@@ -6,9 +6,11 @@ __pycache__/
 .env
 .env.*
 !.env.example
+!backend/.env.example
 .aws/
 .codex/
 .agents/
 *.sqlite3-journal
 *.sqlite3-wal
 *.sqlite3-shm
+runtime/

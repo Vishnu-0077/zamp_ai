@@ -1,0 +1,11 @@
+.git
+zamp_venv
+.venv
+__pycache__
+*.pyc
+.env
+.env.*
+**/runtime
+.aws
+.codex
+.agents

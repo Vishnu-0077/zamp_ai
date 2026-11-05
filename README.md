@@ -1,60 +1,71 @@
-# Synthetic vendor inbox
+# Invoice processing
 
-All identities and documents are fictional. No emails are sent.
+The repository has three application directories:
 
-All test data lives in `test_inputs/`:
-
-- `emails/`: 50 RFC 5322 email messages with PDF attachments.
-- `attachments/`: the 50 corresponding invoice PDFs.
-- `inbox.sqlite3`: inbox records, approved vendors and purchase orders.
-- `ground_truth/`: expected outcomes and procurement reference data. Keep expected outcomes out of extraction inputs.
-
-The dataset contains **40 routine invoices and exactly 10 edge cases**. Routine
-invoices cover five recurring suppliers with different invoice numbers and POs;
-multiple invoices from one company are valid. Each unique legitimate invoice has
-its own fully received PO, so the ordinary invoices remain valid when processed
-in order. Duplicate follow-ups refer to earlier messages.
-
-Emails include normal sender names, subjects, timestamps, signatures, payment
-terms and follow-up threads. Edge-case labels appear only in fixture metadata
-and file paths, not in customer-facing subjects or bodies. PDFs carry a fictional
-test-document footer.
-
-See `EDGE_CASES.md` for the 10 combined exception scenarios. Expected email
-outcomes are 40 approvals, 2 duplicates and 8 human reviews. Existing scenarios
-are retained with added credit/debit notes, multipage and bundled documents,
-FX/GST examples, date anomalies and bank changes. Ordinary emails 12, 13 and 18
-provide valid FX/GST controls. The 50 PDFs contain 52 documents across 53 pages.
-
-Start the read-only inbox API:
-
-```bash
-./zamp_venv/bin/python -m uvicorn app:app --host 127.0.0.1 --port 8000
+```text
+backend/                 All backend code, configuration, dependencies and API docs
+  main.py                FastAPI application entry point
+  processing_api.py      Ingestion, case management and review endpoints
+  inbox_api.py           Existing inbox demo endpoints
+  invoice_service.py     Persistent processing and review workflow
+  invoice_extractor.py   PDF/OCR routing and LangChain extraction
+  invoice_rules.py       Matching, confidence and decision rules
+  invoice_checks.py      Deterministic financial and vendor checks
+  schemas.py             Extraction and API schemas
+  database.py            SQLite persistence and audit storage
+  settings.py            Environment configuration and repository paths
+  procurement.json       Trusted synthetic procurement master and policy
+  requirements.txt       Python dependencies
+  Dockerfile             Container build with Tesseract OCR
+  .env.example           Environment configuration example
+  README.md              Setup, API integration and operational guide
+  openapi.json           Exported frontend API contract
+  export_openapi.py      API contract export utility
+  runtime/               Local processing data (ignored by Git)
+frontend/                Existing inbox page; no new frontend implementation
+  inbox.html
+test_cases/              All tests, test-data tools and sample documents
+  test_backend.py        Processing and API regression tests
+  test_invoice_checks.py Financial rule boundary tests
+  generate_inbox.py      Synthetic inbox generator
+  validate_inbox.py      Fixture integrity checks
+  invoice_layouts.py     Supplier PDF layouts and scan rendering
+  invoice_scenarios.py   Synthetic invoice scenarios
+  expand_inbox.py        Compatibility entry point for inbox generation
+  EDGE_CASES.md          Exception scenario descriptions
+  test_inputs/           Sample emails, PDFs, inbox database and ground truth
 ```
 
-Open http://localhost:8000 for the demo inbox: search messages, read email bodies,
-preview invoice PDFs, or download the original email. The inbox shows incoming
-messages; it does not display ground-truth outcomes as processing results.
-API documentation remains at http://localhost:8000/docs. This project supplies fixtures and an inbox API;
-it does not implement extraction or automated payment decisions.
+The local `zamp_venv/` is the Python environment, not application source.
+All commands below run from the repository root.
 
-Generate a fresh dataset with `./zamp_venv/bin/python generate.py`. It refuses to
-overwrite an existing database. `expand_inbox.py` is a compatibility entry point
-for the same generator; it no longer appends extra exception cases.
+Install dependencies and configure credentials using
+[backend setup and API integration](backend/README.md) and
+[the environment example](backend/.env.example):
 
-Invoice designs now vary by supplier, from branded billing tables to traditional
-contractor letters and plain warehouse exports. Repeat invoices retain the same
-supplier stationery. Emails include formal, brief, informal, structured and
-forwarded styles. The dataset includes **35 searchable PDFs and 15 image-only
-PDFs requiring OCR**; this format mix is independent of the 10 business edge
-cases. See `test_inputs/README.md` for scan IDs and online design references.
+```bash
+./zamp_venv/bin/python -m pip install -r backend/requirements.txt
+./zamp_venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+```
 
-Run `./zamp_venv/bin/python validate_inputs.py` to verify fixture integrity and
-PDF extraction routing. This check does not measure OCR accuracy.
+The inbox demo is at `/`, interactive API documentation at `/docs`, and
+processing endpoints under `/api/v1`. LangChain extracts structured facts;
+deterministic Python validates, matches and decides. Human corrections re-enter
+at validation. Approval reserves local PO value and never executes payments.
 
-`invoice_checks.py` checks structured extraction output for document classification,
-bank changes, dates, GST arithmetic and FX references. It does not extract PDFs,
-run OCR, detect duplicates or approve payments, and the demo does not run it
-automatically. Run `./zamp_venv/bin/python -m unittest test_invoice_checks.py`
-for rule-boundary tests. Full case instructions and policy assumptions are in
-`test_inputs/README.md`.
+Run all tests and verify sample inputs:
+
+```bash
+./zamp_venv/bin/python -m unittest discover -s test_cases -v
+./zamp_venv/bin/python -m test_cases.validate_inbox
+./zamp_venv/bin/python -m backend.export_openapi
+```
+
+Generate sample inputs with `./zamp_venv/bin/python -m test_cases.generate_inbox`.
+The generator refuses to overwrite an existing inbox database. See the
+[fixture guide](test_cases/test_inputs/README.md) and
+[edge cases](test_cases/EDGE_CASES.md) for dataset details.
+
+All fixture identities and documents are fictional. No emails are sent.
+Expected fixture outcomes are reference labels, not measured live extraction
+performance; expected outcomes are never read by the processing backend.

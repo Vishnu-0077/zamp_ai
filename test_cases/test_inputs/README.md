@@ -10,7 +10,7 @@ No real messages are sent and no real payments should be made.
 From `/home/hpvishnu/zamp_ai`, run:
 
 ```bash
-./zamp_venv/bin/python -m uvicorn app:app --host 127.0.0.1 --port 8000
+./zamp_venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
 ```
 
 Open **http://localhost:8000**. If the server is already running, open the link
@@ -107,7 +107,7 @@ Ground-truth records include `is_edge_case`, `added_features`, `documents`,
 
 ## Field checks and policy
 
-`invoice_checks.py` provides `check_document(fields, vendor, po, fx_rates, policy)`
+`backend/invoice_checks.py` provides `check_document(fields, vendor, po, fx_rates, policy)`
 for structured extraction output. It returns findings with review codes and
 reasons. It never reads expected outcomes and does not extract PDFs, perform OCR,
 detect duplicates, fully match POs, or approve payments. No findings means only
@@ -138,8 +138,8 @@ comparing foreign amounts with a PO. PO references include `issue_date` and
 Run validation and regression checks from the project directory:
 
 ```bash
-./zamp_venv/bin/python validate_inputs.py
-./zamp_venv/bin/python -m unittest test_invoice_checks.py
+./zamp_venv/bin/python -m test_cases.validate_inbox
+./zamp_venv/bin/python -m unittest test_cases.test_invoice_checks
 ```
 
 These verify dataset counts, MIME/PDF hashes, duplicate relationships, supplier

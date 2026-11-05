@@ -36,4 +36,4 @@ threshold of **365 days**, bank-change routing and adjustment routing are demo
 business policies, not claims about statutory deadlines. FX rates are synthetic
 reference values with explicit currency direction and invoice-date matching.
 
-See `test_inputs/README.md` for running the demo and using the reference data.
+See [fixture guide](test_inputs/README.md) for running the demo and using the reference data.

@@ -3,7 +3,7 @@ import copy
 import json
 from pathlib import Path
 import unittest
-from invoice_checks import check_document
+from backend.invoice_checks import check_document
 
 ROOT=Path(__file__).resolve().parent
 

@@ -7,8 +7,8 @@ import hashlib
 import json
 import sqlite3
 import pymupdf
-from invoice_layouts import SCAN_IDS, render, compose_pdf
-from invoice_checks import check_document
+from .invoice_layouts import SCAN_IDS, render, compose_pdf
+from backend.invoice_checks import check_document
 
 ROOT = Path(__file__).resolve().parent
 

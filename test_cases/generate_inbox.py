@@ -6,8 +6,8 @@ from datetime import datetime, timezone, timedelta
 import hashlib
 import json
 import sqlite3
-from invoice_layouts import render, scan_pdf, SCAN_IDS, STYLES, compose_pdf
-from realistic_cases import enrich, debit_note, bundled_invoice, POLICY, FX_RATES, ADDED_FEATURES, ADDED_REASONS
+from .invoice_layouts import render, scan_pdf, SCAN_IDS, STYLES, compose_pdf
+from .invoice_scenarios import enrich, debit_note, bundled_invoice, POLICY, FX_RATES, ADDED_FEATURES, ADDED_REASONS
 
 ROOT = Path(__file__).resolve().parent
 INPUTS = ROOT / 'test_inputs'
