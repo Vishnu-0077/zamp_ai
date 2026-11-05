@@ -22,8 +22,9 @@ backend/                 All backend code, configuration, dependencies and API d
   openapi.json           Exported frontend API contract
   export_openapi.py      API contract export utility
   runtime/               Local processing data (ignored by Git)
-frontend/                Existing inbox page; no new frontend implementation
-  inbox.html
+frontend/                React + TypeScript review app (see frontend/README.md)
+  src/                   API client, feature modules, shared components
+  inbox.html             Legacy inbox page, still served by the backend at /
 test_cases/              All tests, test-data tools and sample documents
   test_backend.py        Processing and API regression tests
   test_invoice_checks.py Financial rule boundary tests
@@ -49,7 +50,9 @@ Install dependencies and configure credentials using
 ```
 
 The inbox demo is at `/`, interactive API documentation at `/docs`, and
-processing endpoints under `/api/v1`. LangChain extracts structured facts;
+processing endpoints under `/api/v1`. The review frontend runs separately:
+`cd frontend && npm install && BACKEND_API_KEY=... npm run dev`, then open
+http://localhost:5173 (details in [the frontend guide](frontend/README.md)). LangChain extracts structured facts;
 deterministic Python validates, matches and decides. Human corrections re-enter
 at validation. Approval reserves local PO value and never executes payments.
 

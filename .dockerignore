@@ -9,3 +9,5 @@ __pycache__
 .aws
 .codex
 .agents
+frontend/node_modules
+frontend/dist
