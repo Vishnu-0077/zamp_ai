@@ -1,0 +1,70 @@
+From: Summit Packaging <billing@summit.example>
+To: Accounts Payable <accounts-payable@buyer.example>
+Subject: Invoice for recycled shipping cartons, bundles (004-2026-0034)
+Date: Tue, 03 Nov 2026 01:34:00 +0000
+Message-ID: <ar.202611.0034@summit.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============0070931316050700747=="
+
+--===============0070931316050700747==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Good morning,
+
+I have attached the invoice for recycled shipping cartons, bundles, as agreed=
+ with your purchasing team. Your reference is PO-26034.
+
+The invoice amount is USD 633.60. Payment terms are Net 30. Please let us kno=
+w if you need anything else to process this.
+
+Many thanks,
+Alex Morgan
+Accounts receivable | Summit Packaging
+billing@summit.example
+
+--===============0070931316050700747==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="Invoice_004-2026-0034.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjMKJZOMi54gUmVwb3J0TGFiIEdlbmVyYXRlZCBQREYgZG9jdW1lbnQgKG9wZW5zb3Vy
+Y2UpCjEgMCBvYmoKPDwKL0YxIDIgMCBSIC9GMiAzIDAgUgo+PgplbmRvYmoKMiAwIG9iago8PAov
+QmFzZUZvbnQgL0hlbHZldGljYSAvRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZyAvTmFtZSAvRjEg
+L1N1YnR5cGUgL1R5cGUxIC9UeXBlIC9Gb250Cj4+CmVuZG9iagozIDAgb2JqCjw8Ci9CYXNlRm9u
+dCAvSGVsdmV0aWNhLUJvbGQgL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcgL05hbWUgL0YyIC9T
+dWJ0eXBlIC9UeXBlMSAvVHlwZSAvRm9udAo+PgplbmRvYmoKNCAwIG9iago8PAovQ29udGVudHMg
+OCAwIFIgL01lZGlhQm94IFsgMCAwIDU5NS4yNzU2IDg0MS44ODk4IF0gL1BhcmVudCA3IDAgUiAv
+UmVzb3VyY2VzIDw8Ci9Gb250IDEgMCBSIC9Qcm9jU2V0IFsgL1BERiAvVGV4dCAvSW1hZ2VCIC9J
+bWFnZUMgL0ltYWdlSSBdCj4+IC9Sb3RhdGUgMCAvVHJhbnMgPDwKCj4+IAogIC9UeXBlIC9QYWdl
+Cj4+CmVuZG9iago1IDAgb2JqCjw8Ci9QYWdlTW9kZSAvVXNlTm9uZSAvUGFnZXMgNyAwIFIgL1R5
+cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0F1dGhvciAoYW5vbnltb3VzKSAvQ3Jl
+YXRpb25EYXRlIChEOjIwMDAwMTAxMDAwMDAwKzAwJzAwJykgL0NyZWF0b3IgKGFub255bW91cykg
+L0tleXdvcmRzICgpIC9Nb2REYXRlIChEOjIwMDAwMTAxMDAwMDAwKzAwJzAwJykgL1Byb2R1Y2Vy
+IChSZXBvcnRMYWIgUERGIExpYnJhcnkgLSBcKG9wZW5zb3VyY2VcKSkgCiAgL1N1YmplY3QgKHVu
+c3BlY2lmaWVkKSAvVGl0bGUgKEludm9pY2UgMDA0LTIwMjYtMDAzNCkgL1RyYXBwZWQgL0ZhbHNl
+Cj4+CmVuZG9iago3IDAgb2JqCjw8Ci9Db3VudCAxIC9LaWRzIFsgNCAwIFIgXSAvVHlwZSAvUGFn
+ZXMKPj4KZW5kb2JqCjggMCBvYmoKPDwKL0ZpbHRlciBbIC9BU0NJSTg1RGVjb2RlIC9GbGF0ZURl
+Y29kZSBdIC9MZW5ndGggNjkxCj4+CnN0cmVhbQpHYXMySGJBUSZnJjRRP2hNVi9cN2c8KF9ATEZx
+b2FFLkBxNlxAJ2FiMkRkOnJmZ3FvMk9jQj42VidOT1NKXj10JCJqKGlTQlFUIkRMayJYWCgoSiZa
+JC9dVkw6XjYjM2N0JjspR245TjtDZms+YzhBRUZbPHA8cDVSRENgU10rKDhgPy4yPVAkU0w8Mj4s
+cTYhUGVXbWhyKlJJZSVsMWk/N2t1TTRBRjpMZzUyQk1qTzZPUScvMEUvQ2FncVxXJF5ialhlKCtk
+OD5lKm9nWD5BXVFtVk5dKStQQGxXLj4ybGVHLyEpWj9lI3RyWjw+cmIrN0VlJGtNTjcnPXBiRG9S
+TUQ3bSNZPzQwPTtESl0tWGwrXUg6MWlpQEs/UiQ4T1IzIk88dCdTaixQOSRkOmouYUYjbFBvQj5m
+T0sjaGk3K1hjJyo1QVoqW0VaZT1Qc1NNN0BXO1FCa0pUXCwpPi8qSm1zRD5VMTxEUUhtcD0nLklf
+ZV8jVEtQJyMoSm1eVFJObUwjU0RuNm40JWomdTImW0RvXFRKRVEkUmhqUCloVWxtanRhKVliIWpu
+Nl1qZSpKPjoqS3NAay9cSVRQbycsOHErI2g7Oj90aF8tV3AwKlhRLm9CLWBVUU1OKmkhZkROJ1Ni
+NSF1KnBuYGkvWzoyWCJFdFJcaFVuJk06cTBPKkhzMUIzZjFecktKIjg9bFU4PVpycUdiVkRHZiVA
+Yl1ISCVJZ0FRZlFnWz4tW3QoIVJzLzRDSzRyLkBuWCxqW0NNWXE1cTstTG1yRmVUNVJSVnJXaUJK
+RjUxY1RcMSsmZkdDWXRzcS9WXypNVitOVTxES1FoLGhZZ15tSjYlOyslWG9xTE9OW3UsSkYiOVsk
+RXBnK0ptLy5zVV9AOTUjNVxWPVduXC11SUpbPCwvaWBVLn4+ZW5kc3RyZWFtCmVuZG9iagp4cmVm
+CjAgOQowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwNjEgMDAwMDAgbiAKMDAwMDAwMDEwMiAw
+MDAwMCBuIAowMDAwMDAwMjA5IDAwMDAwIG4gCjAwMDAwMDAzMjEgMDAwMDAgbiAKMDAwMDAwMDUy
+NCAwMDAwMCBuIAowMDAwMDAwNTkyIDAwMDAwIG4gCjAwMDAwMDA4NjYgMDAwMDAgbiAKMDAwMDAw
+MDkyNSAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9JRCAKWzw5MmNjMjY2OTUwNzcxZjA1YjQwMDA2YzZh
+ZTllMjZmNz48OTJjYzI2Njk1MDc3MWYwNWI0MDAwNmM2YWU5ZTI2Zjc+XQolIFJlcG9ydExhYiBn
+ZW5lcmF0ZWQgUERGIGRvY3VtZW50IC0tIGRpZ2VzdCAob3BlbnNvdXJjZSkKCi9JbmZvIDYgMCBS
+Ci9Sb290IDUgMCBSCi9TaXplIDkKPj4Kc3RhcnR4cmVmCjE3MDYKJSVFT0YK
+
+--===============0070931316050700747==--

@@ -1,0 +1,14 @@
+zamp_venv/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+.aws/
+.codex/
+.agents/
+*.sqlite3-journal
+*.sqlite3-wal
+*.sqlite3-shm
