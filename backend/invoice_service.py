@@ -87,7 +87,9 @@ class Service:
             batch = self.extractor.extract(pages)
             with self.store.connect() as c:
                 self.store.audit(c, job_id, 'extracted', batch.model_dump(mode='json'))
-                c.execute('UPDATE jobs SET extraction=? WHERE id=?', (batch.model_dump_json(), job_id))
+                # Record the model that actually produced the extraction (may be a fallback).
+                used = getattr(self.extractor, 'last_model', None) or self.settings.model
+                c.execute('UPDATE jobs SET extraction=?, model=? WHERE id=?', (batch.model_dump_json(), used, job_id))
             if len(batch.documents) != 1:
                 raise ProcessingError('MULTIPLE_DOCUMENTS', 'Bundled documents require separation and individual ingestion before approval.')
             self.validate(job_id, batch.documents[0])

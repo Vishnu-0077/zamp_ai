@@ -139,10 +139,18 @@ use FastAPI's `detail` format. PDF download remains behind application auth.
   page count, text context and OCR subprocess time are bounded. Encrypted,
   malformed, blank or unsupported documents go to review.
 - `LangChainExtractor` calls `ChatOpenAI.with_structured_output` with a Pydantic
-  batch schema, native `json_schema`, strict output, temperature 0, and no
-  provider-level retries. Parsing/schema failures retry exactly once. Provider
-  errors/refusals become review findings. Source instructions are treated as
-  untrusted data; the model has no business tools or decision authority.
+  batch schema, native `json_schema`, strict output and temperature 0. SDK-level
+  retries are off. Parsing/schema failures retry exactly once. By default a
+  provider error becomes a review finding after one attempt. Optional transient-error
+  handling (429, 5xx, timeouts only) is configured explicitly:
+  `EXTRACTION_PROVIDER_RETRIES` retries per model with exponential backoff
+  from `EXTRACTION_RETRY_BACKOFF_SECONDS`, honouring `Retry-After` or Google
+  `retryDelay` hints up to 60 s. Longer hints, such as an exhausted daily quota,
+  move straight to the next model in `EXTRACTION_FALLBACK_MODELS`. Schema
+  failures and other errors are never retried across models. Each case
+  records the model that produced its extraction. Source instructions are
+  treated as untrusted data; the model has no business tools or decision
+  authority.
 - Core required fields include due date as well as invoice identity, vendor, currency, PO, amounts, account details and line items.
 - Model extraction retains document type, original reference, vendor, invoice
   and due dates, currency, PO, line items, subtotal, tax, total, account details,

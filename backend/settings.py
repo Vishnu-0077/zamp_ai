@@ -14,6 +14,10 @@ class Settings:
     reviewer_key: str = field(default_factory=lambda: os.getenv('REVIEWER_API_KEY', ''))
     model: str = field(default_factory=lambda: os.getenv('EXTRACTION_MODEL', ''))
     base_url: str | None = field(default_factory=lambda: os.getenv('OPENAI_BASE_URL') or None)
+    # Transient provider failures (429, 5xx, timeouts) only. Defaults keep a single attempt.
+    fallback_models: list[str] = field(default_factory=lambda: [s.strip() for s in os.getenv('EXTRACTION_FALLBACK_MODELS', '').split(',') if s.strip()])
+    provider_retries: int = field(default_factory=lambda: max(0, int(os.getenv('EXTRACTION_PROVIDER_RETRIES', '0'))))
+    retry_backoff_seconds: float = field(default_factory=lambda: max(0.0, float(os.getenv('EXTRACTION_RETRY_BACKOFF_SECONDS', '2'))))
     cors_origins: list[str] = field(default_factory=lambda: [s for s in os.getenv('CORS_ORIGINS', 'http://localhost:3000,http://localhost:5173').split(',') if s])
     max_pdf_bytes: int = 20 * 1024 * 1024
     max_pages: int = 30

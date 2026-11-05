@@ -106,6 +106,9 @@ files:
 | `OPENAI_API_KEY` | For extraction | Model provider credential |
 | `EXTRACTION_MODEL` | For extraction | Model ID with JSON-schema structured output |
 | `OPENAI_BASE_URL` | No | OpenAI-compatible endpoint |
+| `EXTRACTION_FALLBACK_MODELS` | No | Comma-separated models tried when the main one is overloaded or out of quota |
+| `EXTRACTION_PROVIDER_RETRIES` | No | Retries per model for 429, 5xx and timeouts (default `0`) |
+| `EXTRACTION_RETRY_BACKOFF_SECONDS` | No | First retry delay; doubles each retry (default `2`) |
 | `PROCESSING_DB` | No | SQLite path (default `backend/runtime/processing.sqlite3`) |
 | `PROCUREMENT_PATH` | No | Trusted vendor/PO/policy file (default `backend/procurement.json`) |
 | `CORS_ORIGINS` | No | Only needed when the dashboard calls the backend directly |
@@ -123,7 +126,8 @@ cp frontend/.env.example frontend/.env    # then set BACKEND_API_KEY in it
 ```
 
 **Free option: Google Gemini.** Gemini's free tier works through its
-OpenAI-compatible endpoint; it has been tested with `gemini-3.5-flash`.
+OpenAI-compatible endpoint. It has been tested with `gemini-3.5-flash`,
+`gemini-3-flash-preview` and `gemini-3.5-flash-lite`.
 
 1. Create a key at https://aistudio.google.com/apikey.
 2. Store it outside the repository, without echoing it:
@@ -135,12 +139,18 @@ OpenAI-compatible endpoint; it has been tested with `gemini-3.5-flash`.
    export OPENAI_API_KEY="$(cat ~/.config/zamp/gemini.key)"
    export OPENAI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
    export EXTRACTION_MODEL=gemini-3.5-flash
+   export EXTRACTION_FALLBACK_MODELS=gemini-3-flash-preview,gemini-3.5-flash-lite
+   export EXTRACTION_PROVIDER_RETRIES=3
+   export EXTRACTION_RETRY_BACKOFF_SECONDS=5
    ```
 
 Free-tier caveats:
-- It allows only a few requests per minute. Process invoices a few at a time.
-- When Google is overloaded it returns 503 "high demand", and the case goes to
-  review with `PROCESSING_ERROR`. Click **Retry processing** later.
+- Each model allows about **20 requests per day** and a few per minute. The
+  three-model chain above gives roughly 60 invoices a day. Once a model's
+  daily quota is used up, the backend moves to the next model straight away.
+- Google often returns 503 "high demand". The retries and fallbacks above
+  absorb most of these. If every model fails, the case goes to review with
+  `PROCESSING_ERROR`; click **Retry processing** later.
 - Older models such as `gemini-2.5-flash` are closed to new keys. List the
   models your key can use with
   `curl -s https://generativelanguage.googleapis.com/v1beta/openai/models -H "Authorization: Bearer $(cat ~/.config/zamp/gemini.key)"`.

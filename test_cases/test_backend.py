@@ -260,4 +260,95 @@ class LangChainContractTests(unittest.TestCase):
         self.assertEqual(error.exception.code,'EXTRACTION_SCHEMA_FAILED')
         self.assertEqual(structured.invoke.call_count,2)
 
+
+def api_error(status, headers=None, body=None):
+    import httpx, openai
+    response = httpx.Response(status, headers=headers or {}, request=httpx.Request('POST', 'https://provider.invalid/chat/completions'))
+    cls = {400: openai.BadRequestError, 429: openai.RateLimitError, 503: openai.InternalServerError}[status]
+    return cls('provider error', response=response, body=body)
+
+
+class ProviderRetryTests(unittest.TestCase):
+    """Transient provider errors are retried with backoff, then fall back to other models."""
+
+    def run_extract(self, settings, outcomes):
+        from unittest.mock import Mock
+        structured = {}
+        for name, effects in outcomes.items():
+            s = Mock()
+            s.invoke.side_effect = effects
+            structured[name] = s
+        def chat(**kwargs):
+            model = Mock()
+            model.with_structured_output.return_value = structured[kwargs['model']]
+            return model
+        sleeps = []
+        extractor = LangChainExtractor(settings, sleep=sleeps.append)
+        with patch('langchain_openai.ChatOpenAI', side_effect=chat):
+            try:
+                return extractor.extract([{'page':1,'text':'source'}]), extractor, structured, sleeps
+            except Exception as exc:
+                return exc, extractor, structured, sleeps
+
+    def ok(self):
+        return {'parsed': ExtractionBatch(documents=[extraction()]), 'parsing_error': None}
+
+    def test_default_makes_a_single_attempt(self):
+        result, _, structured, sleeps = self.run_extract(Settings(model='m1'), {'m1': [api_error(503), self.ok()]})
+        self.assertEqual(getattr(result, 'status_code', None), 503)
+        self.assertEqual(structured['m1'].invoke.call_count, 1)
+        self.assertEqual(sleeps, [])
+
+    def test_transient_error_is_retried_with_exponential_backoff(self):
+        settings = Settings(model='m1', provider_retries=2, retry_backoff_seconds=1.5)
+        result, extractor, structured, sleeps = self.run_extract(settings, {'m1': [api_error(503), api_error(429), self.ok()]})
+        self.assertEqual(len(result.documents), 1)
+        self.assertEqual(structured['m1'].invoke.call_count, 3)
+        self.assertEqual(sleeps, [1.5, 3.0])
+        self.assertEqual(extractor.last_model, 'm1')
+
+    def test_retry_after_header_is_respected(self):
+        settings = Settings(model='m1', provider_retries=1, retry_backoff_seconds=1)
+        _, _, _, sleeps = self.run_extract(settings, {'m1': [api_error(429, {'retry-after': '7'}), self.ok()]})
+        self.assertEqual(sleeps, [7.0])
+
+    def test_long_retry_delay_skips_to_next_model(self):
+        # Google free tier: daily quota exhausted, retryDelay of hours.
+        quota = api_error(429, body=[{'error': {'code': 429, 'details': [{'retryDelay': '40134s'}]}}])
+        settings = Settings(model='m1', fallback_models=['m2'], provider_retries=3, retry_backoff_seconds=5)
+        result, extractor, structured, sleeps = self.run_extract(settings, {'m1': [quota], 'm2': [self.ok()]})
+        self.assertEqual(len(result.documents), 1)
+        self.assertEqual(structured['m1'].invoke.call_count, 1)
+        self.assertEqual(sleeps, [])
+        self.assertEqual(extractor.last_model, 'm2')
+
+    def test_short_retry_delay_in_body_is_respected(self):
+        limited = api_error(429, body={'error': {'details': [{'retryDelay': '12s'}]}})
+        settings = Settings(model='m1', provider_retries=1, retry_backoff_seconds=5)
+        _, _, _, sleeps = self.run_extract(settings, {'m1': [limited, self.ok()]})
+        self.assertEqual(sleeps, [12.0])
+
+    def test_falls_back_to_next_model_after_retries(self):
+        settings = Settings(model='m1', fallback_models=['m2'], provider_retries=1, retry_backoff_seconds=0)
+        result, extractor, structured, _ = self.run_extract(settings, {'m1': [api_error(503), api_error(503)], 'm2': [self.ok()]})
+        self.assertEqual(len(result.documents), 1)
+        self.assertEqual(structured['m1'].invoke.call_count, 2)
+        self.assertEqual(extractor.last_model, 'm2')
+
+    def test_non_transient_errors_are_not_retried(self):
+        settings = Settings(model='m1', fallback_models=['m2'], provider_retries=3)
+        result, _, structured, sleeps = self.run_extract(settings, {'m1': [api_error(400)], 'm2': [self.ok()]})
+        self.assertEqual(getattr(result, 'status_code', None), 400)
+        self.assertEqual(structured['m1'].invoke.call_count, 1)
+        self.assertEqual(structured['m2'].invoke.call_count, 0)
+        self.assertEqual(sleeps, [])
+
+    def test_schema_failure_does_not_fall_back(self):
+        settings = Settings(model='m1', fallback_models=['m2'], provider_retries=2)
+        bad = {'parsed': None, 'parsing_error': ValueError('invalid')}
+        result, _, structured, _ = self.run_extract(settings, {'m1': [bad, bad], 'm2': [self.ok()]})
+        self.assertIsInstance(result, ProcessingError)
+        self.assertEqual(result.code, 'EXTRACTION_SCHEMA_FAILED')
+        self.assertEqual(structured['m2'].invoke.call_count, 0)
+
 if __name__ == '__main__': unittest.main()
