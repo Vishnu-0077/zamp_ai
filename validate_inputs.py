@@ -7,7 +7,8 @@ import hashlib
 import json
 import sqlite3
 import pymupdf
-from invoice_layouts import SCAN_IDS
+from invoice_layouts import SCAN_IDS, render, compose_pdf
+from invoice_checks import check_document
 
 ROOT = Path(__file__).resolve().parent
 
@@ -21,11 +22,13 @@ def validate():
     assert len(list((base/'emails').glob('*.eml')))==50
     assert len(list((base/'attachments').glob('*.pdf')))==50
     assert sum(t['is_edge_case'] for t in truth)==10
-    assert Counter(t['expected'] for t in truth)=={'approve':42,'duplicate':2,'human_review':6}
+    assert Counter(t['expected'] for t in truth)=={'approve':40,'duplicate':2,'human_review':8}
     assert {t['id'] for t in truth if t['requires_ocr']}==SCAN_IDS
     templates=defaultdict(set)
     procurement=json.loads((base/'ground_truth/procurement.json').read_text())
     pos={p['number']:p for p in procurement['purchase_orders']}
+    vendors={v['id']:v for v in procurement['vendors']}
+    codes_by_id={}
     for row,t in zip(rows,truth):
         assert row['id']==t['id']
         data=(ROOT/row['attachment_path']).read_bytes()
@@ -36,12 +39,13 @@ def validate():
         body=msg.get_body(preferencelist=('plain',)).get_content()
         assert body.strip()
         with pymupdf.open(stream=data,filetype='pdf') as pdf:
-            assert len(pdf)==1
-            extracted=pdf[0].get_text()
+            assert len(pdf)==t['page_count']
+            extracted='\n'.join(page.get_text() for page in pdf)
             if t['requires_ocr']:
                 assert not extracted.strip(), (t['id'],'Scan leaked extractable text')
-                assert pdf[0].get_images(), (t['id'],'Scan contains no raster image')
-                assert not pdf[0].get_fonts(), (t['id'],'Scan has a text font resource')
+                for page in pdf:
+                    assert page.get_images(), (t['id'],'Scan contains no raster image')
+                    assert not page.get_fonts(), (t['id'],'Scan has a text font resource')
             else:
                 fields=t['fields']
                 assert fields['vendor'].lower() in ' '.join(extracted.lower().split()), (t['id'], 'vendor name')
@@ -63,13 +67,48 @@ def validate():
             templates[t['vendor_id']].add(t['template_id'])
         if t['expected']=='approve':
             po=pos[t['fields']['po']]
-            assert po['vendor_id']==t['vendor_id'] and po['amount']==t['fields']['total']
+            assert po['vendor_id']==t['vendor_id']
+            if t['fields'].get('currency') == po['currency']:
+                assert po['amount']==t['fields']['total']
+        findings=check_document(t['fields'],vendors.get(t['vendor_id']),pos.get(t['fields']['po']),procurement['fx_rates'],procurement['validation_policy'])
+        codes_by_id[t['id']]={f['code'] for f in findings}
+        if t['expected']=='approve':
+            assert not findings,(t['id'],findings)
+        elif t['expected']=='human_review' and t['id']!=43:
+            assert findings,t['id']
+        for document in t['documents']:
+            assert document['page_range'][1]<=t['page_count']
+            if document['expected']=='approve':
+                fields=document['fields']
+                assert not check_document(fields,vendors.get(t['vendor_id']),pos.get(fields['po']),procurement['fx_rates'],procurement['validation_policy'])
+    assert sum(len(t['documents']) for t in truth)==52
+    assert sum(t['page_count'] for t in truth)==53
+    required={44:{'negative_invoice','unapproved_vendor'},45:{'bank_account_changed'},
+              46:{'future_invoice_date','missing_number'},47:{'missing_total'},
+              48:{'missing_currency','gst_split_total','gst_component_amount','invoice_before_po'},
+              49:{'adjustment_document'},50:{'old_invoice','missing_fx_rate'}}
+    for idx,codes in required.items():
+        assert codes<=codes_by_id[idx],(idx,codes_by_id[idx])
+    for idx in (12,13,18):assert not codes_by_id[idx],(idx,codes_by_id[idx])
+    debit=truth[46]['documents'][2]['fields']
+    assert debit['document_type']=='DEBIT NOTE'
+    assert 'adjustment_document' in {f['code'] for f in check_document(debit,vendors['V002'],pos[debit['po']],procurement['fx_rates'],procurement['validation_policy'])}
+    # Verify source layout before rasterization: the amount due occurs only on page 2.
+    with pymupdf.open(stream=compose_pdf(truth[42]['fields'],'V003',multipage=True),filetype='pdf') as pdf:
+        assert 'Total payable' not in pdf[0].get_text() and 'AMOUNT DUE:' not in pdf[0].get_text()
+        assert 'AMOUNT DUE:' in pdf[1].get_text()
+        assert truth[42]['fields']['number'] in pdf[0].get_text()+pdf[1].get_text()
+    # Multi-invoice PDF must preserve the missing total in document 1 and the debit identity in document 2.
+    with pymupdf.open(stream=compose_pdf(truth[46]['fields'],'V002',extra=[truth[46]['documents'][1]['fields'],debit]),filetype='pdf') as pdf:
+        assert 'AMOUNT DUE' not in pdf[0].get_text()
+        assert 'INVOICE' in pdf[1].get_text() and 'HI-2026-EXTRA-0047' in pdf[1].get_text()
+        assert 'DEBIT NOTE' in pdf[2].get_text() and debit['number'] in pdf[2].get_text()
     assert all(len(styles)==1 for styles in templates.values())
     assert truth[40]['sha256']==truth[0]['sha256']
     assert truth[41]['sha256']!=truth[1]['sha256']
     assert truth[41]['fields']==truth[1]['fields']
     assert truth[42]['fields']['number']==truth[2]['fields']['number'].replace('-','')
-    print('PASS: 50 emails, 40 routine + 10 edge cases; 35 searchable PDFs + 15 image-only PDFs; supplier templates, MIME attachments, hashes, omissions, duplicates, PO matches and page bounds.')
+    print('PASS: 50 emails, 40 routine + 10 edge cases; 35 searchable PDFs + 15 image-only PDFs; 52 documents across 53 pages; notes, FX, GST, date and bank checks; supplier templates, MIME attachments and duplicates.')
 
 if __name__=='__main__':
     validate()

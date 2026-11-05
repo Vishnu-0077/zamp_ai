@@ -20,10 +20,11 @@ terms and follow-up threads. Edge-case labels appear only in fixture metadata
 and file paths, not in customer-facing subjects or bodies. PDFs carry a fictional
 test-document footer.
 
-See `EDGE_CASES.md` for the 10 exceptions. There are 42 expected approvals,
-2 duplicates and 6 human-review outcomes. Two edge cases are intentionally valid:
-missing optional contact information and a vague message with a complete invoice
-except an optional due date. The vendor master supplies Net 30 terms.
+See `EDGE_CASES.md` for the 10 combined exception scenarios. Expected email
+outcomes are 40 approvals, 2 duplicates and 8 human reviews. Existing scenarios
+are retained with added credit/debit notes, multipage and bundled documents,
+FX/GST examples, date anomalies and bank changes. Ordinary emails 12, 13 and 18
+provide valid FX/GST controls. The 50 PDFs contain 52 documents across 53 pages.
 
 Start the read-only inbox API:
 
@@ -50,3 +51,10 @@ cases. See `test_inputs/README.md` for scan IDs and online design references.
 
 Run `./zamp_venv/bin/python validate_inputs.py` to verify fixture integrity and
 PDF extraction routing. This check does not measure OCR accuracy.
+
+`invoice_checks.py` checks structured extraction output for document classification,
+bank changes, dates, GST arithmetic and FX references. It does not extract PDFs,
+run OCR, detect duplicates or approve payments, and the demo does not run it
+automatically. Run `./zamp_venv/bin/python -m unittest test_invoice_checks.py`
+for rule-boundary tests. Full case instructions and policy assumptions are in
+`test_inputs/README.md`.

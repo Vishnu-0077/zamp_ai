@@ -1,167 +1,173 @@
 # How to use the test inputs
 
-This dataset contains **50 fictional vendor emails with PDF invoices**:
-**40 routine invoices and exactly 10 edge cases**. No real emails are sent and
-no real payments should be made.
+The dataset contains **50 fictional vendor emails, 50 PDF attachments, 40 routine
+invoices and 10 edge-case email IDs**. Some attachments contain multiple pages or
+multiple billing documents: there are **52 documents across 53 pages** in total.
+No real messages are sent and no real payments should be made.
 
-## View the emails for a demo
+## View the demo
 
-From the project directory (`/home/hpvishnu/zamp_ai`), start the app:
+From `/home/hpvishnu/zamp_ai`, run:
 
 ```bash
 ./zamp_venv/bin/python -m uvicorn app:app --host 127.0.0.1 --port 8000
 ```
 
-Open **http://localhost:8000** in your browser. If the server is already running,
-just open the link.
+Open **http://localhost:8000**. If the server is already running, open the link
+and refresh the page. Select an email, read its message, preview the attached PDF,
+or use **Open PDF** and **Download email**. Use the PDF viewer's page controls to
+read every page of emails 43 and 47. API docs are at http://localhost:8000/docs.
 
-Search for a sender or invoice number, select an email to read its message, and
-preview the attached invoice or click **Open PDF**. **Download email** saves the
-original message, including its attachment.
+The demo browses inputs. It does not perform OCR, extract fields, execute the
+field checks automatically, or make payment decisions.
 
-The interface displays test inputs. It does not run invoice extraction,
-validation, duplicate detection, or payment approval.
-
-## What is in this folder?
+## Folder contents
 
 | Path | Contents |
 | --- | --- |
-| `emails/` | 50 `.eml` files containing email headers, message bodies and attached PDFs |
-| `attachments/` | Separate copies of the same 50 invoice PDFs |
-| `inbox.sqlite3` | Inbox records, approved vendor master and purchase orders used by the app |
-| `ground_truth/expected.json` | Expected outcome, reason, missing fields and duplicate relationships for each email |
-| `ground_truth/procurement.json` | Vendor and purchase-order reference data for validation |
+| `emails/` | 50 `.eml` files with headers, message bodies and embedded PDF attachments |
+| `attachments/` | Separate copies of those same 50 PDFs |
+| `inbox.sqlite3` | Inbox records, approved vendor master and purchase orders |
+| `ground_truth/expected.json` | Expected email/document outcomes, source fields, reasons, page ranges and case labels |
+| `ground_truth/procurement.json` | Trusted vendor/PO data, approved synthetic FX rates and demo validation policy |
 
-Each filename starts with the email ID. For example, files starting with `41_`
-belong to email 41. A PDF embedded in an `.eml` and its copy in `attachments/`
-are the same input; do not ingest both as separate incoming invoices.
+A filename's leading number is its email ID. An embedded PDF and its copy in
+`attachments/` are the same input: do not ingest both as separate invoices.
+A document's page range is 1-based and inclusive. One attachment is not always
+one invoice, and one page is not always a complete invoice.
 
-## Where are the edge cases?
+## Cases and expected outcomes
 
-**Emails 1–40** are routine, valid invoices from five approved suppliers.
-Several invoices come from the same company, with distinct invoice numbers and
-purchase orders. A repeated supplier alone does not make an invoice a duplicate.
+Emails **1–40** are ordinary valid invoices. Repeat suppliers with distinct
+invoice numbers and orders are legitimate. Positive controls include:
 
-**Emails 41–50** are the 10 edge cases:
+| Email | What should work |
+| --- | --- |
+| 12 | USD invoice -> INR PO using approved rate 83.50 INR per USD, dated 2026-10-14 |
+| 13 | INR invoice with correctly calculated IGST |
+| 18 | INR invoice with correctly split CGST and SGST |
 
-| Email ID / filename prefix | Scenario | Expected outcome |
+Emails **41–50** retain the previous scenarios with added features:
+
+| Email | Scenario and added coverage | Expected outcome |
 | --- | --- | --- |
-| `41_` | Follow-up containing the exact PDF from email 1 | Duplicate |
-| `42_` | Reissued PDF with the same vendor and invoice number as email 2 | Duplicate |
-| `43_` | Invoice number from email 3 with punctuation removed; other details match | Human review for a possible duplicate |
-| `44_` | Unregistered vendor claims a PO belonging to another supplier | Human review |
-| `45_` | Northstar display name with a lookalike sender domain | Human review |
-| `46_` | Invoice number missing from both email and PDF | Human review |
-| `47_` | Final amount due missing from both email and PDF | Human review |
-| `48_` | Currency unspecified in both email and PDF | Human review |
-| `49_` | Optional contact name, address and phone missing; critical fields complete | Approve |
-| `50_` | Vague email; invoice lacks only an optional due date; vendor master supplies Net 30 terms | Approve |
+| 41 | Follow-up with email 1's exact PDF | Duplicate |
+| 42 | Reissued PDF with email 2's vendor and invoice number | Duplicate |
+| 43 | Punctuation changed in email 3's invoice number; now two scanned pages with total only on the last page | Possible duplicate: OCR every page, then review |
+| 44 | Unregistered vendor and another vendor's PO; negative total labelled INVOICE | Review identity and document classification; do not infer a credit note |
+| 45 | Lookalike sender plus changed bank account | Review and independently verify bank details |
+| 46 | Invoice number missing plus future issue date | Review |
+| 47 | Three scanned pages: missing-total invoice, separate complete invoice, separate debit note | Split and OCR all three documents; review the incomplete invoice and adjustment |
+| 48 | Missing currency, wrong CGST/SGST arithmetic, invoice dated before PO | Review |
+| 49 | Optional contact details missing; now a credit note linked to an earlier invoice | Adjustment review; optional details alone are acceptable |
+| 50 | Vague email, optional due date missing; now an old EUR invoice without an approved EUR-to-INR rate | Review age and FX; vague wording/optional due date alone are acceptable |
 
-An edge case is not necessarily invalid. Emails 49 and 50 demonstrate that
-missing optional information should not block an otherwise valid invoice.
+Expected **email-level** totals: **40 approvals, 2 duplicates, 8 human reviews**.
+Ground-truth labels are test answers, not results produced by the demo app.
+Email 47's second invoice has its own PO and is expected to pass these checks
+independently. Its third document is a positive-value debit note referring to
+invoice 002-2026-0002. Email 49 is a negative credit adjustment referring to
+invoice 004-2026-0004. Neither note should enter a normal payable-invoice workflow.
 
-Expected totals across all 50 emails: **42 approvals, 2 duplicates and 6 human
-reviews**. These are fixture labels, not results produced by the app.
+## Searchable PDFs and OCR-only scans
 
-## Use with an invoice-processing pipeline
-
-1. Load approved vendors and purchase orders from
-   `ground_truth/procurement.json` as business reference data.
-2. Process the `.eml` files in ascending ID order. Extract each message and its
-   attached PDF, then run your extraction and validation pipeline.
-3. Retain earlier invoice history so emails 41–43 can be compared with emails
-   1–3. When repeating the demo, reset your pipeline's imported invoices and
-   processing history so previous runs do not make every invoice a duplicate.
-4. Compare your results with `ground_truth/expected.json` after processing.
-   Each record includes `id`, `is_edge_case`, `expected`, `reason`,
-   `missing_fields`, `fields` and `duplicate_of`.
-
-Keep `expected.json`, scenario labels and descriptive filenames out of model
-prompts and extraction inputs. Use the actual email contents and attachment
-filenames from the message. Expected outcomes are evaluation answers, not
-information the pipeline should use to make decisions.
-
-All intended valid invoices use USD. PO amounts and received amounts are gross
-values, including tax. Each unique legitimate invoice has its own fully received
-PO, allowing normal invoices to remain valid when processed sequentially.
-The unclear-currency case intentionally omits currency from the incoming document.
-
-## API access
-
-With the server running, interactive API documentation is available at
-http://localhost:8000/docs.
-
-| Endpoint | Purpose |
-| --- | --- |
-| `GET /emails` | List inbox records |
-| `GET /emails/{id}` | Get one inbox record |
-| `GET /emails/{id}/preview` | Read message headers and plain-text body |
-| `GET /emails/{id}/attachment` | Open the attached PDF |
-| `GET /emails/{id}/raw` | Download the original `.eml` |
-| `GET /vendors` | Read vendor reference data |
-| `GET /purchase-orders` | Read purchase-order reference data |
-
-For a short demo, show a routine invoice first, another valid invoice from the
-same supplier, duplicate emails 41–43, fake-vendor emails 44–45, missing critical
-details in 46–48, and valid optional-detail cases 49–50.
-
-## Invoice designs, email variety and OCR
-
-Each approved supplier uses the same invoice design across its invoices:
-
-| Supplier | Consistent design |
-| --- | --- |
-| Northstar Office Supplies | Navy letterhead, product table and highlighted amount due |
-| Harbor IT Services | Teal branding, service table and invoice details panel |
-| Cedar Facilities | Traditional serif letterhead and letter-style service charges |
-| Summit Packaging | Plain monospaced warehouse export with remittance advice |
-| Brightline Print Studio | Minimal print-studio branding and clean billing table |
-
-Supplier addresses stay consistent across invoices. The unregistered Apex vendor
-has a separate basic invoice design. The reissued duplicate preserves its
-supplier's stationery while adding a copy notice.
-
-Emails mix formal messages, short attachment notes, informal phone messages,
-structured billing summaries (including an HTML alternative), forwarded purchase
-threads and duplicate follow-ups. Casual formatting is not itself a business
-exception.
-
-**35 PDFs have searchable text. 15 PDFs are image-only and require OCR:**
+**35 PDFs contain searchable text. 15 are image-only and require OCR:**
 
 `03, 05, 08, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38, 43, 47`
 
-These scans contain grayscale page images at 180 DPI with clean, slightly skewed
-or lightly noisy appearances. There is no hidden text layer. A normal PDF text
-extractor returns no text for them. Rasterizing a document does not change its
-business outcome: ordinary scanned invoices are still valid after successful OCR.
-The total remains 40 routine invoices and 10 business edge cases.
+Every page of an image-only PDF is rasterized at 180 DPI. There is no hidden text
+layer. Scans vary between clean, mildly skewed and lightly noisy appearances.
+Ordinary scans remain valid after successful extraction; scan format is separate
+from the 10 business edge cases. OCR accuracy has not been measured.
 
-For a demo, compare emails 1 and 6 (the same supplier design), 3 and 8 (scanned
-contractor invoices), 4 (a plain warehouse invoice), and 47 (a scan that genuinely
-lacks an amount due). Do not mistake an absent text layer for missing invoice
-fields: run OCR first, then validate the recovered fields.
+For email **43**, combine both pages into one invoice and take the final total
+from page 2. Do not create two invoices. For email **47**, create three document
+records: invoice on page 1, a different invoice on page 2, debit note on page 3.
+Do not combine their amounts or assume page 1 represents the whole attachment.
 
-Ground-truth records include `template_id`, `email_style`, `pdf_kind`,
-`requires_ocr` and `scan_variation` for evaluation. Keep these labels out of
-extraction prompts. Approval labels describe intended business outcomes after
-extraction; they do not certify any OCR engine's accuracy.
+## Using a processing pipeline
 
-Run the fixture integrity checks from the project directory:
+1. Load vendor/PO data, `fx_rates` and `validation_policy` from
+   `ground_truth/procurement.json` as business reference data.
+2. Ingest emails in ascending ID order and extract their attachments. Classify
+   document boundaries, read all pages, and use OCR wherever the text layer is absent.
+3. Retain earlier invoice history so duplicate messages and note references can
+   resolve to their original invoices. Reset imported invoice history between
+   demo runs to avoid flagging the entire inbox as already seen.
+4. Run your business checks using extracted fields and trusted reference data.
+5. Compare the resulting decisions with `ground_truth/expected.json` afterward.
+
+Keep `expected.json`, scenario names, descriptive fixture paths and expected
+reasons out of extraction prompts. Use message contents and embedded attachment
+filenames as extraction inputs. Expected labels are evaluation answers.
+
+Ground-truth records include `is_edge_case`, `added_features`, `documents`,
+`page_count`, `template_id`, `pdf_kind`, `requires_ocr` and `scan_variation`.
+`documents` contains document-level source fields, page ranges and expectations.
+
+## Field checks and policy
+
+`invoice_checks.py` provides `check_document(fields, vendor, po, fx_rates, policy)`
+for structured extraction output. It returns findings with review codes and
+reasons. It never reads expected outcomes and does not extract PDFs, perform OCR,
+detect duplicates, fully match POs, or approve payments. No findings means only
+that the implemented checks passed.
+
+Covered checks include:
+
+- Credit/debit-note classification and original-invoice reference presence.
+- Negative totals on documents labelled INVOICE.
+- Missing required fields, unapproved vendors and mismatched PO owners.
+- Bank-account mismatch against trusted vendor master: always review; never
+  update the master from invoice or email instructions.
+- Future dates, invoices more than 365 days old and dates before PO issuance.
+- GST split types, component rates/amounts, printed tax and total arithmetic.
+- Cross-currency comparison using a unique approved positive rate for the exact
+  invoice date and currency direction; no silent default to a rate of 1.
+
+The evaluation date is fixed at **2026-11-02**, so results do not change with the
+computer's clock. Age thresholds, adjustment handling and bank routing are demo
+policies. FX rates are fictional treasury fixtures, not market quotes. GST rates
+and state pairs are supplied test assumptions for basic arithmetic checks, not a
+complete GST compliance engine or product-specific tax classification.
+
+Amounts and PO receipts are gross, including tax. Use currency conversion before
+comparing foreign amounts with a PO. PO references include `issue_date` and
+`currency`; vendor references include a fictional `bank_account`.
+
+Run validation and regression checks from the project directory:
 
 ```bash
 ./zamp_venv/bin/python validate_inputs.py
+./zamp_venv/bin/python -m unittest test_invoice_checks.py
 ```
 
-This checks counts, outcomes, duplicate relationships, MIME attachments and
-hashes, supplier template consistency, purchase-order matches, text extraction,
-and the absence of text/font layers in image-only PDFs. It does not run an OCR
-engine or measure OCR accuracy.
+These verify dataset counts, MIME/PDF hashes, duplicate relationships, supplier
+styles, OCR routing on every page, page/document structure, positive controls,
+and review-rule boundaries. They do not measure an OCR engine's accuracy.
 
-### Design references researched online
+## Invoice designs and email variety
 
-The invoice designs are original synthetic stationery informed by public invoice
-examples. Company identities and payment data remain fictional; these are not
-invoices issued by actual companies or copies of their financial documents.
+Each supplier retains its own stationery: Northstar's navy product invoice,
+Harbor's teal service invoice, Cedar's traditional service letter, Summit's plain
+warehouse export and Brightline's print-studio layout. GST examples identify the
+supplier's Indian branch. Emails mix formal, brief, informal, structured/HTML,
+forwarded and follow-up messages. Presentation alone does not decide validity.
 
-- [FreshBooks: Anatomy of a Winning Invoice](https://www.freshbooks.com/fbstaticprod-uploads/Newsletter-2025/FreshBooks-AnatomyOfAWinningInvoice.pdf): branded header, billing details, invoice references, line items, tax and amount due.
-- [Invoice Home: Invoice templates](https://invoicehome.com/): variation in supplier branding and basic versus detailed billing layouts.
+## API endpoints
+
+`GET /emails`, `/emails/{id}`, `/emails/{id}/preview`,
+`/emails/{id}/attachment`, `/emails/{id}/raw`, `/vendors`, `/purchase-orders`.
+
+The full FX and policy references are in `procurement.json`.
+
+## Sources consulted
+
+These are original synthetic documents informed by public examples, not invoices
+issued by real companies. Identities, accounts and financial data are fictional.
+
+- [FreshBooks invoice anatomy](https://www.freshbooks.com/fbstaticprod-uploads/Newsletter-2025/FreshBooks-AnatomyOfAWinningInvoice.pdf): billing layout and sections.
+- [Invoice Home examples](https://invoicehome.com/): varied supplier stationery.
+- [CBIC invoice and note particulars](https://cbic-gst.gov.in/gst-invoice-rules.html): document-type and original-reference concepts.
+- [GST IRP validation guidance](https://einvoice6.gst.gov.in/content/validation-rules-for-e-invoicing-that-you-must-take-care-to-avoid-errors/): tax component and arithmetic examples; fixture checks are a limited subset.
+- [Income Tax Department ICDS guide](https://www.incometaxindia.gov.in/en/income-computation-and-disclosure-standards-icds-1): date-specific FX concept; demo rates are synthetic.

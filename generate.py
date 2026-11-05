@@ -4,10 +4,10 @@ from email.message import EmailMessage
 from email.policy import SMTP
 from datetime import datetime, timezone, timedelta
 import hashlib
-import io
 import json
 import sqlite3
-from invoice_layouts import render, scan_pdf, SCAN_IDS, STYLES
+from invoice_layouts import render, scan_pdf, SCAN_IDS, STYLES, compose_pdf
+from realistic_cases import enrich, debit_note, bundled_invoice, POLICY, FX_RATES, ADDED_FEATURES, ADDED_REASONS
 
 ROOT = Path(__file__).resolve().parent
 INPUTS = ROOT / 'test_inputs'
@@ -43,7 +43,7 @@ def generate():
     db.executescript("""CREATE TABLE emails (id INTEGER PRIMARY KEY, scenario TEXT, sender TEXT, subject TEXT, eml_path TEXT, attachment_path TEXT, sha256 TEXT, status TEXT DEFAULT 'received');
     CREATE TABLE vendors (id TEXT PRIMARY KEY, data TEXT);
     CREATE TABLE purchase_orders (number TEXT PRIMARY KEY, data TEXT);""")
-    vendors = [{k: v[k] for k in ('id', 'name', 'domain', 'approved')} | {'payment_terms': 'Net 30', 'currency': 'USD'} for v in VENDORS]
+    vendors = [{k: v[k] for k in ('id', 'name', 'domain', 'approved')} | {'payment_terms': 'Net 30', 'currency': 'USD', 'bank_account': 'DEMO-ACCOUNT-' + v['id'][1:]} for v in VENDORS]
     pos, truth, originals, pdfs = [], [], {}, {}
     for idx in range(1, 51):
         edge = idx > 40
@@ -53,15 +53,24 @@ def generate():
         quantity = vendor['quantity'] + (idx - 1) // 5
         subtotal = quantity * vendor['price']
         fields = dict(document_type='INVOICE', vendor=vendor['name'], number=f"{vendor['id'][1:]}-2026-{idx:04}", date=issue.date().isoformat(), due_date=(issue + timedelta(days=30)).date().isoformat(), po=f'PO-{26000 + idx}', description=vendor['item'], quantity=quantity, unit_price=vendor['price'], subtotal=subtotal, tax=round(subtotal * .1, 2), total=round(subtotal * 1.1, 2), currency='USD', terms='Net 30', contact=vendor['contact'], address=f'{100 + int(vendor["id"][1:])} Market Street, Portland, OR 97205', phone='+1-202-555-0142')
+        fields = enrich(idx, fields)
         if duplicate_of:
             vendor, original = originals[duplicate_of]
             fields = original.copy()
             if idx == 43:
                 fields['number'] = fields['number'].replace('-', '')
-        elif idx != 44:
-            pos.append(dict(number=fields['po'], vendor_id=vendor['id'], amount=fields['total'], received_amount=fields['total'], previously_invoiced=0, tolerance_percent=2, currency='USD'))
         if idx == 44:
             fields.update(vendor='Apex Business Trading', number='ABT-7619', po='PO-26001')
+        if not duplicate_of and idx not in (44, 49):
+            po_currency = 'INR' if idx in (12, 50) else fields['currency']
+            po_amount = round(fields['total'] * 83.5, 2) if idx == 12 else 100000 if idx == 50 else fields['total']
+            pos.append(dict(number=fields['po'], vendor_id=vendor['id'], amount=po_amount,
+                            received_amount=po_amount, previously_invoiced=0, tolerance_percent=2,
+                            currency=po_currency, issue_date='2023-12-01' if idx==50 else '2026-10-01'))
+        if idx in (49, 50):
+            expected = 'human_review'
+        if idx in ADDED_REASONS:
+            reason = (reason + ' ' if idx not in (49, 50) else '') + ADDED_REASONS[idx]
         omissions = {46: ['number'], 47: ['total'], 48: ['currency'], 49: ['contact', 'address', 'phone'], 50: ['due_date']}.get(idx, [])
         for key in omissions:
             fields.pop(key)
@@ -95,9 +104,25 @@ def generate():
         if idx == 50:
             subject = 'Invoice attached'
             body = f'Hi team,\n\nHere is the invoice we discussed. Please let me know if you need anything else.\n\nThanks,\n{vendor["contact"]}\n{display}\n'
+        if idx == 49:
+            subject = f'Credit note {number} - returned cartons'
+            body = f'Hello Accounts Payable,\n\nAttached is our credit note for the returned cartons on invoice {fields["original_invoice"]}. Please apply this to our account rather than raising a new payment.\n\nThank you,\n{display}\n'
+        if idx == 47:
+            body += '\nAlso attached in the same PDF are invoice HI-2026-EXTRA-0047 and debit note HI-DN-2026-0047 for additional support hours against our earlier invoice.\n'
         layout_id = 'UNKNOWN' if idx == 44 else vendor['id']
         pdf_kind = 'image_only' if idx in SCAN_IDS else 'text_extractable'
         data = pdfs[1] if idx == 41 else render(fields, layout_id, reissued=idx == 42)
+        documents = [dict(fields=fields.copy(), page_range=[1, 2] if idx == 43 else [1, 1], expected=expected)]
+        if idx == 43:
+            data = compose_pdf(fields, layout_id, multipage=True)
+        if idx == 47:
+            valid_extra = bundled_invoice()
+            extra = debit_note()
+            data = compose_pdf(fields, layout_id, extra=[valid_extra, extra])
+            documents.append(dict(fields=valid_extra,page_range=[2,2],expected='approve',reason='Separate complete invoice with its own fully received PO.'))
+            documents.append(dict(fields=extra, page_range=[3, 3], expected='human_review', reason='Debit note requires separate adjustment handling.'))
+            pos.append(dict(number=valid_extra['po'],vendor_id=vendor['id'],amount=275,received_amount=275,
+                            previously_invoiced=0,tolerance_percent=2,currency='USD',issue_date='2026-10-01'))
         if idx in SCAN_IDS:
             data = scan_pdf(data, idx)
         pdfs[idx] = data
@@ -123,7 +148,7 @@ def generate():
         eml.write_bytes(msg.as_bytes())
         sha = hashlib.sha256(data).hexdigest()
         db.execute('INSERT INTO emails(id,scenario,sender,subject,eml_path,attachment_path,sha256) VALUES (?,?,?,?,?,?,?)', (idx, scenario, sender, subject, str(eml.relative_to(ROOT)), str(pdf.relative_to(ROOT)), sha))
-        truth.append(dict(id=idx, scenario=scenario, is_edge_case=edge, vendor_id=None if idx == 44 else vendor['id'], fields=fields, missing_fields=omissions, email_style=email_style if idx <= 40 else "follow_up" if duplicate_of else "exception_message", pdf_kind=pdf_kind, requires_ocr=idx in SCAN_IDS, template_id=STYLES[layout_id][0], scan_variation=('clean', 'slight_skew', 'light_noise')[idx % 3] if idx in SCAN_IDS else None, expected=expected, reason=reason, sha256=sha, duplicate_of=duplicate_of))
+        truth.append(dict(id=idx, scenario=scenario, is_edge_case=edge, vendor_id=None if idx == 44 else vendor['id'], fields=fields, missing_fields=omissions, added_features=ADDED_FEATURES.get(idx, []), documents=documents, page_count=3 if idx==47 else 2 if idx==43 else 1, email_style=email_style if idx <= 40 else "follow_up" if duplicate_of else "exception_message", pdf_kind=pdf_kind, requires_ocr=idx in SCAN_IDS, template_id=STYLES[layout_id][0], scan_variation=('clean', 'slight_skew', 'light_noise')[idx % 3] if idx in SCAN_IDS else None, expected=expected, reason=reason, sha256=sha, duplicate_of=duplicate_of))
     for vendor in vendors:
         db.execute('INSERT INTO vendors VALUES (?,?)', (vendor['id'], json.dumps(vendor)))
     for po in pos:
@@ -131,7 +156,7 @@ def generate():
     db.commit()
     db.close()
     (INPUTS / 'ground_truth' / 'expected.json').write_text(json.dumps(truth, indent=2) + '\n')
-    (INPUTS / 'ground_truth' / 'procurement.json').write_text(json.dumps(dict(vendors=vendors, purchase_orders=pos), indent=2) + '\n')
+    (INPUTS / 'ground_truth' / 'procurement.json').write_text(json.dumps(dict(vendors=vendors, purchase_orders=pos, fx_rates=FX_RATES, validation_policy=POLICY), indent=2) + '\n')
     print('Created test_inputs: 50 emails, 50 PDFs, 40 routine invoices, exactly 10 edge cases.')
 
 if __name__ == '__main__':

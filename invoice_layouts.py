@@ -38,52 +38,61 @@ def render(fields, vendor_id, reissued=False):
         text(42,744,'N /',27,True,'#ffffff')
         text(108,744,fields['vendor'],21,True,'#ffffff')
         text(108,720,'WORKPLACE ESSENTIALS',9,False,'#c8dde9')
-        text(570,646,'INVOICE',25,True,accent,True)
+        text(570,646,fields['document_type'],25,True,accent,True)
     elif vendor_id == 'V002':
         rect(0,0,16,792,accent)
         text(42,742,'HARBOR',31,True,accent)
         text(43,722,'IT SERVICES  /  MANAGED SOLUTIONS',9)
-        text(570,743,'INVOICE',24,True,accent,True)
+        text(570,743,fields['document_type'],24,True,accent,True)
         line(700,accent)
     elif vendor_id == 'V003':
         # Centered traditional letterhead.
         p.setFont(bold,29); p.setFillColor(HexColor(accent))
         p.setFillColor(HexColor(accent)); p.drawCentredString(306,745,fields['vendor'])
         p.setFont(regular,11); p.drawCentredString(306,721,'Commercial cleaning & property care')
-        line(701,accent); text(42,666,'INVOICE',20,True,accent)
+        line(701,accent); text(42,666,fields['document_type'],20,True,accent)
     elif vendor_id == 'V004':
         text(42,746,'SUMMIT PACKAGING',23,True,accent)
         text(42,724,'WAREHOUSE / CUSTOMER ACCOUNTS',10)
         text(42,697,'================================================',10)
-        text(42,669,'SALES INVOICE / DISPATCH COPY',14,True)
+        text(42,669,fields['document_type'] + ' / DISPATCH COPY',14,True)
     elif vendor_id == 'V005':
         rect(42,728,52,30,accent)
         text(48,737,'BL.',19,True,'#ffffff')
         text(108,738,fields['vendor'],23,True,accent)
         text(108,718,'PRINT  /  DESIGN  /  PRODUCTION',9)
-        text(42,657,'Invoice.',37,True,accent)
+        text(42,657,fields['document_type'].title()+'.',32,True,accent)
         line(698,accent)
     else:
         text(42,745,fields['vendor'],24,True)
-        text(42,708,'COMMERCIAL INVOICE',18,True)
+        text(42,708,fields['document_type'],18,True)
     if vendor_id in ('V003', 'V004'):
         if vendor_id == 'V003':
             # A small contractor's letter-style invoice, without a product grid.
+            if fields.get('supplier_branch'):
+                text(42,645,fields['supplier_branch'],9)
             y=629
             for key,label in [('number','Invoice reference'),('date','Date'),('due_date','Payment due'),('po','Your order')]:
                 if key in fields:
                     text(42,y,label+': '+fields[key],12); y-=23
             text(42,501,'To: Example Manufacturing Ltd / Accounts Payable',12)
-            text(42,478,'200 Foundry Lane, Portland, OR 97205',10)
+            text(42,478,fields.get('buyer_address','200 Foundry Lane, Portland, OR 97205'),10)
             line(454,accent)
             text(42,425,'Charges for services provided',15,True,accent)
             text(42,394,fields['description'],12)
-            text(42,365,f"{fields['quantity']} visits at {money('unit_price')} per visit",12)
-            text(42,315,'Service charges',12); text(360,315,money('subtotal'),12,right=True)
-            text(42,287,'Tax at 10%',12); text(360,287,money('tax'),12,right=True)
+            text(42,375,f"{fields['quantity']} visits at {money('unit_price')} per visit",12)
+            text(42,337,'Service charges',12); text(360,337,money('subtotal'),12,right=True)
+            if fields.get('tax_profile') == 'GST':
+                text(42,355,f"Supply state {fields['supplier_state']} -> {fields['place_of_supply']} | GST rate 18%",10)
+                for n,component in enumerate(fields['tax_components']):
+                    text(42,312-n*22,f"{component['name']} ({component['rate']}%)",11)
+                    text(360,312-n*22,f"{fields.get('currency','')} {component['amount']:,.2f}".strip(),11,right=True)
+                text(42,266,'Printed total tax',11); text(360,266,money('tax'),11,right=True)
+            else:
+                text(42,287,'Tax at 10%',12); text(360,287,money('tax'),12,right=True)
             if 'total' in fields:
-                line(269,accent)
-                text(42,244,'Total payable',15,True,accent); text(360,244,money('total'),15,True,accent,True)
+                line(244,accent)
+                text(42,223,'Total payable',15,True,accent); text(360,223,money('total'),15,True,accent,True)
             text(42,197,'Terms: '+fields['terms'],11)
             y=159
             for key in ('contact','address','phone'):
@@ -108,12 +117,15 @@ def render(fields, vendor_id, reissued=False):
             line(208,accent)
             text(42,184,'REMITTANCE ADVICE - QUOTE DOCUMENT NUMBER',10,True)
             text(42,160,fields.get('number',''),11)
+            if fields.get('original_invoice'):
+                text(42,221,'Original invoice: '+fields['original_invoice'],9)
             y=134
             for key in ('contact','address','phone'):
                 if key in fields: text(42,y,fields[key],9); y-=16
+        text(42,82,'Bank account: '+fields.get('bank_account',''),8)
         line(70)
         text(42,51,'Fictional demo invoice - not payable.',8,color='#727c86')
-        text(570,51,'Page 1 of 1',8,color='#727c86',right=True)
+        text(570,51,fields.get('_page_label','Page 1 of 1'),8,color='#727c86',right=True)
         p.save()
         return out.getvalue()
     # Fixed supplier address/contact across repeat invoices; omissions stay absent.
@@ -126,12 +138,14 @@ def render(fields, vendor_id, reissued=False):
     text(42,546,'BILL TO',9,True,accent)
     text(42,527,'Example Manufacturing Ltd',12,True)
     text(42,510,'Accounts Payable',10)
-    text(42,493,'200 Foundry Lane, Portland, OR 97205',9)
+    text(42,493,fields.get('buyer_address','200 Foundry Lane, Portland, OR 97205'),9)
     details=[('number','Invoice no.'),('date','Issued'),('due_date','Due date'),('po','Customer PO')]
     for n,(key,label) in enumerate(details):
         if key in fields:
             text(348,613-n*25,label,9)
             text(570,613-n*25,fields[key],10,True,right=True)
+    if fields.get('original_invoice'):
+        text(42,570,'Original invoice: '+fields['original_invoice'],9)
     if reissued:
         text(570,493,'COPY - original invoice reference retained',8,color=accent,right=True)
     if vendor_id == 'V004':
@@ -173,30 +187,67 @@ def render(fields, vendor_id, reissued=False):
     text(42,176,fields['terms'],10)
     text(42,154,'Please use your agreed payment method and quote the invoice reference.',9)
     text(42,129,'Thank you for your business.',11,True,accent)
+    text(42,82,'Bank account: '+fields.get('bank_account',''),8)
     line(70)
     text(42,51,'Fictional demo invoice - not payable.',8,color='#727c86')
-    text(570,51,'Page 1 of 1',8,color='#727c86',right=True)
+    text(570,51,fields.get('_page_label','Page 1 of 1'),8,color='#727c86',right=True)
     p.save()
     return out.getvalue()
 
 
+def compose_pdf(fields, vendor_id, multipage=False, extra=None):
+    """Separate document boundaries from continuation pages of one invoice."""
+    result=pymupdf.open()
+    first=fields.copy()
+    if multipage:
+        first.pop('total',None)
+        first['_page_label']='Page 1 of 2 - continued'
+    with pymupdf.open(stream=render(first,vendor_id),filetype='pdf') as page:
+        result.insert_pdf(page)
+    if extra:
+        for document in extra if isinstance(extra,list) else [extra]:
+            with pymupdf.open(stream=render(document,vendor_id),filetype='pdf') as page:
+                result.insert_pdf(page)
+    if multipage:
+        out=io.BytesIO(); p=canvas.Canvas(out,pagesize=(612,792),invariant=1)
+        _,color,font,bold=STYLES[vendor_id]
+        p.setFillColor(HexColor(color)); p.setFont(bold,26)
+        p.drawString(42,745,fields['vendor'])
+        p.setFont(bold,18); p.drawString(42,698,fields['document_type']+' - continued')
+        p.setFont(font,12)
+        rows=[f"Invoice reference: {fields['number']}",f"Invoice date: {fields['date']}",
+              f"Purchase order: {fields['po']}",'Bill to: Example Manufacturing Ltd','',
+              'Charges carried forward from page 1',
+              f"Subtotal: {fields['currency']} {fields['subtotal']:,.2f}",
+              f"Tax (10%): {fields['currency']} {fields['tax']:,.2f}",'',
+              f"AMOUNT DUE: {fields['currency']} {fields['total']:,.2f}",'',
+              f"Payment terms: {fields['terms']}",f"Bank account: {fields['bank_account']}"]
+        for n,row in enumerate(rows):p.drawString(42,646-n*27,row)
+        p.setFont(font,8);p.drawString(42,51,'Fictional demo invoice - not payable.')
+        p.drawRightString(570,51,'Page 2 of 2');p.save()
+        with pymupdf.open(stream=out.getvalue(),filetype='pdf') as page:result.insert_pdf(page)
+    data=result.tobytes();result.close();return data
+
+
 def scan_pdf(data, idx):
-    """Rasterize every mark, including the footer; add no hidden text layer."""
-    with pymupdf.open(stream=data, filetype='pdf') as doc:
-        pix=doc[0].get_pixmap(dpi=180, colorspace=pymupdf.csGRAY)
-        image=Image.frombytes('L',(pix.width,pix.height),pix.samples)
-    # Mild transport variation retains all fields at readable resolution.
-    variation=idx % 3
-    if variation == 1:
-        image=ImageEnhance.Contrast(image).enhance(.88)
-        image=image.rotate(.65, resample=Image.Resampling.BICUBIC, expand=False, fillcolor=255)
-    elif variation == 2:
-        image=image.filter(ImageFilter.GaussianBlur(.35))
-        rng=random.Random(idx)
-        pixels=image.load()
-        for _ in range(2200):
-            x,y=rng.randrange(image.width),rng.randrange(image.height)
-            pixels[x,y]=max(0,pixels[x,y]-rng.randrange(8,35))
+    """Rasterize every page, including footers; add no hidden text layer."""
+    images=[]
+    with pymupdf.open(stream=data,filetype='pdf') as doc:
+        for page in doc:
+            pix=page.get_pixmap(dpi=180, colorspace=pymupdf.csGRAY)
+            image=Image.frombytes('L',(pix.width,pix.height),pix.samples)
+            variation=idx % 3
+            if variation==1:
+                image=ImageEnhance.Contrast(image).enhance(.88)
+                image=image.rotate(.65,resample=Image.Resampling.BICUBIC,expand=False,fillcolor=255)
+            elif variation==2:
+                image=image.filter(ImageFilter.GaussianBlur(.35))
+                rng=random.Random(idx+page.number)
+                pixels=image.load()
+                for _ in range(2200):
+                    x,y=rng.randrange(image.width),rng.randrange(image.height)
+                    pixels[x,y]=max(0,pixels[x,y]-rng.randrange(8,35))
+            images.append(image.convert('RGB'))
     out=io.BytesIO()
-    image.convert('RGB').save(out,'PDF',resolution=180,quality=90)
+    images[0].save(out,'PDF',resolution=180,quality=90,save_all=True,append_images=images[1:])
     return out.getvalue()

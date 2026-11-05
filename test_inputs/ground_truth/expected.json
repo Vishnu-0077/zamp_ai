@@ -21,9 +21,41 @@
       "terms": "Net 30",
       "contact": "Maya Chen",
       "address": "101 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-001"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Northstar Office Supplies",
+          "number": "001-2026-0001",
+          "date": "2026-10-12",
+          "due_date": "2026-11-11",
+          "po": "PO-26001",
+          "description": "A4 copier paper, cartons",
+          "quantity": 8,
+          "unit_price": 32,
+          "subtotal": 256,
+          "tax": 25.6,
+          "total": 281.6,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Maya Chen",
+          "address": "101 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-001"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "brief",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -31,7 +63,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "30655e14341d3aaadffc8bb9e64ad680bf231dd2325e57eeec180d2e1391cbc3",
+    "sha256": "4bb4a33e74e868685ead04b590d4e238d6738e41a9257bdadb26dc00ed4307e5",
     "duplicate_of": null
   },
   {
@@ -56,9 +88,41 @@
       "terms": "Net 30",
       "contact": "Daniel Reed",
       "address": "102 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-002"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Harbor IT Services",
+          "number": "002-2026-0002",
+          "date": "2026-10-12",
+          "due_date": "2026-11-11",
+          "po": "PO-26002",
+          "description": "Managed IT support, monthly retainer",
+          "quantity": 1,
+          "unit_price": 850,
+          "subtotal": 850,
+          "tax": 85.0,
+          "total": 935.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Daniel Reed",
+          "address": "102 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-002"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "informal",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -66,7 +130,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "52568e1eab9c2423e677419b738a98f71e34a57a65f0bb0c03a1c1806e91b4da",
+    "sha256": "23cd3717f071af860f49b8dcaf131fe34d8b3522959fa5f5f7b38571e2f53e49",
     "duplicate_of": null
   },
   {
@@ -91,9 +155,41 @@
       "terms": "Net 30",
       "contact": "Priya Shah",
       "address": "103 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-003"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Cedar Facilities",
+          "number": "003-2026-0003",
+          "date": "2026-10-12",
+          "due_date": "2026-11-11",
+          "po": "PO-26003",
+          "description": "Weekly office cleaning visits",
+          "quantity": 4,
+          "unit_price": 125,
+          "subtotal": 500,
+          "tax": 50.0,
+          "total": 550.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Priya Shah",
+          "address": "103 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-003"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "structured",
     "pdf_kind": "image_only",
     "requires_ocr": true,
@@ -101,7 +197,7 @@
     "scan_variation": "clean",
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "25c069edf1463df158f3d1d74ecb9de5de0c9e452d5d1cc92472f175f07ea4f8",
+    "sha256": "82d25ada015590967bf7c8c95d1137f54b9129b784ecfb1d710b884abaa8c8d8",
     "duplicate_of": null
   },
   {
@@ -126,9 +222,41 @@
       "terms": "Net 30",
       "contact": "Alex Morgan",
       "address": "104 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-004"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Summit Packaging",
+          "number": "004-2026-0004",
+          "date": "2026-10-12",
+          "due_date": "2026-11-11",
+          "po": "PO-26004",
+          "description": "Recycled shipping cartons, bundles",
+          "quantity": 6,
+          "unit_price": 48,
+          "subtotal": 288,
+          "tax": 28.8,
+          "total": 316.8,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Alex Morgan",
+          "address": "104 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-004"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "forwarded",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -136,7 +264,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "995e18f5dd6e4e74254fc332923a4d6201739ec763e9a418e91876bd88b92718",
+    "sha256": "c50d74b5dd30ffcb8288277ec0a206e534f0d4a848b4c54a453a1e95bc6074cd",
     "duplicate_of": null
   },
   {
@@ -161,9 +289,41 @@
       "terms": "Net 30",
       "contact": "Sam Wilson",
       "address": "105 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-005"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Brightline Print Studio",
+          "number": "005-2026-0005",
+          "date": "2026-10-12",
+          "due_date": "2026-11-11",
+          "po": "PO-26005",
+          "description": "Product information leaflets, batches",
+          "quantity": 3,
+          "unit_price": 75,
+          "subtotal": 225,
+          "tax": 22.5,
+          "total": 247.5,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Sam Wilson",
+          "address": "105 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-005"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "formal",
     "pdf_kind": "image_only",
     "requires_ocr": true,
@@ -171,7 +331,7 @@
     "scan_variation": "light_noise",
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "fb030d106d961e96accc06e9f95f0b8de8c02c3f815afcc3ceed7f859882e7fc",
+    "sha256": "5d9084373a87d63e3498e26c83f72b5600158c4da32601e45468cc55c4cedc43",
     "duplicate_of": null
   },
   {
@@ -196,9 +356,41 @@
       "terms": "Net 30",
       "contact": "Maya Chen",
       "address": "101 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-001"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Northstar Office Supplies",
+          "number": "001-2026-0006",
+          "date": "2026-10-13",
+          "due_date": "2026-11-12",
+          "po": "PO-26006",
+          "description": "A4 copier paper, cartons",
+          "quantity": 9,
+          "unit_price": 32,
+          "subtotal": 288,
+          "tax": 28.8,
+          "total": 316.8,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Maya Chen",
+          "address": "101 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-001"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "brief",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -206,7 +398,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "5c5403d1274bd26699ec76f0dc96266479a0c8195952721e7ac4fede9fb18df1",
+    "sha256": "3beb1c6b4437aa6bfbec32760cb27331c01ab7092d8272529f993281e2cb31f1",
     "duplicate_of": null
   },
   {
@@ -231,9 +423,41 @@
       "terms": "Net 30",
       "contact": "Daniel Reed",
       "address": "102 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-002"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Harbor IT Services",
+          "number": "002-2026-0007",
+          "date": "2026-10-13",
+          "due_date": "2026-11-12",
+          "po": "PO-26007",
+          "description": "Managed IT support, monthly retainer",
+          "quantity": 2,
+          "unit_price": 850,
+          "subtotal": 1700,
+          "tax": 170.0,
+          "total": 1870.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Daniel Reed",
+          "address": "102 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-002"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "informal",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -241,7 +465,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "2639e4d1214fb097ca4ef7af1638f60ff1055d6699ecc139fc2eebfd9931470b",
+    "sha256": "44e08b7174aa427e1fe461344358d33d627efc99eb0f4939aa7ff10865078e8e",
     "duplicate_of": null
   },
   {
@@ -266,9 +490,41 @@
       "terms": "Net 30",
       "contact": "Priya Shah",
       "address": "103 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-003"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Cedar Facilities",
+          "number": "003-2026-0008",
+          "date": "2026-10-13",
+          "due_date": "2026-11-12",
+          "po": "PO-26008",
+          "description": "Weekly office cleaning visits",
+          "quantity": 5,
+          "unit_price": 125,
+          "subtotal": 625,
+          "tax": 62.5,
+          "total": 687.5,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Priya Shah",
+          "address": "103 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-003"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "structured",
     "pdf_kind": "image_only",
     "requires_ocr": true,
@@ -276,7 +532,7 @@
     "scan_variation": "light_noise",
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "4ed65e9d371c1e5927496a9131d0332dff0003fbbdf6f071476cbde6c439584a",
+    "sha256": "7d52b97f4e1f9c18bb151b1792d56f3aa4168755c0d5a0cdfe1e3278d190cd33",
     "duplicate_of": null
   },
   {
@@ -301,9 +557,41 @@
       "terms": "Net 30",
       "contact": "Alex Morgan",
       "address": "104 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-004"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Summit Packaging",
+          "number": "004-2026-0009",
+          "date": "2026-10-13",
+          "due_date": "2026-11-12",
+          "po": "PO-26009",
+          "description": "Recycled shipping cartons, bundles",
+          "quantity": 7,
+          "unit_price": 48,
+          "subtotal": 336,
+          "tax": 33.6,
+          "total": 369.6,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Alex Morgan",
+          "address": "104 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-004"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "forwarded",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -311,7 +599,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "5a142eb044983e0e473b59d3488ef21554e3f27df11776547256693728bf7cc7",
+    "sha256": "2266c1ce09c8e7b8ec848e26df202eee4df6bc26148e54a64f5198392f2f2461",
     "duplicate_of": null
   },
   {
@@ -336,9 +624,41 @@
       "terms": "Net 30",
       "contact": "Sam Wilson",
       "address": "105 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-005"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Brightline Print Studio",
+          "number": "005-2026-0010",
+          "date": "2026-10-13",
+          "due_date": "2026-11-12",
+          "po": "PO-26010",
+          "description": "Product information leaflets, batches",
+          "quantity": 4,
+          "unit_price": 75,
+          "subtotal": 300,
+          "tax": 30.0,
+          "total": 330.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Sam Wilson",
+          "address": "105 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-005"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "formal",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -346,7 +666,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "5c4e1cb2572316b896df3055f45f2d01d53dd0c2fec3e4031e037a9a51055dee",
+    "sha256": "41ec1e9ea7560446a4b5d35dddf0db974456da75ab42fad09b07f526028c9a91",
     "duplicate_of": null
   },
   {
@@ -371,9 +691,41 @@
       "terms": "Net 30",
       "contact": "Maya Chen",
       "address": "101 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-001"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Northstar Office Supplies",
+          "number": "001-2026-0011",
+          "date": "2026-10-14",
+          "due_date": "2026-11-13",
+          "po": "PO-26011",
+          "description": "A4 copier paper, cartons",
+          "quantity": 10,
+          "unit_price": 32,
+          "subtotal": 320,
+          "tax": 32.0,
+          "total": 352.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Maya Chen",
+          "address": "101 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-001"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "brief",
     "pdf_kind": "image_only",
     "requires_ocr": true,
@@ -381,7 +733,7 @@
     "scan_variation": "light_noise",
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "51ff00b2957c5903fb171fdb63a1288344611f3c353503565f64634680806a66",
+    "sha256": "bbae858435dcd474713cba7faff748d0a5fde29c8ed5fc5b649267e17c4d6041",
     "duplicate_of": null
   },
   {
@@ -406,9 +758,43 @@
       "terms": "Net 30",
       "contact": "Daniel Reed",
       "address": "102 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-002"
     },
     "missing_fields": [],
+    "added_features": [
+      "approved_foreign_currency_conversion"
+    ],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Harbor IT Services",
+          "number": "002-2026-0012",
+          "date": "2026-10-14",
+          "due_date": "2026-11-13",
+          "po": "PO-26012",
+          "description": "Managed IT support, monthly retainer",
+          "quantity": 3,
+          "unit_price": 850,
+          "subtotal": 2550,
+          "tax": 255.0,
+          "total": 2805.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Daniel Reed",
+          "address": "102 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-002"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "informal",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -416,7 +802,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "0eff5287234412aa2f5fea50a9b2f4db3da8eb356c2d2e121aec63e1824fb9cd",
+    "sha256": "19ba109e425e49269f7a5bccf37d5390785620a1dfbb69524a5113cca44cfe59",
     "duplicate_of": null
   },
   {
@@ -435,15 +821,75 @@
       "quantity": 6,
       "unit_price": 125,
       "subtotal": 750,
-      "tax": 75.0,
-      "total": 825.0,
-      "currency": "USD",
+      "tax": 135.0,
+      "total": 885.0,
+      "currency": "INR",
       "terms": "Net 30",
       "contact": "Priya Shah",
       "address": "103 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-003",
+      "tax_profile": "GST",
+      "supplier_state": "29",
+      "place_of_supply": "27",
+      "buyer_address": "200 Demo Industrial Road, Mumbai, Maharashtra",
+      "supplier_branch": "Bengaluru branch, Karnataka (29)",
+      "tax_rate": 18,
+      "tax_components": [
+        {
+          "name": "IGST",
+          "rate": 18,
+          "amount": 135.0
+        }
+      ]
     },
     "missing_fields": [],
+    "added_features": [
+      "valid_igst"
+    ],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Cedar Facilities",
+          "number": "003-2026-0013",
+          "date": "2026-10-14",
+          "due_date": "2026-11-13",
+          "po": "PO-26013",
+          "description": "Weekly office cleaning visits",
+          "quantity": 6,
+          "unit_price": 125,
+          "subtotal": 750,
+          "tax": 135.0,
+          "total": 885.0,
+          "currency": "INR",
+          "terms": "Net 30",
+          "contact": "Priya Shah",
+          "address": "103 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-003",
+          "tax_profile": "GST",
+          "supplier_state": "29",
+          "place_of_supply": "27",
+          "buyer_address": "200 Demo Industrial Road, Mumbai, Maharashtra",
+          "supplier_branch": "Bengaluru branch, Karnataka (29)",
+          "tax_rate": 18,
+          "tax_components": [
+            {
+              "name": "IGST",
+              "rate": 18,
+              "amount": 135.0
+            }
+          ]
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "structured",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -451,7 +897,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "395ea12c201955cbc20378b86722a904f79744327c3a0aa6a4684c2a9569d22e",
+    "sha256": "2c4d9090e0029bef358de78bdb878f82129d52295b9bedeec607fb2fde20cfeb",
     "duplicate_of": null
   },
   {
@@ -476,9 +922,41 @@
       "terms": "Net 30",
       "contact": "Alex Morgan",
       "address": "104 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-004"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Summit Packaging",
+          "number": "004-2026-0014",
+          "date": "2026-10-14",
+          "due_date": "2026-11-13",
+          "po": "PO-26014",
+          "description": "Recycled shipping cartons, bundles",
+          "quantity": 8,
+          "unit_price": 48,
+          "subtotal": 384,
+          "tax": 38.4,
+          "total": 422.4,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Alex Morgan",
+          "address": "104 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-004"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "forwarded",
     "pdf_kind": "image_only",
     "requires_ocr": true,
@@ -486,7 +964,7 @@
     "scan_variation": "light_noise",
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "f8ff0b69f78b8f5fb49f99408cb68045fa9b3e7273d2d12ef4bac8588faedcf4",
+    "sha256": "2e23ef0f746dddb531c1dc32512329f0c4473246e7ca4139431dc520c240524e",
     "duplicate_of": null
   },
   {
@@ -511,9 +989,41 @@
       "terms": "Net 30",
       "contact": "Sam Wilson",
       "address": "105 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-005"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Brightline Print Studio",
+          "number": "005-2026-0015",
+          "date": "2026-10-14",
+          "due_date": "2026-11-13",
+          "po": "PO-26015",
+          "description": "Product information leaflets, batches",
+          "quantity": 5,
+          "unit_price": 75,
+          "subtotal": 375,
+          "tax": 37.5,
+          "total": 412.5,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Sam Wilson",
+          "address": "105 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-005"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "formal",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -521,7 +1031,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "764a5709926627f068dd8ed0e3aa9f13e080d1e6fb2c1389414c437a8700614f",
+    "sha256": "f6cbd315306f4c9799fa80b10bc4d5d6730ac0941a247897c41c9bbe6b2d8119",
     "duplicate_of": null
   },
   {
@@ -546,9 +1056,41 @@
       "terms": "Net 30",
       "contact": "Maya Chen",
       "address": "101 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-001"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Northstar Office Supplies",
+          "number": "001-2026-0016",
+          "date": "2026-10-15",
+          "due_date": "2026-11-14",
+          "po": "PO-26016",
+          "description": "A4 copier paper, cartons",
+          "quantity": 11,
+          "unit_price": 32,
+          "subtotal": 352,
+          "tax": 35.2,
+          "total": 387.2,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Maya Chen",
+          "address": "101 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-001"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "brief",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -556,7 +1098,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "9db4248bcc9a95526a1cff5d83fa624a6b33ba6614d58058805f94e732e21afc",
+    "sha256": "40c79df34c6fb6c80189cec60aa2bee0721e2bf3ad1a76eb7aa22ac220ed41e8",
     "duplicate_of": null
   },
   {
@@ -581,9 +1123,41 @@
       "terms": "Net 30",
       "contact": "Daniel Reed",
       "address": "102 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-002"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Harbor IT Services",
+          "number": "002-2026-0017",
+          "date": "2026-10-15",
+          "due_date": "2026-11-14",
+          "po": "PO-26017",
+          "description": "Managed IT support, monthly retainer",
+          "quantity": 4,
+          "unit_price": 850,
+          "subtotal": 3400,
+          "tax": 340.0,
+          "total": 3740.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Daniel Reed",
+          "address": "102 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-002"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "informal",
     "pdf_kind": "image_only",
     "requires_ocr": true,
@@ -591,7 +1165,7 @@
     "scan_variation": "light_noise",
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "5f6b7c05ed3ffe038b502ec5883746a1b20a88334509c8f72d2312789c351b4a",
+    "sha256": "d93722b6a6f6b9efadbd79eb9b0da00f6a6fe45714c27c6a629be96a96d20443",
     "duplicate_of": null
   },
   {
@@ -610,15 +1184,85 @@
       "quantity": 7,
       "unit_price": 125,
       "subtotal": 875,
-      "tax": 87.5,
-      "total": 962.5,
-      "currency": "USD",
+      "tax": 157.5,
+      "total": 1032.5,
+      "currency": "INR",
       "terms": "Net 30",
       "contact": "Priya Shah",
       "address": "103 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-003",
+      "tax_profile": "GST",
+      "supplier_state": "29",
+      "place_of_supply": "29",
+      "buyer_address": "200 Demo Industrial Road, Bengaluru, Karnataka",
+      "supplier_branch": "Bengaluru branch, Karnataka (29)",
+      "tax_rate": 18,
+      "tax_components": [
+        {
+          "name": "CGST",
+          "rate": 9,
+          "amount": 78.75
+        },
+        {
+          "name": "SGST",
+          "rate": 9,
+          "amount": 78.75
+        }
+      ]
     },
     "missing_fields": [],
+    "added_features": [
+      "valid_cgst_sgst"
+    ],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Cedar Facilities",
+          "number": "003-2026-0018",
+          "date": "2026-10-15",
+          "due_date": "2026-11-14",
+          "po": "PO-26018",
+          "description": "Weekly office cleaning visits",
+          "quantity": 7,
+          "unit_price": 125,
+          "subtotal": 875,
+          "tax": 157.5,
+          "total": 1032.5,
+          "currency": "INR",
+          "terms": "Net 30",
+          "contact": "Priya Shah",
+          "address": "103 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-003",
+          "tax_profile": "GST",
+          "supplier_state": "29",
+          "place_of_supply": "29",
+          "buyer_address": "200 Demo Industrial Road, Bengaluru, Karnataka",
+          "supplier_branch": "Bengaluru branch, Karnataka (29)",
+          "tax_rate": 18,
+          "tax_components": [
+            {
+              "name": "CGST",
+              "rate": 9,
+              "amount": 78.75
+            },
+            {
+              "name": "SGST",
+              "rate": 9,
+              "amount": 78.75
+            }
+          ]
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "structured",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -626,7 +1270,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "aedb65325c1549c4725c1776b2d7cc4ec8f9b0ab12ad5e2b8a662d56aea30c69",
+    "sha256": "1f2ecd5cf181a2f56f01e4735ed2f266a026418aff8d4d12443a0c6e55db8993",
     "duplicate_of": null
   },
   {
@@ -651,9 +1295,41 @@
       "terms": "Net 30",
       "contact": "Alex Morgan",
       "address": "104 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-004"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Summit Packaging",
+          "number": "004-2026-0019",
+          "date": "2026-10-15",
+          "due_date": "2026-11-14",
+          "po": "PO-26019",
+          "description": "Recycled shipping cartons, bundles",
+          "quantity": 9,
+          "unit_price": 48,
+          "subtotal": 432,
+          "tax": 43.2,
+          "total": 475.2,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Alex Morgan",
+          "address": "104 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-004"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "forwarded",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -661,7 +1337,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "9b2ec23ca016262a9966b0dbe92804c291bd147db1b9ff2b57f9da2c1d31ce3a",
+    "sha256": "f0addc139511dff527cf62eaea4472ab47f2640e3613cf95993b012fd3d9679d",
     "duplicate_of": null
   },
   {
@@ -686,9 +1362,41 @@
       "terms": "Net 30",
       "contact": "Sam Wilson",
       "address": "105 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-005"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Brightline Print Studio",
+          "number": "005-2026-0020",
+          "date": "2026-10-15",
+          "due_date": "2026-11-14",
+          "po": "PO-26020",
+          "description": "Product information leaflets, batches",
+          "quantity": 6,
+          "unit_price": 75,
+          "subtotal": 450,
+          "tax": 45.0,
+          "total": 495.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Sam Wilson",
+          "address": "105 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-005"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "formal",
     "pdf_kind": "image_only",
     "requires_ocr": true,
@@ -696,7 +1404,7 @@
     "scan_variation": "light_noise",
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "313dd9f098a89683e44e4e5eb9c70d130fb40ae3f1eb9d8838c10f7a964c3bd5",
+    "sha256": "1efb8f7c775c34c5a6eb182d503e76af72575acfa6c29d30b8ca915e6da56106",
     "duplicate_of": null
   },
   {
@@ -721,9 +1429,41 @@
       "terms": "Net 30",
       "contact": "Maya Chen",
       "address": "101 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-001"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Northstar Office Supplies",
+          "number": "001-2026-0021",
+          "date": "2026-10-16",
+          "due_date": "2026-11-15",
+          "po": "PO-26021",
+          "description": "A4 copier paper, cartons",
+          "quantity": 12,
+          "unit_price": 32,
+          "subtotal": 384,
+          "tax": 38.4,
+          "total": 422.4,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Maya Chen",
+          "address": "101 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-001"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "brief",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -731,7 +1471,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "4a9f6bc0a4f20a7397a1e28e658689204840e62387dce7af1c457e9e6d7f08a4",
+    "sha256": "b5b5bc337944f17af9cf6280426ab6ed676d8ae359a199efbe0a7f923dda47b1",
     "duplicate_of": null
   },
   {
@@ -756,9 +1496,41 @@
       "terms": "Net 30",
       "contact": "Daniel Reed",
       "address": "102 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-002"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Harbor IT Services",
+          "number": "002-2026-0022",
+          "date": "2026-10-16",
+          "due_date": "2026-11-15",
+          "po": "PO-26022",
+          "description": "Managed IT support, monthly retainer",
+          "quantity": 5,
+          "unit_price": 850,
+          "subtotal": 4250,
+          "tax": 425.0,
+          "total": 4675.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Daniel Reed",
+          "address": "102 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-002"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "informal",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -766,7 +1538,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "116d4c15d09f0b06185a98babbf06809e6cfb6fb8c99dc2d5dc2b6b18e365498",
+    "sha256": "35921d303571fea3fd3914f8bd2a1db768aeaa1f8026c8c6736d20dcd174bf9c",
     "duplicate_of": null
   },
   {
@@ -791,9 +1563,41 @@
       "terms": "Net 30",
       "contact": "Priya Shah",
       "address": "103 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-003"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Cedar Facilities",
+          "number": "003-2026-0023",
+          "date": "2026-10-16",
+          "due_date": "2026-11-15",
+          "po": "PO-26023",
+          "description": "Weekly office cleaning visits",
+          "quantity": 8,
+          "unit_price": 125,
+          "subtotal": 1000,
+          "tax": 100.0,
+          "total": 1100.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Priya Shah",
+          "address": "103 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-003"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "structured",
     "pdf_kind": "image_only",
     "requires_ocr": true,
@@ -801,7 +1605,7 @@
     "scan_variation": "light_noise",
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "c9225bf54d81b26a258707ef0a489c06cb19388a83b7e801ec35772f14b8c2eb",
+    "sha256": "1af376e3f754d46114d6027b62a785d0e780fcff0fd63c264ebc83190a305f43",
     "duplicate_of": null
   },
   {
@@ -826,9 +1630,41 @@
       "terms": "Net 30",
       "contact": "Alex Morgan",
       "address": "104 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-004"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Summit Packaging",
+          "number": "004-2026-0024",
+          "date": "2026-10-16",
+          "due_date": "2026-11-15",
+          "po": "PO-26024",
+          "description": "Recycled shipping cartons, bundles",
+          "quantity": 10,
+          "unit_price": 48,
+          "subtotal": 480,
+          "tax": 48.0,
+          "total": 528.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Alex Morgan",
+          "address": "104 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-004"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "forwarded",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -836,7 +1672,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "b6c7916eee02a249501624daf806a39d9882da3bf25eb4704cb01a2552fa79ab",
+    "sha256": "6c157f622e35d849fce95b76670c2baca0e851fc629e9e26189e774446fb5be4",
     "duplicate_of": null
   },
   {
@@ -861,9 +1697,41 @@
       "terms": "Net 30",
       "contact": "Sam Wilson",
       "address": "105 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-005"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Brightline Print Studio",
+          "number": "005-2026-0025",
+          "date": "2026-10-16",
+          "due_date": "2026-11-15",
+          "po": "PO-26025",
+          "description": "Product information leaflets, batches",
+          "quantity": 7,
+          "unit_price": 75,
+          "subtotal": 525,
+          "tax": 52.5,
+          "total": 577.5,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Sam Wilson",
+          "address": "105 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-005"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "formal",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -871,7 +1739,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "c6a54140524b27c01a0dd59bac94a7a743859ab265ac26ff154b7e67d2a5c73e",
+    "sha256": "1400657b0d82607bd1e4730b8ad5174e626e3c317174eefdc8103dabbfbdae74",
     "duplicate_of": null
   },
   {
@@ -896,9 +1764,41 @@
       "terms": "Net 30",
       "contact": "Maya Chen",
       "address": "101 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-001"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Northstar Office Supplies",
+          "number": "001-2026-0026",
+          "date": "2026-10-17",
+          "due_date": "2026-11-16",
+          "po": "PO-26026",
+          "description": "A4 copier paper, cartons",
+          "quantity": 13,
+          "unit_price": 32,
+          "subtotal": 416,
+          "tax": 41.6,
+          "total": 457.6,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Maya Chen",
+          "address": "101 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-001"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "brief",
     "pdf_kind": "image_only",
     "requires_ocr": true,
@@ -906,7 +1806,7 @@
     "scan_variation": "light_noise",
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "d814c2a8e1187a6c7b7d45cc6011f1fe562c2df5b074c326021d4236d09fb1bc",
+    "sha256": "95861bfb7963422225db30c65ea2336e4a911a5a445c48b5183dba68df27ddb2",
     "duplicate_of": null
   },
   {
@@ -931,9 +1831,41 @@
       "terms": "Net 30",
       "contact": "Daniel Reed",
       "address": "102 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-002"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Harbor IT Services",
+          "number": "002-2026-0027",
+          "date": "2026-10-17",
+          "due_date": "2026-11-16",
+          "po": "PO-26027",
+          "description": "Managed IT support, monthly retainer",
+          "quantity": 6,
+          "unit_price": 850,
+          "subtotal": 5100,
+          "tax": 510.0,
+          "total": 5610.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Daniel Reed",
+          "address": "102 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-002"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "informal",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -941,7 +1873,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "a880477ce3b71973c26cc83ee319d7b153f75507ef6d01b3e038d9289cb590da",
+    "sha256": "8785c7e136807a061de42269cdf6f307c0cb54ea137ffe9f55f54998da81f786",
     "duplicate_of": null
   },
   {
@@ -966,9 +1898,41 @@
       "terms": "Net 30",
       "contact": "Priya Shah",
       "address": "103 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-003"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Cedar Facilities",
+          "number": "003-2026-0028",
+          "date": "2026-10-17",
+          "due_date": "2026-11-16",
+          "po": "PO-26028",
+          "description": "Weekly office cleaning visits",
+          "quantity": 9,
+          "unit_price": 125,
+          "subtotal": 1125,
+          "tax": 112.5,
+          "total": 1237.5,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Priya Shah",
+          "address": "103 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-003"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "structured",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -976,7 +1940,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "fd5c953c95289681a18665738ffba840c4230799e7b3197fa5cfb4c8a2e63ac7",
+    "sha256": "38d2f34ed45f2e3f5e37a5ec01a712871bfe790504e26e7e3479c8ba28b9c038",
     "duplicate_of": null
   },
   {
@@ -1001,9 +1965,41 @@
       "terms": "Net 30",
       "contact": "Alex Morgan",
       "address": "104 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-004"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Summit Packaging",
+          "number": "004-2026-0029",
+          "date": "2026-10-17",
+          "due_date": "2026-11-16",
+          "po": "PO-26029",
+          "description": "Recycled shipping cartons, bundles",
+          "quantity": 11,
+          "unit_price": 48,
+          "subtotal": 528,
+          "tax": 52.8,
+          "total": 580.8,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Alex Morgan",
+          "address": "104 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-004"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "forwarded",
     "pdf_kind": "image_only",
     "requires_ocr": true,
@@ -1011,7 +2007,7 @@
     "scan_variation": "light_noise",
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "5cbda66694aadb5723ec0437bbdd074d7943228928dc0a4781a339d339feb3d1",
+    "sha256": "9fde5787f242fa1ccf75827ef1e78d751ad2a2006bd72855652df97f76ce98bd",
     "duplicate_of": null
   },
   {
@@ -1036,9 +2032,41 @@
       "terms": "Net 30",
       "contact": "Sam Wilson",
       "address": "105 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-005"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Brightline Print Studio",
+          "number": "005-2026-0030",
+          "date": "2026-10-17",
+          "due_date": "2026-11-16",
+          "po": "PO-26030",
+          "description": "Product information leaflets, batches",
+          "quantity": 8,
+          "unit_price": 75,
+          "subtotal": 600,
+          "tax": 60.0,
+          "total": 660.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Sam Wilson",
+          "address": "105 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-005"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "formal",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -1046,7 +2074,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "9d05e862f4b6010e9c2114f2fb94d7cc7c7fb38527fc510db145bceef30192f3",
+    "sha256": "60c672f15bae4babd9c5ea535adb5290988626a9f3ae2caae05cb0a49ef113b4",
     "duplicate_of": null
   },
   {
@@ -1071,9 +2099,41 @@
       "terms": "Net 30",
       "contact": "Maya Chen",
       "address": "101 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-001"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Northstar Office Supplies",
+          "number": "001-2026-0031",
+          "date": "2026-10-18",
+          "due_date": "2026-11-17",
+          "po": "PO-26031",
+          "description": "A4 copier paper, cartons",
+          "quantity": 14,
+          "unit_price": 32,
+          "subtotal": 448,
+          "tax": 44.8,
+          "total": 492.8,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Maya Chen",
+          "address": "101 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-001"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "brief",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -1081,7 +2141,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "82e10a0b22a071ebc20d9b8689ded29be86f5d53cb8b1719c90291094d70c8cd",
+    "sha256": "4ed90992639126320a1da9abe6d7702576026b47769ad131a98ee586bfd1c674",
     "duplicate_of": null
   },
   {
@@ -1106,9 +2166,41 @@
       "terms": "Net 30",
       "contact": "Daniel Reed",
       "address": "102 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-002"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Harbor IT Services",
+          "number": "002-2026-0032",
+          "date": "2026-10-18",
+          "due_date": "2026-11-17",
+          "po": "PO-26032",
+          "description": "Managed IT support, monthly retainer",
+          "quantity": 7,
+          "unit_price": 850,
+          "subtotal": 5950,
+          "tax": 595.0,
+          "total": 6545.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Daniel Reed",
+          "address": "102 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-002"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "informal",
     "pdf_kind": "image_only",
     "requires_ocr": true,
@@ -1116,7 +2208,7 @@
     "scan_variation": "light_noise",
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "97ff75fa1711ca2dfd13b9964844b57f880459b965158315561d321ea03eb02d",
+    "sha256": "1a7027fc7c21bab22c0ea8c44c7f585ce94a18f3751227b2ce4714f6f827ce74",
     "duplicate_of": null
   },
   {
@@ -1141,9 +2233,41 @@
       "terms": "Net 30",
       "contact": "Priya Shah",
       "address": "103 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-003"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Cedar Facilities",
+          "number": "003-2026-0033",
+          "date": "2026-10-18",
+          "due_date": "2026-11-17",
+          "po": "PO-26033",
+          "description": "Weekly office cleaning visits",
+          "quantity": 10,
+          "unit_price": 125,
+          "subtotal": 1250,
+          "tax": 125.0,
+          "total": 1375.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Priya Shah",
+          "address": "103 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-003"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "structured",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -1151,7 +2275,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "51a7bc5208feef30b16357a20bf617c0d5781c60f0eee966589355368ed65e33",
+    "sha256": "217ae6733791591f82ecf556512168a6a260b1bee6faea8df47f4bf255c76b44",
     "duplicate_of": null
   },
   {
@@ -1176,9 +2300,41 @@
       "terms": "Net 30",
       "contact": "Alex Morgan",
       "address": "104 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-004"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Summit Packaging",
+          "number": "004-2026-0034",
+          "date": "2026-10-18",
+          "due_date": "2026-11-17",
+          "po": "PO-26034",
+          "description": "Recycled shipping cartons, bundles",
+          "quantity": 12,
+          "unit_price": 48,
+          "subtotal": 576,
+          "tax": 57.6,
+          "total": 633.6,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Alex Morgan",
+          "address": "104 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-004"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "forwarded",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -1186,7 +2342,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "5b803424648347310cf5afaa808a90364ff25d4034e91d6e53f64f03e757c2f6",
+    "sha256": "e10d8a1b266e9ec0d4fd7bfb81826c587c50316572154f502b9b940464d79bf4",
     "duplicate_of": null
   },
   {
@@ -1211,9 +2367,41 @@
       "terms": "Net 30",
       "contact": "Sam Wilson",
       "address": "105 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-005"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Brightline Print Studio",
+          "number": "005-2026-0035",
+          "date": "2026-10-18",
+          "due_date": "2026-11-17",
+          "po": "PO-26035",
+          "description": "Product information leaflets, batches",
+          "quantity": 9,
+          "unit_price": 75,
+          "subtotal": 675,
+          "tax": 67.5,
+          "total": 742.5,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Sam Wilson",
+          "address": "105 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-005"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "formal",
     "pdf_kind": "image_only",
     "requires_ocr": true,
@@ -1221,7 +2409,7 @@
     "scan_variation": "light_noise",
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "aeb135a1fbc0d3aeaac8326bf0145c3e71af0c8a2caeb93961aebbbb5f7f1932",
+    "sha256": "35126884bf5903463e9b81a319e7198ef6a62e9f9763f0b987d6853d3b9ad386",
     "duplicate_of": null
   },
   {
@@ -1246,9 +2434,41 @@
       "terms": "Net 30",
       "contact": "Maya Chen",
       "address": "101 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-001"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Northstar Office Supplies",
+          "number": "001-2026-0036",
+          "date": "2026-10-19",
+          "due_date": "2026-11-18",
+          "po": "PO-26036",
+          "description": "A4 copier paper, cartons",
+          "quantity": 15,
+          "unit_price": 32,
+          "subtotal": 480,
+          "tax": 48.0,
+          "total": 528.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Maya Chen",
+          "address": "101 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-001"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "brief",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -1256,7 +2476,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "e1953154dbf375f314bbb318f5bdb63c826745518f9b9a63852dd7b1a1cec7e0",
+    "sha256": "e13fddb277ae3347ec7fe58d3c117c15ba7c40c0244e541e31150bd39feac2dd",
     "duplicate_of": null
   },
   {
@@ -1281,9 +2501,41 @@
       "terms": "Net 30",
       "contact": "Daniel Reed",
       "address": "102 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-002"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Harbor IT Services",
+          "number": "002-2026-0037",
+          "date": "2026-10-19",
+          "due_date": "2026-11-18",
+          "po": "PO-26037",
+          "description": "Managed IT support, monthly retainer",
+          "quantity": 8,
+          "unit_price": 850,
+          "subtotal": 6800,
+          "tax": 680.0,
+          "total": 7480.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Daniel Reed",
+          "address": "102 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-002"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "informal",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -1291,7 +2543,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "26e6884b358eb7736e9113f223a5582a825a9acc81126568809d4097cda08361",
+    "sha256": "d7d6f9325734fc53adb8d9776b3af31b30c129cfa5068d7239bb4399f9de44ba",
     "duplicate_of": null
   },
   {
@@ -1316,9 +2568,41 @@
       "terms": "Net 30",
       "contact": "Priya Shah",
       "address": "103 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-003"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Cedar Facilities",
+          "number": "003-2026-0038",
+          "date": "2026-10-19",
+          "due_date": "2026-11-18",
+          "po": "PO-26038",
+          "description": "Weekly office cleaning visits",
+          "quantity": 11,
+          "unit_price": 125,
+          "subtotal": 1375,
+          "tax": 137.5,
+          "total": 1512.5,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Priya Shah",
+          "address": "103 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-003"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "structured",
     "pdf_kind": "image_only",
     "requires_ocr": true,
@@ -1326,7 +2610,7 @@
     "scan_variation": "light_noise",
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "a2fd21c37b58885a9c4214c11fe5f466c876f6d0101f4796e0e387f8fdf9a8e1",
+    "sha256": "56545ff6b9d66b593062250d8e1346b3354f98acd5200d1db2c08314e6497861",
     "duplicate_of": null
   },
   {
@@ -1351,9 +2635,41 @@
       "terms": "Net 30",
       "contact": "Alex Morgan",
       "address": "104 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-004"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Summit Packaging",
+          "number": "004-2026-0039",
+          "date": "2026-10-19",
+          "due_date": "2026-11-18",
+          "po": "PO-26039",
+          "description": "Recycled shipping cartons, bundles",
+          "quantity": 13,
+          "unit_price": 48,
+          "subtotal": 624,
+          "tax": 62.4,
+          "total": 686.4,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Alex Morgan",
+          "address": "104 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-004"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "forwarded",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -1361,7 +2677,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "0141d513c4a6b77bd1ea3253aadfc8ea026cc81faef87e033c652d1be32b6ddb",
+    "sha256": "4049caa00277b9cf2a03074966cdf84714cb8569399fe3a507e650a065be4dfc",
     "duplicate_of": null
   },
   {
@@ -1386,9 +2702,41 @@
       "terms": "Net 30",
       "contact": "Sam Wilson",
       "address": "105 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-005"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Brightline Print Studio",
+          "number": "005-2026-0040",
+          "date": "2026-10-19",
+          "due_date": "2026-11-18",
+          "po": "PO-26040",
+          "description": "Product information leaflets, batches",
+          "quantity": 10,
+          "unit_price": 75,
+          "subtotal": 750,
+          "tax": 75.0,
+          "total": 825.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Sam Wilson",
+          "address": "105 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-005"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve"
+      }
+    ],
+    "page_count": 1,
     "email_style": "formal",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -1396,7 +2744,7 @@
     "scan_variation": null,
     "expected": "approve",
     "reason": "Complete invoice for an approved vendor and fully received purchase order.",
-    "sha256": "a9ab0f02490010d7a319a1820bc64f77d94172b2fd2cddf4b96bb33e86b27b80",
+    "sha256": "7b65921d5f3e9d8a1db32a992fc0f12bc73e1e30bfbda12df1c489cca88abb44",
     "duplicate_of": null
   },
   {
@@ -1421,9 +2769,41 @@
       "terms": "Net 30",
       "contact": "Maya Chen",
       "address": "101 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-001"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Northstar Office Supplies",
+          "number": "001-2026-0001",
+          "date": "2026-10-12",
+          "due_date": "2026-11-11",
+          "po": "PO-26001",
+          "description": "A4 copier paper, cartons",
+          "quantity": 8,
+          "unit_price": 32,
+          "subtotal": 256,
+          "tax": 25.6,
+          "total": 281.6,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Maya Chen",
+          "address": "101 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-001"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "duplicate"
+      }
+    ],
+    "page_count": 1,
     "email_style": "follow_up",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -1431,7 +2811,7 @@
     "scan_variation": null,
     "expected": "duplicate",
     "reason": "Byte-identical attachment to email 1.",
-    "sha256": "30655e14341d3aaadffc8bb9e64ad680bf231dd2325e57eeec180d2e1391cbc3",
+    "sha256": "4bb4a33e74e868685ead04b590d4e238d6738e41a9257bdadb26dc00ed4307e5",
     "duplicate_of": 1
   },
   {
@@ -1456,9 +2836,41 @@
       "terms": "Net 30",
       "contact": "Daniel Reed",
       "address": "102 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-002"
     },
     "missing_fields": [],
+    "added_features": [],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Harbor IT Services",
+          "number": "002-2026-0002",
+          "date": "2026-10-12",
+          "due_date": "2026-11-11",
+          "po": "PO-26002",
+          "description": "Managed IT support, monthly retainer",
+          "quantity": 1,
+          "unit_price": 850,
+          "subtotal": 850,
+          "tax": 85.0,
+          "total": 935.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Daniel Reed",
+          "address": "102 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-002"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "duplicate"
+      }
+    ],
+    "page_count": 1,
     "email_style": "follow_up",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
@@ -1466,7 +2878,7 @@
     "scan_variation": null,
     "expected": "duplicate",
     "reason": "Same vendor and invoice number as email 2; different PDF layout.",
-    "sha256": "4f034422087d53568df02ddb13f97a6d02f4a841ab4a0d87cf689089341f13d6",
+    "sha256": "8100931390cd283eff153a6876d9f0d3c6c67c1ae72c61dca908f2a17b71d519",
     "duplicate_of": 2
   },
   {
@@ -1491,17 +2903,51 @@
       "terms": "Net 30",
       "contact": "Priya Shah",
       "address": "103 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-003"
     },
     "missing_fields": [],
+    "added_features": [
+      "multipage_total_on_last_page"
+    ],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Cedar Facilities",
+          "number": "00320260003",
+          "date": "2026-10-12",
+          "due_date": "2026-11-11",
+          "po": "PO-26003",
+          "description": "Weekly office cleaning visits",
+          "quantity": 4,
+          "unit_price": 125,
+          "subtotal": 500,
+          "tax": 50.0,
+          "total": 550.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Priya Shah",
+          "address": "103 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-003"
+        },
+        "page_range": [
+          1,
+          2
+        ],
+        "expected": "human_review"
+      }
+    ],
+    "page_count": 2,
     "email_style": "follow_up",
     "pdf_kind": "image_only",
     "requires_ocr": true,
     "template_id": "cedar-traditional",
     "scan_variation": "slight_skew",
     "expected": "human_review",
-    "reason": "Invoice number differs only by punctuation from email 3; same transaction details.",
-    "sha256": "32557d32f3c33663ea1c8969058371e7b05294f83a7e15ddef730249ef46c6ca",
+    "reason": "Invoice number differs only by punctuation from email 3; same transaction details. Two-page scanned invoice: reconcile the same invoice across pages and read the total only on page 2.",
+    "sha256": "42a8a62d5914b3260cadb89b91a41884ab31496b05710b72fc134ba703153be6",
     "duplicate_of": 3
   },
   {
@@ -1518,25 +2964,59 @@
       "po": "PO-26001",
       "description": "Recycled shipping cartons, bundles",
       "quantity": 14,
-      "unit_price": 48,
-      "subtotal": 672,
-      "tax": 67.2,
-      "total": 739.2,
+      "unit_price": -48,
+      "subtotal": -672,
+      "tax": -67.2,
+      "total": -739.2,
       "currency": "USD",
       "terms": "Net 30",
       "contact": "Alex Morgan",
       "address": "104 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-004"
     },
     "missing_fields": [],
+    "added_features": [
+      "negative_invoice_not_credit_note"
+    ],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Apex Business Trading",
+          "number": "ABT-7619",
+          "date": "2026-10-20",
+          "due_date": "2026-11-19",
+          "po": "PO-26001",
+          "description": "Recycled shipping cartons, bundles",
+          "quantity": 14,
+          "unit_price": -48,
+          "subtotal": -672,
+          "tax": -67.2,
+          "total": -739.2,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Alex Morgan",
+          "address": "104 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-004"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "human_review"
+      }
+    ],
+    "page_count": 1,
     "email_style": "exception_message",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
     "template_id": "apex-basic",
     "scan_variation": null,
     "expected": "human_review",
-    "reason": "Vendor is absent from the approved vendor master; claimed PO belongs to another vendor.",
-    "sha256": "de2f550cfeef04fdd377bcda72bf0cf90dd108764dcac16b3cb8d4c762d386bf",
+    "reason": "Vendor is absent from the approved vendor master; claimed PO belongs to another vendor. Negative total is still labelled INVOICE, not CREDIT NOTE; never approve it as a normal payable.",
+    "sha256": "b7982a1c48ef863d2fd5c7ebbf9fa36136078d5cf5b25835599417bdc88a035c",
     "duplicate_of": null
   },
   {
@@ -1561,17 +3041,51 @@
       "terms": "Net 30",
       "contact": "Maya Chen",
       "address": "101 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-CHANGED-999"
     },
     "missing_fields": [],
+    "added_features": [
+      "bank_account_change"
+    ],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Northstar Office Supplies",
+          "number": "001-2026-0045",
+          "date": "2026-10-20",
+          "due_date": "2026-11-19",
+          "po": "PO-26045",
+          "description": "A4 copier paper, cartons",
+          "quantity": 16,
+          "unit_price": 32,
+          "subtotal": 512,
+          "tax": 51.2,
+          "total": 563.2,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Maya Chen",
+          "address": "101 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-CHANGED-999"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "human_review"
+      }
+    ],
+    "page_count": 1,
     "email_style": "exception_message",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
     "template_id": "northstar-navy",
     "scan_variation": null,
     "expected": "human_review",
-    "reason": "Sender uses northstarr.example while claiming the approved Northstar identity.",
-    "sha256": "eed9648a9f59e301b14384743cf8544a9e27e9ff74414e03d812c4e4e130f3ca",
+    "reason": "Sender uses northstarr.example while claiming the approved Northstar identity. Invoice bank account differs from vendor master; independent bank verification is mandatory.",
+    "sha256": "b29eed9aed7fa252ef6bc2c1e92f40fd77d66dcbbdf13c15210fdfee0de4b403",
     "duplicate_of": null
   },
   {
@@ -1582,8 +3096,8 @@
     "fields": {
       "document_type": "INVOICE",
       "vendor": "Northstar Office Supplies",
-      "date": "2026-10-21",
-      "due_date": "2026-11-20",
+      "date": "2026-12-01",
+      "due_date": "2026-12-31",
       "po": "PO-26046",
       "description": "A4 copier paper, cartons",
       "quantity": 17,
@@ -1595,19 +3109,52 @@
       "terms": "Net 30",
       "contact": "Maya Chen",
       "address": "101 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-001"
     },
     "missing_fields": [
       "number"
     ],
+    "added_features": [
+      "future_invoice_date"
+    ],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Northstar Office Supplies",
+          "date": "2026-12-01",
+          "due_date": "2026-12-31",
+          "po": "PO-26046",
+          "description": "A4 copier paper, cartons",
+          "quantity": 17,
+          "unit_price": 32,
+          "subtotal": 544,
+          "tax": 54.4,
+          "total": 598.4,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Maya Chen",
+          "address": "101 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-001"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "human_review"
+      }
+    ],
+    "page_count": 1,
     "email_style": "exception_message",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
     "template_id": "northstar-navy",
     "scan_variation": null,
     "expected": "human_review",
-    "reason": "Invoice number absent from both message and attachment.",
-    "sha256": "37867697986b320da23bc981f3afb5424659e6a0d4e8b7f57d46dbf940e57ecf",
+    "reason": "Invoice number absent from both message and attachment. Invoice date 2026-12-01 is after the fixed evaluation date 2026-11-02.",
+    "sha256": "17c33828d7e272b6c54fe77584120a1e6b5ced1efef53111b149f48186583dc7",
     "duplicate_of": null
   },
   {
@@ -1631,19 +3178,110 @@
       "terms": "Net 30",
       "contact": "Daniel Reed",
       "address": "102 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-002"
     },
     "missing_fields": [
       "total"
     ],
+    "added_features": [
+      "multiple_invoices_one_pdf",
+      "debit_note"
+    ],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Harbor IT Services",
+          "number": "002-2026-0047",
+          "date": "2026-10-21",
+          "due_date": "2026-11-20",
+          "po": "PO-26047",
+          "description": "Managed IT support, monthly retainer",
+          "quantity": 10,
+          "unit_price": 850,
+          "subtotal": 8500,
+          "tax": 850.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Daniel Reed",
+          "address": "102 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-002"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "human_review"
+      },
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Harbor IT Services",
+          "number": "HI-2026-EXTRA-0047",
+          "date": "2026-10-28",
+          "due_date": "2026-11-27",
+          "po": "PO-EXTRA-0047",
+          "description": "Replacement workstation setup",
+          "quantity": 1,
+          "unit_price": 250,
+          "subtotal": 250,
+          "tax": 25,
+          "total": 275,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Daniel Reed",
+          "address": "102 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-002"
+        },
+        "page_range": [
+          2,
+          2
+        ],
+        "expected": "approve",
+        "reason": "Separate complete invoice with its own fully received PO."
+      },
+      {
+        "fields": {
+          "document_type": "DEBIT NOTE",
+          "vendor": "Harbor IT Services",
+          "number": "HI-DN-2026-0047",
+          "original_invoice": "002-2026-0002",
+          "date": "2026-10-28",
+          "due_date": "2026-11-27",
+          "po": "PO-26002",
+          "description": "Additional support hours omitted from original billing",
+          "quantity": 1,
+          "unit_price": 100,
+          "subtotal": 100,
+          "tax": 10,
+          "total": 110,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Daniel Reed",
+          "address": "102 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-002"
+        },
+        "page_range": [
+          3,
+          3
+        ],
+        "expected": "human_review",
+        "reason": "Debit note requires separate adjustment handling."
+      }
+    ],
+    "page_count": 3,
     "email_style": "exception_message",
     "pdf_kind": "image_only",
     "requires_ocr": true,
     "template_id": "harbor-teal",
     "scan_variation": "light_noise",
     "expected": "human_review",
-    "reason": "Final amount due absent; do not silently approve an inferred total.",
-    "sha256": "5af9fc0cb7c1418ea411cb901c2fd2f1d2401f9a4ce463283ec094f14b70d7e9",
+    "reason": "Final amount due absent; do not silently approve an inferred total. The PDF also contains a separate complete invoice and a debit note referencing a historical invoice; split documents and route the adjustment for review.",
+    "sha256": "4cc717f6a691b095e34fca0811df17706f3de3f66b5836beef92d0abc5fa8f85",
     "duplicate_of": null
   },
   {
@@ -1655,31 +3293,101 @@
       "document_type": "INVOICE",
       "vendor": "Cedar Facilities",
       "number": "003-2026-0048",
-      "date": "2026-10-21",
-      "due_date": "2026-11-20",
+      "date": "2026-09-15",
+      "due_date": "2026-10-15",
       "po": "PO-26048",
       "description": "Weekly office cleaning visits",
       "quantity": 13,
       "unit_price": 125,
       "subtotal": 1625,
-      "tax": 162.5,
-      "total": 1787.5,
+      "tax": 292.5,
+      "total": 1917.5,
       "terms": "Net 30",
       "contact": "Priya Shah",
       "address": "103 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-003",
+      "tax_profile": "GST",
+      "supplier_state": "29",
+      "place_of_supply": "29",
+      "buyer_address": "200 Demo Industrial Road, Bengaluru, Karnataka",
+      "supplier_branch": "Bengaluru branch, Karnataka (29)",
+      "tax_rate": 18,
+      "tax_components": [
+        {
+          "name": "CGST",
+          "rate": 9,
+          "amount": 146.25
+        },
+        {
+          "name": "SGST",
+          "rate": 9,
+          "amount": 221.25
+        }
+      ]
     },
     "missing_fields": [
       "currency"
     ],
+    "added_features": [
+      "gst_split_arithmetic_error",
+      "invoice_before_po"
+    ],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Cedar Facilities",
+          "number": "003-2026-0048",
+          "date": "2026-09-15",
+          "due_date": "2026-10-15",
+          "po": "PO-26048",
+          "description": "Weekly office cleaning visits",
+          "quantity": 13,
+          "unit_price": 125,
+          "subtotal": 1625,
+          "tax": 292.5,
+          "total": 1917.5,
+          "terms": "Net 30",
+          "contact": "Priya Shah",
+          "address": "103 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-003",
+          "tax_profile": "GST",
+          "supplier_state": "29",
+          "place_of_supply": "29",
+          "buyer_address": "200 Demo Industrial Road, Bengaluru, Karnataka",
+          "supplier_branch": "Bengaluru branch, Karnataka (29)",
+          "tax_rate": 18,
+          "tax_components": [
+            {
+              "name": "CGST",
+              "rate": 9,
+              "amount": 146.25
+            },
+            {
+              "name": "SGST",
+              "rate": 9,
+              "amount": 221.25
+            }
+          ]
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "human_review"
+      }
+    ],
+    "page_count": 1,
     "email_style": "exception_message",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
     "template_id": "cedar-traditional",
     "scan_variation": null,
     "expected": "human_review",
-    "reason": "Amounts have no currency in either email or attachment.",
-    "sha256": "21d4161e5aab82f0166e019ec4fb0fd6e1c6bf4b7653dcfea7c8a5c783a79261",
+    "reason": "Amounts have no currency in either email or attachment. CGST/SGST split does not sum to printed tax; invoice is dated before PO issue date.",
+    "sha256": "65b5c9770512a5162902545703cbede0901e114a65d5b719e07514543c812926",
     "duplicate_of": null
   },
   {
@@ -1688,34 +3396,67 @@
     "is_edge_case": true,
     "vendor_id": "V004",
     "fields": {
-      "document_type": "INVOICE",
+      "document_type": "CREDIT NOTE",
       "vendor": "Summit Packaging",
       "number": "004-2026-0049",
       "date": "2026-10-21",
       "due_date": "2026-11-20",
-      "po": "PO-26049",
-      "description": "Recycled shipping cartons, bundles",
-      "quantity": 15,
-      "unit_price": 48,
-      "subtotal": 720,
-      "tax": 72.0,
-      "total": 792.0,
+      "po": "PO-26004",
+      "description": "Credit for returned shipping cartons",
+      "quantity": 1,
+      "unit_price": -48,
+      "subtotal": -48,
+      "tax": -4.8,
+      "total": -52.8,
       "currency": "USD",
-      "terms": "Net 30"
+      "terms": "Net 30",
+      "bank_account": "DEMO-ACCOUNT-004",
+      "original_invoice": "004-2026-0004"
     },
     "missing_fields": [
       "contact",
       "address",
       "phone"
     ],
+    "added_features": [
+      "credit_note"
+    ],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "CREDIT NOTE",
+          "vendor": "Summit Packaging",
+          "number": "004-2026-0049",
+          "date": "2026-10-21",
+          "due_date": "2026-11-20",
+          "po": "PO-26004",
+          "description": "Credit for returned shipping cartons",
+          "quantity": 1,
+          "unit_price": -48,
+          "subtotal": -48,
+          "tax": -4.8,
+          "total": -52.8,
+          "currency": "USD",
+          "terms": "Net 30",
+          "bank_account": "DEMO-ACCOUNT-004",
+          "original_invoice": "004-2026-0004"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "human_review"
+      }
+    ],
+    "page_count": 1,
     "email_style": "exception_message",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
     "template_id": "summit-dispatch",
     "scan_variation": null,
-    "expected": "approve",
-    "reason": "Contact person, street address and phone omitted; payment-critical fields are complete.",
-    "sha256": "d80a160cd6d08c940b15285baa731d10ca3dd81689e94c014bfbadde106a576d",
+    "expected": "human_review",
+    "reason": "A credit note referencing invoice 004-2026-0004 requires adjustment handling, not normal payment approval.",
+    "sha256": "f5f0273c4567a685be2b6b56d5c81baa6408bba653047ef4e0e65acbd5cb7b63",
     "duplicate_of": null
   },
   {
@@ -1727,7 +3468,7 @@
       "document_type": "INVOICE",
       "vendor": "Brightline Print Studio",
       "number": "005-2026-0050",
-      "date": "2026-10-21",
+      "date": "2024-01-15",
       "po": "PO-26050",
       "description": "Product information leaflets, batches",
       "quantity": 12,
@@ -1735,23 +3476,57 @@
       "subtotal": 900,
       "tax": 90.0,
       "total": 990.0,
-      "currency": "USD",
+      "currency": "EUR",
       "terms": "Net 30",
       "contact": "Sam Wilson",
       "address": "105 Market Street, Portland, OR 97205",
-      "phone": "+1-202-555-0142"
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-005"
     },
     "missing_fields": [
       "due_date"
     ],
+    "added_features": [
+      "foreign_currency_missing_rate",
+      "very_old_invoice"
+    ],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Brightline Print Studio",
+          "number": "005-2026-0050",
+          "date": "2024-01-15",
+          "po": "PO-26050",
+          "description": "Product information leaflets, batches",
+          "quantity": 12,
+          "unit_price": 75,
+          "subtotal": 900,
+          "tax": 90.0,
+          "total": 990.0,
+          "currency": "EUR",
+          "terms": "Net 30",
+          "contact": "Sam Wilson",
+          "address": "105 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-005"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "human_review"
+      }
+    ],
+    "page_count": 1,
     "email_style": "exception_message",
     "pdf_kind": "text_extractable",
     "requires_ocr": false,
     "template_id": "brightline-editorial",
     "scan_variation": null,
-    "expected": "approve",
-    "reason": "Brief message; complete invoice except optional due date. Vendor terms supply Net 30.",
-    "sha256": "044ec0ad588cdb038c916f1fd3fab2d891255efb2bc76acdbd03f792651b8154",
+    "expected": "human_review",
+    "reason": "EUR invoice has no approved EUR-to-INR rate and is older than the fixture policy of 365 days.",
+    "sha256": "15b08cd13b21233728f50de6555fda31df3f30b7cb6a615d687de30514c49cf9",
     "duplicate_of": null
   }
 ]
