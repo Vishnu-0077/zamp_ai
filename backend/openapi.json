@@ -1654,7 +1654,6 @@
               "$ref": "#/components/schemas/InvoiceExtraction-Output"
             },
             "type": "array",
-            "maxItems": 30,
             "minItems": 1,
             "title": "Documents"
           }

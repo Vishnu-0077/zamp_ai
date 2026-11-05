@@ -45,7 +45,10 @@ class InvoiceExtraction(StrictModel):
     tax_components: ExtractedField[list[TaxComponent]]
 
 class ExtractionBatch(StrictModel):
-    documents: list[InvoiceExtraction] = Field(min_length=1, max_length=30)
+    # The 30-document cap is still enforced on validation, but omitted from the
+    # JSON schema: Gemini's OpenAI-compatible structured output rejects maxItems.
+    documents: list[InvoiceExtraction] = Field(min_length=1, max_length=30,
+                                               json_schema_extra=lambda s: s.pop('maxItems', None))
 
 class Correction(StrictModel):
     expected_version: int = Field(ge=1)

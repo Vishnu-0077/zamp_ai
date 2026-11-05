@@ -122,6 +122,31 @@ The dashboard reads `frontend/.env`, or the shell, for its proxy:
 cp frontend/.env.example frontend/.env    # then set BACKEND_API_KEY in it
 ```
 
+**Free option: Google Gemini.** Gemini's free tier works through its
+OpenAI-compatible endpoint; it has been tested with `gemini-3.5-flash`.
+
+1. Create a key at https://aistudio.google.com/apikey.
+2. Store it outside the repository, without echoing it:
+   ```bash
+   mkdir -p ~/.config/zamp && read -rsp "Gemini key: " K && printf '%s' "$K" > ~/.config/zamp/gemini.key && chmod 600 ~/.config/zamp/gemini.key && unset K
+   ```
+3. Start the backend with these settings (see step 4):
+   ```bash
+   export OPENAI_API_KEY="$(cat ~/.config/zamp/gemini.key)"
+   export OPENAI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
+   export EXTRACTION_MODEL=gemini-3.5-flash
+   ```
+
+Free-tier caveats:
+- It allows only a few requests per minute. Process invoices a few at a time.
+- When Google is overloaded it returns 503 "high demand", and the case goes to
+  review with `PROCESSING_ERROR`. Click **Retry processing** later.
+- Older models such as `gemini-2.5-flash` are closed to new keys. List the
+  models your key can use with
+  `curl -s https://generativelanguage.googleapis.com/v1beta/openai/models -H "Authorization: Bearer $(cat ~/.config/zamp/gemini.key)"`.
+- Google may use free-tier inputs to improve its models, so don't send
+  confidential invoices.
+
 ### 4. Start
 
 **Terminal 1, the backend:**
