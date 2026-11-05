@@ -104,3 +104,64 @@ http://localhost:8000/docs.
 For a short demo, show a routine invoice first, another valid invoice from the
 same supplier, duplicate emails 41–43, fake-vendor emails 44–45, missing critical
 details in 46–48, and valid optional-detail cases 49–50.
+
+## Invoice designs, email variety and OCR
+
+Each approved supplier uses the same invoice design across its invoices:
+
+| Supplier | Consistent design |
+| --- | --- |
+| Northstar Office Supplies | Navy letterhead, product table and highlighted amount due |
+| Harbor IT Services | Teal branding, service table and invoice details panel |
+| Cedar Facilities | Traditional serif letterhead and letter-style service charges |
+| Summit Packaging | Plain monospaced warehouse export with remittance advice |
+| Brightline Print Studio | Minimal print-studio branding and clean billing table |
+
+Supplier addresses stay consistent across invoices. The unregistered Apex vendor
+has a separate basic invoice design. The reissued duplicate preserves its
+supplier's stationery while adding a copy notice.
+
+Emails mix formal messages, short attachment notes, informal phone messages,
+structured billing summaries (including an HTML alternative), forwarded purchase
+threads and duplicate follow-ups. Casual formatting is not itself a business
+exception.
+
+**35 PDFs have searchable text. 15 PDFs are image-only and require OCR:**
+
+`03, 05, 08, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38, 43, 47`
+
+These scans contain grayscale page images at 180 DPI with clean, slightly skewed
+or lightly noisy appearances. There is no hidden text layer. A normal PDF text
+extractor returns no text for them. Rasterizing a document does not change its
+business outcome: ordinary scanned invoices are still valid after successful OCR.
+The total remains 40 routine invoices and 10 business edge cases.
+
+For a demo, compare emails 1 and 6 (the same supplier design), 3 and 8 (scanned
+contractor invoices), 4 (a plain warehouse invoice), and 47 (a scan that genuinely
+lacks an amount due). Do not mistake an absent text layer for missing invoice
+fields: run OCR first, then validate the recovered fields.
+
+Ground-truth records include `template_id`, `email_style`, `pdf_kind`,
+`requires_ocr` and `scan_variation` for evaluation. Keep these labels out of
+extraction prompts. Approval labels describe intended business outcomes after
+extraction; they do not certify any OCR engine's accuracy.
+
+Run the fixture integrity checks from the project directory:
+
+```bash
+./zamp_venv/bin/python validate_inputs.py
+```
+
+This checks counts, outcomes, duplicate relationships, MIME attachments and
+hashes, supplier template consistency, purchase-order matches, text extraction,
+and the absence of text/font layers in image-only PDFs. It does not run an OCR
+engine or measure OCR accuracy.
+
+### Design references researched online
+
+The invoice designs are original synthetic stationery informed by public invoice
+examples. Company identities and payment data remain fictional; these are not
+invoices issued by actual companies or copies of their financial documents.
+
+- [FreshBooks: Anatomy of a Winning Invoice](https://www.freshbooks.com/fbstaticprod-uploads/Newsletter-2025/FreshBooks-AnatomyOfAWinningInvoice.pdf): branded header, billing details, invoice references, line items, tax and amount due.
+- [Invoice Home: Invoice templates](https://invoicehome.com/): variation in supplier branding and basic versus detailed billing layouts.

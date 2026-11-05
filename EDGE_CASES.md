@@ -21,3 +21,8 @@ explicitly marks the 10 edge cases using `is_edge_case`; edge case does not alwa
 mean invalid. Process emails in ID order to populate duplicate history. PO
 amounts and receipts are gross USD values; each unique legitimate invoice has
 its own PO, avoiding accidental cumulative overruns.
+
+PDF format is independent of business exceptions. There are 35 searchable PDFs
+and 15 image-only scanned PDFs. Edge cases 43 and 47 require OCR; the other scans
+are routine invoices. Supplier designs remain consistent across digital and
+scanned versions. Expected business outcomes are unchanged after extraction.

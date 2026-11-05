@@ -40,3 +40,13 @@ it does not implement extraction or automated payment decisions.
 Generate a fresh dataset with `./zamp_venv/bin/python generate.py`. It refuses to
 overwrite an existing database. `expand_inbox.py` is a compatibility entry point
 for the same generator; it no longer appends extra exception cases.
+
+Invoice designs now vary by supplier, from branded billing tables to traditional
+contractor letters and plain warehouse exports. Repeat invoices retain the same
+supplier stationery. Emails include formal, brief, informal, structured and
+forwarded styles. The dataset includes **35 searchable PDFs and 15 image-only
+PDFs requiring OCR**; this format mix is independent of the 10 business edge
+cases. See `test_inputs/README.md` for scan IDs and online design references.
+
+Run `./zamp_venv/bin/python validate_inputs.py` to verify fixture integrity and
+PDF extraction routing. This check does not measure OCR accuracy.

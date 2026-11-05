@@ -7,7 +7,7 @@ import hashlib
 import io
 import json
 import sqlite3
-from reportlab.pdfgen import canvas
+from invoice_layouts import render, scan_pdf, SCAN_IDS, STYLES
 
 ROOT = Path(__file__).resolve().parent
 INPUTS = ROOT / 'test_inputs'
@@ -33,27 +33,6 @@ EDGE_CASES = [
 ]
 
 
-def render(fields, reissued=False):
-    out = io.BytesIO()
-    pdf = canvas.Canvas(out, invariant=1)
-    pdf.setTitle('Invoice ' + fields.get('number', ''))
-    pdf.setFont('Helvetica-Bold', 20)
-    pdf.drawString(48, 790, fields['vendor'])
-    pdf.setFont('Helvetica', 10)
-    lines = ['INVOICE' + (' - Copy' if reissued else ''), 'Bill to: Example Manufacturing Ltd', 'Accounts Payable', '']
-    labels = [('number', 'Invoice number'), ('date', 'Invoice date'), ('due_date', 'Due date'), ('po', 'Purchase order'), ('description', 'Description'), ('quantity', 'Quantity'), ('unit_price', 'Unit price'), ('subtotal', 'Subtotal'), ('tax', 'Tax (10%)'), ('total', 'Amount due'), ('currency', 'Currency'), ('terms', 'Payment terms'), ('contact', 'Accounts contact'), ('address', 'Supplier address'), ('phone', 'Telephone')]
-    for key, label in labels:
-        if key in fields:
-            value = fields[key]
-            if key in ('unit_price', 'subtotal', 'tax', 'total'):
-                value = f"{fields.get('currency', '')} {value:,.2f}".strip()
-            lines.append(f'{label}: {value}')
-    lines += ['', 'Please quote the invoice number with your remittance.', 'Fictional test document - not payable.']
-    for i, line in enumerate(lines):
-        pdf.drawString(48, 752 - i * (25 if reissued else 23), line)
-    pdf.save()
-    return out.getvalue()
-
 
 def generate():
     if (INPUTS / 'inbox.sqlite3').exists():
@@ -73,7 +52,7 @@ def generate():
         issue = datetime(2026, 10, 12, tzinfo=timezone.utc) + timedelta(days=(idx - 1) // 5)
         quantity = vendor['quantity'] + (idx - 1) // 5
         subtotal = quantity * vendor['price']
-        fields = dict(document_type='INVOICE', vendor=vendor['name'], number=f"{vendor['id'][1:]}-2026-{idx:04}", date=issue.date().isoformat(), due_date=(issue + timedelta(days=30)).date().isoformat(), po=f'PO-{26000 + idx}', description=vendor['item'], quantity=quantity, unit_price=vendor['price'], subtotal=subtotal, tax=round(subtotal * .1, 2), total=round(subtotal * 1.1, 2), currency='USD', terms='Net 30', contact=vendor['contact'], address=f'{100 + idx} Market Street', phone='+1-202-555-0142')
+        fields = dict(document_type='INVOICE', vendor=vendor['name'], number=f"{vendor['id'][1:]}-2026-{idx:04}", date=issue.date().isoformat(), due_date=(issue + timedelta(days=30)).date().isoformat(), po=f'PO-{26000 + idx}', description=vendor['item'], quantity=quantity, unit_price=vendor['price'], subtotal=subtotal, tax=round(subtotal * .1, 2), total=round(subtotal * 1.1, 2), currency='USD', terms='Net 30', contact=vendor['contact'], address=f'{100 + int(vendor["id"][1:])} Market Street, Portland, OR 97205', phone='+1-202-555-0142')
         if duplicate_of:
             vendor, original = originals[duplicate_of]
             fields = original.copy()
@@ -98,6 +77,16 @@ def generate():
         openings = ['Hi Accounts Payable,', 'Hello AP team,', 'Good morning,', 'Hi team,']
         paragraphs = [f'Please find invoice {number} attached for {fields["description"].lower()}. The order reference is {fields["po"]}.', f'Attached is our invoice {number} against {fields["po"]}. Thank you for your recent order.', f'I have attached the invoice for {fields["description"].lower()}, as agreed with your purchasing team. Your reference is {fields["po"]}.', f'We have completed the work under {fields["po"]}. Please find the invoice attached for your records and payment.']
         body = f'{openings[idx % 4]}\n\n{paragraphs[idx % 4]}\n\nThe invoice amount is {amount}. Payment terms are Net 30. Please let us know if you need anything else to process this.\n\nMany thanks,\n{vendor["contact"]}\nAccounts receivable | {display}\n{sender}\n'
+        email_style = ('formal', 'brief', 'informal', 'structured', 'forwarded')[idx % 5]
+        if idx <= 40:
+            if email_style == 'brief':
+                body = f'Hi,\n\nInvoice attached for {fields["po"]}. Please confirm receipt.\n\nThanks,\n{vendor["contact"]}\n{display}\n'
+            elif email_style == 'informal':
+                body = f'hi team - sending this over from my phone.\n\n{fields["description"]} / ref {fields["po"]}\nattached the bill, thanks!\n\n{vendor["contact"].split()[0]}\nSent from my phone\n'
+            elif email_style == 'structured':
+                body = f'Hello Accounts Payable,\n\nPlease see the attached invoice.\n\nInvoice: {number}\nPO: {fields["po"]}\nAmount: {amount}\nTerms: Net 30\n\nThank you,\n{vendor["contact"]}\nAccounts receivable\n{display}\n'
+            elif email_style == 'forwarded':
+                body = f'Hi AP,\n\nPlease book the attached invoice for the order below. Receiving has confirmed delivery.\n\nThanks,\nJordan | Purchasing\n\n---------- Forwarded message ----------\nFrom: {display} <{sender}>\nSubject: Invoice {number}\nTo: purchasing@buyer.example\n\nHello Jordan,\nAttached is invoice {number} for {fields["po"]}, total {amount}.\nThanks again,\n{vendor["contact"]}\n'
         if idx in (41, 42, 43):
             subject = f'Re: Invoice {number} / {fields["po"]}'
             body = f'Hi team,\n\nFollowing up on invoice {number} for {amount}. I have attached a copy in case the original did not reach you. Could you confirm whether it is scheduled for payment?\n\nThanks,\n{vendor["contact"]}\n{display}\n'
@@ -106,7 +95,11 @@ def generate():
         if idx == 50:
             subject = 'Invoice attached'
             body = f'Hi team,\n\nHere is the invoice we discussed. Please let me know if you need anything else.\n\nThanks,\n{vendor["contact"]}\n{display}\n'
-        data = pdfs[1] if idx == 41 else render(fields, reissued=idx == 42)
+        layout_id = 'UNKNOWN' if idx == 44 else vendor['id']
+        pdf_kind = 'image_only' if idx in SCAN_IDS else 'text_extractable'
+        data = pdfs[1] if idx == 41 else render(fields, layout_id, reissued=idx == 42)
+        if idx in SCAN_IDS:
+            data = scan_pdf(data, idx)
         pdfs[idx] = data
         originals[idx] = (vendor, fields.copy())
         filename = f'{idx:02}_{scenario}' if edge else f'{idx:02}_invoice_{number}'
@@ -122,12 +115,15 @@ def generate():
             msg['In-Reply-To'] = f'<ar.202611.{duplicate_of:04}@{sender.split("@")[1]}>'
             msg['References'] = msg['In-Reply-To']
         msg.set_content(body)
+        if idx <= 40 and email_style == 'structured':
+            from html import escape
+            msg.add_alternative('<html><body style="font-family:Arial;color:#253549"><h2>' + escape(display) + '</h2><div style="border-left:3px solid #147c73;padding:16px">' + escape(body).replace('\n', '<br>') + '</div></body></html>', subtype='html')
         msg.add_attachment(data, maintype='application', subtype='pdf', filename=f'Invoice_{number or "November"}.pdf')
         eml = INPUTS / 'emails' / (filename + '.eml')
         eml.write_bytes(msg.as_bytes())
         sha = hashlib.sha256(data).hexdigest()
         db.execute('INSERT INTO emails(id,scenario,sender,subject,eml_path,attachment_path,sha256) VALUES (?,?,?,?,?,?,?)', (idx, scenario, sender, subject, str(eml.relative_to(ROOT)), str(pdf.relative_to(ROOT)), sha))
-        truth.append(dict(id=idx, scenario=scenario, is_edge_case=edge, vendor_id=None if idx == 44 else vendor['id'], fields=fields, missing_fields=omissions, pdf_kind='text_extractable', expected=expected, reason=reason, sha256=sha, duplicate_of=duplicate_of))
+        truth.append(dict(id=idx, scenario=scenario, is_edge_case=edge, vendor_id=None if idx == 44 else vendor['id'], fields=fields, missing_fields=omissions, email_style=email_style if idx <= 40 else "follow_up" if duplicate_of else "exception_message", pdf_kind=pdf_kind, requires_ocr=idx in SCAN_IDS, template_id=STYLES[layout_id][0], scan_variation=('clean', 'slight_skew', 'light_noise')[idx % 3] if idx in SCAN_IDS else None, expected=expected, reason=reason, sha256=sha, duplicate_of=duplicate_of))
     for vendor in vendors:
         db.execute('INSERT INTO vendors VALUES (?,?)', (vendor['id'], json.dumps(vendor)))
     for po in pos:
