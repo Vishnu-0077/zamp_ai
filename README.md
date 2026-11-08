@@ -14,7 +14,7 @@ backend/                 All backend code, configuration, dependencies and API d
   schemas.py             Extraction and API schemas
   database.py            SQLite persistence and audit storage
   settings.py            Environment configuration and repository paths
-  procurement.json       Trusted synthetic procurement master and policy
+  procurement.json       Trusted procurement master and policy (empty on reset)
   requirements.txt       Python dependencies
   start.sh               Local provider startup helper
   Dockerfile             Container build with Tesseract OCR
@@ -115,7 +115,7 @@ files:
 | `PROCUREMENT_PATH` | No | Trusted vendor/PO/policy file (default `backend/procurement.json`) |
 | `CORS_ORIGINS` | No | Only needed when the dashboard calls the backend directly |
 | `WORKER_ENABLED` | No | `true` (default) runs the processing worker in the API process |
-| `RESET_ON_START` | No | `true` wipes all processed cases, audit history and PO reservations each time the backend starts. Default `true`; set `false` to retain processing history |
+| `RESET_ON_START` | No | `true` wipes all processed cases, audit history, PO reservations and reference data each time the backend starts. Default `true`; set `false` to retain processing history |
 
 The dashboard reads `frontend/.env`, or the shell, for its proxy:
 
@@ -175,14 +175,15 @@ Keep `--workers 1`: a single worker process owns the processing database.
 
 Processed cases and uploaded PDFs live in `backend/runtime/processing.sqlite3`.
 Every backend worker startup clears processing state by default, including
-results, audit history and PO reservations. Set `RESET_ON_START=false` explicitly
+results, audit history, PO reservations and reference data. Set `RESET_ON_START=false` explicitly
 to retain them. `test_cases/` is never modified by the reset.
 
 On the dashboard home page, **Refresh & start fresh** performs the same reset
 without restarting the backend and reloads all dashboard queries, including
-Reference data. Enter the reviewer key in Settings to enable the button. An
-active extraction finishes before reset clears its case. Reference data is
-reread from `PROCUREMENT_PATH`; trusted vendor/PO configuration is retained.
+Reference data. No reviewer key is needed for this button. An active extraction
+finishes before reset clears its case. Reset empties `PROCUREMENT_PATH`, including
+vendors, purchase orders, FX rates and policy. To process invoices against trusted
+reference records, populate that file after startup; unmatched invoices go to review.
 
 **Terminal 2, the dashboard:**
 

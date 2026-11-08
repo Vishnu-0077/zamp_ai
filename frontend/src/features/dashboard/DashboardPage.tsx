@@ -5,14 +5,12 @@ import { systemApi } from '@/api/endpoints';
 import { qk } from '@/api/queryKeys';
 import { CASE_STATUSES } from '@/api/types';
 import { Alert, Card, ErrorMessage, Loading, PageHeader } from '@/components';
-import { useReviewerKey } from '@/lib/reviewerKey';
 import { STATUS_META } from '@/lib/tones';
 import { CaseTable, compactCaseColumns } from '@/features/cases/CaseTable';
 import { useCases, useStats } from '@/features/cases/hooks';
 
 export default function DashboardPage() {
   const client = useQueryClient();
-  const reviewerKey = useReviewerKey();
   const [fresh, setFresh] = useState(false);
   const reset = useMutation({
     mutationFn: async () => {
@@ -36,8 +34,8 @@ export default function DashboardPage() {
         subtitle="Invoice processing at a glance."
         actions={
           <>
-            <button className="btn" disabled={reset.isPending || !reviewerKey}
-              title={reviewerKey ? 'Clear processing data and reload reference data' : 'Set your reviewer key in Settings first'}
+            <button className="btn" disabled={reset.isPending}
+              title="Clear processing data, vendors, purchase orders, FX rates and policy"
               onClick={() => reset.mutate()}>
               {reset.isPending ? 'Starting fresh…' : 'Refresh & start fresh'}
             </button>
@@ -46,9 +44,9 @@ export default function DashboardPage() {
           </>
         }
       />
-      <p className="small muted">Refresh clears all processed cases, uploaded documents, audit history and PO reservations, and reloads reference data. Test inputs are kept. Set your reviewer key in <Link to="/settings">Settings</Link> to enable it.</p>
+      <p className="small muted">Refresh clears all processed cases, uploaded documents, audit history, PO reservations and reference data (vendors, purchase orders, FX rates and policy). Test inputs are kept.</p>
       {reset.error && <ErrorMessage error={reset.error} title="Could not start fresh" />}
-      {fresh && <Alert tone="info" title="Fresh start complete">Processing data has been cleared and reference data reloaded.</Alert>}
+      {fresh && <Alert tone="info" title="Fresh start complete">Processing and reference data have been cleared.</Alert>}
       {health.data && !health.data.extraction_configured && (
         <Alert tone="warn" title="Extraction is not configured">
           New cases go to review with <code>EXTRACTION_NOT_CONFIGURED</code>. Set <code>EXTRACTION_MODEL</code> and

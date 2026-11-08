@@ -21,7 +21,7 @@ const V1 = '/api/v1';
 const enc = encodeURIComponent;
 
 export const systemApi = {
-  reset: () => request<{ status: string }>(`${V1}/reset`, { method: 'POST', reviewer: true }),
+  reset: () => request<{ status: string }>(`${V1}/reset`, { method: 'POST' }),
   health: () => request<Health>('/health'),
   stats: () => request<Stats>(`${V1}/stats`),
   references: () => request<References>(`${V1}/references`),

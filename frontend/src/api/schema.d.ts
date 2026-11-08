@@ -370,7 +370,7 @@ export interface paths {
         put?: never;
         /**
          * Reset
-         * @description Clear processing state and reload trusted reference data; preserve fixtures.
+         * @description Clear processing and reference data; preserve fixtures.
          */
         post: operations["reset_api_v1_reset_post"];
         delete?: never;
@@ -1315,9 +1315,7 @@ export interface operations {
     reset_api_v1_reset_post: {
         parameters: {
             query?: never;
-            header?: {
-                "x-reviewer-key"?: string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -1330,15 +1328,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

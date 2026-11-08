@@ -1,6 +1,8 @@
 import hashlib
 import json
 import logging
+import os
+import tempfile
 import sqlite3
 import threading
 import uuid
@@ -191,7 +193,23 @@ class Service:
     def reset(self):
         # Wait for an in-flight extraction to finish before removing its case.
         # Source bytes, results and reservations all live in these SQLite tables.
-        self.references()  # Validate/reload the current trusted file before clearing.
+        from .settings import TEST_ROOT
+        reference_path = self.settings.procurement_path.resolve()
+        if (reference_path.is_relative_to(TEST_ROOT.resolve()) or
+                self.settings.db_path.resolve().is_relative_to(TEST_ROOT.resolve())):
+            raise ValueError('Reset cannot modify files under test_cases.')
+        empty = {'vendors': [], 'purchase_orders': [], 'fx_rates': [], 'validation_policy': {}}
+        # Replace atomically so concurrent readers never see partial JSON.
+        with tempfile.NamedTemporaryFile(mode='w', dir=reference_path.parent,
+                                         prefix='.procurement-', delete=False) as stream:
+            temporary = stream.name
+            json.dump(empty, stream, indent=2)
+            stream.write('\n')
+        try:
+            os.replace(temporary, reference_path)
+        finally:
+            if os.path.exists(temporary):
+                os.unlink(temporary)
         self.store.reset()
         return {'status': 'reset'}
 

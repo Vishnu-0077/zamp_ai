@@ -47,13 +47,12 @@ model variables as needed. See the [root guide](../README.md) for the dashboard.
 No credentials means processing goes to review with `EXTRACTION_NOT_CONFIGURED`.
 Missing Tesseract produces `OCR_UNAVAILABLE` for scans or mixed raster pages.
 
-The checked-in `backend/procurement.json` is a trusted synthetic procurement
-master, copied from the original fixtures. Replace it with your trusted vendor,
-PO, receipt, FX and policy data using `PROCUREMENT_PATH`. Never populate it from
-invoice text. It deliberately retains the fixture evaluation date 2026-11-02.
-Change `validation_policy.as_of_date` for another fixed evaluation date, or omit
-it to use the current UTC date. Policy changes affect subsequent evaluations;
-each decision retains its procurement/policy snapshot.
+`backend/procurement.json` starts with empty vendor, purchase-order and FX lists
+and an empty validation policy. Reset and default startup empty this file (or
+`PROCUREMENT_PATH`) too. Populate trusted references after startup to evaluate
+invoices against them, or set `RESET_ON_START=false` to keep your configured data
+across restarts. Never populate trusted data from invoice text. With no vendor/PO
+records, invoices require review. An unset policy date uses the current UTC date.
 
 ## Container
 
@@ -219,7 +218,7 @@ to review with an explicit retry, rather than silently repeating external calls.
 reservations after the worker acquires the database lock. The default is
 `true` for both direct startup and the helper. Set `RESET_ON_START=false`
 explicitly to retain processing history.
-Source fixtures and procurement data are retained. Use reset only for local
+Source fixtures are retained; procurement reference records are cleared. Use reset only for local
 development where losing processing history is intended.
 
 Do not use multiple independent databases against the same real PO ledger.
@@ -232,10 +231,10 @@ manual terminal-case editing. Audit records are append-only through this API,
 not tamper-proof against filesystem/database administrators. Protect and back
 up the runtime volume and keys before exposing the service externally.
 
-`POST /api/v1/reset` requires the application key (when configured) and reviewer
-key. It waits for active processing, then atomically removes cases, source PDF
-bytes, extracted results, submissions, audit events and reservations. It reloads
-the current reference file. No files under `test_cases/` are changed. The home
+`POST /api/v1/reset` requires the application key when configured; no reviewer
+key is needed. It waits for active processing, then atomically removes cases, source PDF
+bytes, extracted results, submissions, audit events and reservations. It also atomically replaces
+the current reference file with empty vendors, POs, FX rates and policy. No files under `test_cases/` are changed. The home
 page's **Refresh & start fresh** button also clears the browser query cache.
 
 ## Verification

@@ -21,25 +21,25 @@ class ResetTests(unittest.TestCase):
     def tearDown(self):
         self.fixture.tearDown()
 
-    def test_api_reset_requires_reviewer_and_clears_all_processing_tables(self):
+    def test_api_reset_requires_application_key_and_clears_processing_and_references(self):
         f = self.fixture
+        f.settings.api_key = 'app-secret'
         app = FastAPI()
         service = install(app, f.settings, f.service.extractor)
-        before = f.settings.procurement_path.read_bytes()
         client = TestClient(app)
         job = service.ingest(b'example', '', 'source.pdf')['id']
-        self.assertEqual(client.post('/api/v1/reset').status_code, 403)
+        self.assertEqual(client.post('/api/v1/reset').status_code, 401)
         self.assertIsNotNone(service.store.get(job))
-        response = client.post('/api/v1/reset', headers={'X-Reviewer-Key': 'review-secret'})
+        response = client.post('/api/v1/reset', headers={'X-API-Key': 'app-secret'})
         self.assertEqual(response.status_code, 200)
         for table in ('jobs', 'submissions', 'audit', 'reservations'):
             with service.store.connect() as c:
                 self.assertEqual(c.execute(f'SELECT count(*) FROM {table}').fetchone()[0], 0)
-        self.assertEqual(f.settings.procurement_path.read_bytes(), before)
-        refs = json.loads(before)
-        refs['vendors'][0]['name'] = 'Reloaded vendor'
-        f.settings.procurement_path.write_text(json.dumps(refs))
-        self.assertEqual(client.get('/api/v1/references').json()['vendors'][0]['name'], 'Reloaded vendor')
+        refs = json.loads(f.settings.procurement_path.read_text())
+        self.assertEqual(refs, {'vendors': [], 'purchase_orders': [], 'fx_rates': [], 'validation_policy': {}})
+        response = client.get('/api/v1/references', headers={'X-API-Key': 'app-secret'})
+        self.assertEqual(response.json()['vendors'], [])
+        self.assertEqual(response.json()['purchase_orders'], [])
 
     def test_restart_clears_by_default(self):
         f = self.fixture
@@ -51,6 +51,7 @@ class ResetTests(unittest.TestCase):
         try:
             service.start()
             self.assertIsNone(service.store.get(job))
+            self.assertEqual(service.references()['vendors'], [])
         finally:
             service.stop()
 

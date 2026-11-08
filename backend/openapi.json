@@ -859,20 +859,8 @@
           "processing"
         ],
         "summary": "Reset",
-        "description": "Clear processing state and reload trusted reference data; preserve fixtures.",
+        "description": "Clear processing and reference data; preserve fixtures.",
         "operationId": "reset_api_v1_reset_post",
-        "parameters": [
-          {
-            "name": "x-reviewer-key",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "",
-              "title": "X-Reviewer-Key"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -881,23 +869,9 @@
                 "schema": {}
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
           }
         },
-        "security": [
-          {
-            "ReviewerKey": []
-          }
-        ]
+        "security": []
       }
     },
     "/api/v1/references": {

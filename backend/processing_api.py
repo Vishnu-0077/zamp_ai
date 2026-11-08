@@ -157,8 +157,8 @@ def install(app: FastAPI, settings=None, extractor=None):
         return service.retry(job_id, body.expected_version, body.note, actor)
 
     @router.post('/reset')
-    def reset(actor=Depends(reviewer)):
-        """Clear processing state and reload trusted reference data; preserve fixtures."""
+    def reset():
+        """Clear processing and reference data; preserve fixtures."""
         return service.reset()
 
     @router.get('/references')
@@ -176,7 +176,7 @@ def install(app: FastAPI, settings=None, extractor=None):
             for operation in methods.values():
                 if isinstance(operation, dict) and path != '/health':
                     security = {'ApiKey': []} if settings.api_key else {}
-                    if path.endswith(('/corrections', '/retry', '/reset')):
+                    if path.endswith(('/corrections', '/retry')):
                         security['ReviewerKey'] = []
                     operation['security'] = [security] if security else []
         return schema

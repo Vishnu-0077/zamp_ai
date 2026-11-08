@@ -28,13 +28,11 @@ afterEach(() => {
 
 describe('App', () => {
   it('starts fresh from the home page and reloads the case list', async () => {
-    setReviewerKey('review-secret');
     let cleared = false;
     const fetch = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
       const path = new URL(String(input), 'http://localhost').pathname;
       if (path === '/api/v1/reset') {
         expect(options?.method).toBe('POST');
-        expect(new Headers(options?.headers).get('X-Reviewer-Key')).toBe('review-secret');
         cleared = true;
         return Response.json({ status: 'reset' });
       }
