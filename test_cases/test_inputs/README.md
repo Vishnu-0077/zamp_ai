@@ -64,6 +64,8 @@ Emails **41–50** retain the previous scenarios with added features:
 
 Expected **email-level** totals: **40 approvals, 2 duplicates, 8 human reviews**.
 Ground-truth labels are test answers, not results produced by the demo app.
+A live run of `backend/audit_inbox.py` on 2026-11-08 (Gemini/Groq) reproduced
+all 50; model output varies, so rerun it rather than relying on that result.
 Email 47's second invoice has its own PO and is expected to pass these checks
 independently. Its third document is a positive-value debit note referring to
 invoice 002-2026-0002. Email 49 is a negative credit adjustment referring to

@@ -29,7 +29,6 @@ load_key GROQ_API_KEY groq.key
 unset OPENAI_API_KEY OPENAI_BASE_URL
 
 export BACKEND_API_KEY="${BACKEND_API_KEY:-dev-app-key}"
-export REVIEWER_API_KEY="${REVIEWER_API_KEY:-dev-reviewer-key}"
 export EXTRACTION_MODEL="${EXTRACTION_MODEL:-gemini:gemini-3.5-flash}"
 export EXTRACTION_FALLBACK_MODELS="${EXTRACTION_FALLBACK_MODELS:-groq:openai/gpt-oss-120b,gemini:gemini-3-flash-preview,gemini:gemini-3.5-flash-lite,groq:qwen/qwen3.8-27b}"
 export EXTRACTION_PROVIDER_RETRIES="${EXTRACTION_PROVIDER_RETRIES:-3}"

@@ -9,9 +9,12 @@ TEST_ROOT = ROOT / 'test_cases'
 class Settings:
     db_path: Path = field(default_factory=lambda: Path(os.getenv('PROCESSING_DB', str(ROOT / 'backend' / 'runtime' / 'processing.sqlite3'))))
     inbox_path: Path = TEST_ROOT / 'test_inputs' / 'inbox.sqlite3'
+    # Excel register of approved invoices, rewritten after every approval and reset.
+    # Defaults to exports/ beside the processing database, so each database has its own.
+    export_override: Path | None = field(default_factory=lambda: Path(p) if (p := os.getenv('APPROVED_EXPORT_PATH')) else None)
+
     procurement_path: Path = field(default_factory=lambda: Path(os.getenv('PROCUREMENT_PATH', str(ROOT / 'backend' / 'procurement.json'))))
     api_key: str = field(default_factory=lambda: os.getenv('BACKEND_API_KEY', ''))
-    reviewer_key: str = field(default_factory=lambda: os.getenv('REVIEWER_API_KEY', ''))
     model: str = field(default_factory=lambda: os.getenv('EXTRACTION_MODEL', ''))
     # Keys for providers named with a prefix, e.g. EXTRACTION_FALLBACK_MODELS=groq:openai/gpt-oss-120b.
     provider_keys: dict[str, str] = field(default_factory=lambda: {
@@ -30,3 +33,7 @@ class Settings:
     # Development only: wipe processed cases, audit and PO reservations when the worker starts.
     # The test inbox and procurement file are never touched.
     reset_on_start: bool = field(default_factory=lambda: os.getenv('RESET_ON_START', 'true').lower() == 'true')
+
+    @property
+    def export_path(self) -> Path:
+        return self.export_override or self.db_path.parent / 'exports' / 'approved_invoices.xlsx'

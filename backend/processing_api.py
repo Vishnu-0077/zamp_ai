@@ -5,12 +5,15 @@ from contextlib import asynccontextmanager
 from email import policy
 from email.parser import BytesParser
 from typing import Literal
-from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, Query, Request, Response
+from fastapi import APIRouter, FastAPI, Header, HTTPException, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from .settings import Settings
-from .schemas import Correction, IngestRequest, RetryRequest, InvoiceExtraction, CaseSummary, CaseDetail, CasePage, IngestResult
+from .schemas import Correction, IngestRequest, ManualApproval, RetryRequest, InvoiceExtraction, CaseSummary, CaseDetail, CasePage, IngestResult
 from .invoice_service import Service, Conflict, NotFound
+
+
+XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 
 def install(app: FastAPI, settings=None, extractor=None):
@@ -26,11 +29,11 @@ def install(app: FastAPI, settings=None, extractor=None):
             finally: service.stop()
     app.router.lifespan_context = lifespan
     app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins,
-                       allow_methods=['GET', 'POST'], allow_headers=['Content-Type', 'X-API-Key', 'X-Reviewer-Key', 'X-Filename', 'X-Sender'])
+                       allow_methods=['GET', 'POST'], allow_headers=['Content-Type', 'X-API-Key', 'X-Filename', 'X-Sender'])
 
     @app.middleware('http')
     async def api_auth(request, call_next):
-        if request.method != 'OPTIONS' and request.url.path not in {'/health', '/docs', '/docs/oauth2-redirect', '/redoc', '/openapi.json'} and settings.api_key:
+        if request.method != 'OPTIONS' and (request.url.path.rstrip('/') or '/') not in {'/health', '/docs', '/docs/oauth2-redirect', '/redoc', '/openapi.json'} and settings.api_key:
             if not hmac.compare_digest(request.headers.get('x-api-key', ''), settings.api_key):
                 return JSONResponse(status_code=401, content={'error': {'code': 'UNAUTHORIZED', 'message': 'Valid X-API-Key required.'}})
         response = await call_next(request)
@@ -47,13 +50,9 @@ def install(app: FastAPI, settings=None, extractor=None):
     async def invalid(request, exc):
         return JSONResponse(status_code=400, content={'error': {'code': 'INVALID_REQUEST', 'message': str(exc)}})
 
-    def reviewer(x_reviewer_key: str = Header(default='')):
-        # No anonymous review writes, even in local mode.
-        if not settings.reviewer_key:
-            raise HTTPException(503, 'REVIEWER_API_KEY must be configured for review actions.')
-        if not hmac.compare_digest(x_reviewer_key, settings.reviewer_key):
-            raise HTTPException(403, 'Valid X-Reviewer-Key required.')
-        return 'reviewer:' + __import__('hashlib').sha256(x_reviewer_key.encode()).hexdigest()[:12]
+    def reviewer(name: str) -> str:
+        # Anyone using the dashboard may review; the self-reported name is recorded for accountability.
+        return 'reviewer:' + ' '.join(name.split())
 
     def case(job_id):
         data = service.store.get(job_id)
@@ -70,7 +69,8 @@ def install(app: FastAPI, settings=None, extractor=None):
 
     @app.get('/health', tags=['system'])
     def health():
-        return {'status': 'ok', 'worker_enabled': settings.worker_enabled,
+        refs = service.references()
+        return {'status': 'ok', 'references_configured': bool(refs.get('vendors') and refs.get('purchase_orders')), 'worker_enabled': settings.worker_enabled,
                 'worker_alive': bool(service.thread and service.thread.is_alive()),
                 'extraction_configured': bool(settings.model)}
 
@@ -127,7 +127,23 @@ def install(app: FastAPI, settings=None, extractor=None):
     @router.get('/stats')
     def stats():
         with service.store.connect() as c:
-            return {'counts': {r['status']: r['n'] for r in c.execute('SELECT status,count(*) n FROM jobs GROUP BY status')}}
+            counts = {r['status']: r['n'] for r in c.execute('SELECT status,count(*) n FROM jobs GROUP BY status')}
+            # Count distinct inbox emails; identical PDFs still share one case.
+            rows = c.execute("""SELECT CASE WHEN s.id != (SELECT min(first.id) FROM submissions first WHERE first.job_id=s.job_id)
+                                 THEN 'duplicate' ELSE j.status END AS status, count(*) n
+                                 FROM submissions s JOIN jobs j ON j.id=s.job_id
+                                 WHERE s.email_id IS NOT NULL AND s.id=(SELECT min(e.id) FROM submissions e WHERE e.email_id=s.email_id)
+                                 GROUP BY 1""")
+            return {'counts': counts, 'inbox_counts': {r['status']: r['n'] for r in rows}}
+
+    @router.get('/exports/approved-invoices.xlsx', tags=['exports'],
+                responses={200: {'content': {XLSX: {}}, 'description': 'Excel workbook of all approved invoices'}})
+    def approved_invoices_export():
+        """Download every approved invoice as an Excel workbook, generated from current data."""
+        from datetime import date
+        return Response(service.export_approved(), media_type=XLSX, headers={
+            'Content-Disposition': f'attachment; filename="approved-invoices-{date.today().isoformat()}.xlsx"',
+            'Cache-Control': 'no-store'})
 
     @router.get('/cases/{job_id}', response_model=CaseDetail)
     def detail(job_id: str): return case(job_id)
@@ -147,18 +163,23 @@ def install(app: FastAPI, settings=None, extractor=None):
         return {'items': [{**dict(r), 'payload': json.loads(r['payload'])} for r in rows]}
 
     @router.post('/cases/{job_id}/corrections', response_model=CaseDetail)
-    def correct(job_id: str, body: Correction, actor=Depends(reviewer)):
+    def correct(job_id: str, body: Correction):
         """Attest the full corrected extraction; rerun validation and business rules, never OCR."""
-        return service.validate(job_id, body.extraction, actor, body.expected_version, body.note)
+        return service.validate(job_id, body.extraction, reviewer(body.reviewer), body.expected_version, body.note)
+
+    @router.post('/cases/{job_id}/approve', response_model=CaseDetail)
+    def approve(job_id: str, body: ManualApproval):
+        """Approve a held case after a reviewer checked it by eye; open findings are recorded as overridden."""
+        return service.approve_manually(job_id, body.expected_version, body.note, body.acknowledged_codes, reviewer(body.reviewer))
 
     @router.post('/cases/{job_id}/retry', response_model=CaseDetail)
-    def retry(job_id: str, body: RetryRequest, actor=Depends(reviewer)):
+    def retry(job_id: str, body: RetryRequest):
         """Retry a repaired processing dependency. Not available for business exceptions."""
-        return service.retry(job_id, body.expected_version, body.note, actor)
+        return service.retry(job_id, body.expected_version, body.note, reviewer(body.reviewer))
 
     @router.post('/reset')
     def reset():
-        """Clear processing and reference data; preserve fixtures."""
+        """Clear processing results; retain trusted validation configuration and fixtures."""
         return service.reset()
 
     @router.get('/references')
@@ -171,13 +192,10 @@ def install(app: FastAPI, settings=None, extractor=None):
         schema = original_openapi()
         schemes = schema.setdefault('components', {}).setdefault('securitySchemes', {})
         schemes['ApiKey'] = {'type': 'apiKey', 'in': 'header', 'name': 'X-API-Key'}
-        schemes['ReviewerKey'] = {'type': 'apiKey', 'in': 'header', 'name': 'X-Reviewer-Key'}
         for path, methods in schema['paths'].items():
             for operation in methods.values():
                 if isinstance(operation, dict) and path != '/health':
                     security = {'ApiKey': []} if settings.api_key else {}
-                    if path.endswith(('/corrections', '/retry')):
-                        security['ReviewerKey'] = []
                     operation['security'] = [security] if security else []
         return schema
     app.openapi = openapi

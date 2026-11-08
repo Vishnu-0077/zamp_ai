@@ -18,3 +18,4 @@ openai>=2.45,<4
 httpx>=0.28,<1
 
 # System dependency for scanned PDFs: tesseract-ocr (install separately).
+openpyxl>=3.1,<4

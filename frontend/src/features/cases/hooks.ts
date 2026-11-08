@@ -62,6 +62,10 @@ export function useCorrectCase(id: string) {
   return useCaseMutation(id, (body: Parameters<typeof casesApi.correct>[1]) => casesApi.correct(id, body));
 }
 
+export function useApproveCase(id: string) {
+  return useCaseMutation(id, (body: Parameters<typeof casesApi.approve>[1]) => casesApi.approve(id, body));
+}
+
 export function useRetryCase(id: string) {
   return useCaseMutation(id, (body: Parameters<typeof casesApi.retry>[1]) => casesApi.retry(id, body));
 }

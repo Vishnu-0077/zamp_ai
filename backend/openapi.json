@@ -569,6 +569,29 @@
         "security": []
       }
     },
+    "/api/v1/exports/approved-invoices.xlsx": {
+      "get": {
+        "tags": [
+          "processing",
+          "exports"
+        ],
+        "summary": "Approved Invoices Export",
+        "description": "Download every approved invoice as an Excel workbook, generated from current data.",
+        "operationId": "approved_invoices_export_api_v1_exports_approved_invoices_xlsx_get",
+        "responses": {
+          "200": {
+            "description": "Excel workbook of all approved invoices",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}
+            }
+          }
+        },
+        "security": []
+      }
+    },
     "/api/v1/cases/{job_id}": {
       "get": {
         "tags": [
@@ -734,16 +757,6 @@
               "type": "string",
               "title": "Job Id"
             }
-          },
-          {
-            "name": "x-reviewer-key",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "",
-              "title": "X-Reviewer-Key"
-            }
           }
         ],
         "requestBody": {
@@ -778,11 +791,61 @@
             }
           }
         },
-        "security": [
+        "security": []
+      }
+    },
+    "/api/v1/cases/{job_id}/approve": {
+      "post": {
+        "tags": [
+          "processing"
+        ],
+        "summary": "Approve",
+        "description": "Approve a held case after a reviewer checked it by eye; open findings are recorded as overridden.",
+        "operationId": "approve_api_v1_cases__job_id__approve_post",
+        "parameters": [
           {
-            "ReviewerKey": []
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualApproval"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": []
       }
     },
     "/api/v1/cases/{job_id}/retry": {
@@ -801,16 +864,6 @@
             "schema": {
               "type": "string",
               "title": "Job Id"
-            }
-          },
-          {
-            "name": "x-reviewer-key",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "",
-              "title": "X-Reviewer-Key"
             }
           }
         ],
@@ -846,11 +899,7 @@
             }
           }
         },
-        "security": [
-          {
-            "ReviewerKey": []
-          }
-        ]
+        "security": []
       }
     },
     "/api/v1/reset": {
@@ -859,7 +908,7 @@
           "processing"
         ],
         "summary": "Reset",
-        "description": "Clear processing and reference data; preserve fixtures.",
+        "description": "Clear processing results; retain trusted validation configuration and fixtures.",
         "operationId": "reset_api_v1_reset_post",
         "responses": {
           "200": {
@@ -1323,6 +1372,13 @@
       },
       "Correction": {
         "properties": {
+          "reviewer": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 2,
+            "pattern": "\\S",
+            "title": "Reviewer"
+          },
           "expected_version": {
             "type": "integer",
             "minimum": 1.0,
@@ -1341,6 +1397,7 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
+          "reviewer",
           "expected_version",
           "note",
           "extraction"
@@ -1368,6 +1425,11 @@
           "explanation": {
             "type": "string",
             "title": "Explanation"
+          },
+          "manual_override": {
+            "type": "boolean",
+            "title": "Manual Override",
+            "default": false
           }
         },
         "additionalProperties": false,
@@ -2001,8 +2063,53 @@
         ],
         "title": "LineItem"
       },
+      "ManualApproval": {
+        "properties": {
+          "reviewer": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 2,
+            "pattern": "\\S",
+            "title": "Reviewer"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Expected Version"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 10,
+            "title": "Note"
+          },
+          "acknowledged_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Acknowledged Codes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "reviewer",
+          "expected_version",
+          "note",
+          "acknowledged_codes"
+        ],
+        "title": "ManualApproval"
+      },
       "RetryRequest": {
         "properties": {
+          "reviewer": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 2,
+            "pattern": "\\S",
+            "title": "Reviewer"
+          },
           "expected_version": {
             "type": "integer",
             "minimum": 1.0,
@@ -2018,6 +2125,7 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
+          "reviewer",
           "expected_version",
           "note"
         ],
@@ -2131,11 +2239,6 @@
         "type": "apiKey",
         "in": "header",
         "name": "X-API-Key"
-      },
-      "ReviewerKey": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "X-Reviewer-Key"
       }
     }
   }

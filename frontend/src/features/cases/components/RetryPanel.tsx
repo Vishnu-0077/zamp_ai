@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { RETRYABLE_CODES, type CaseDetail } from '@/api/types';
 import { Alert, ErrorMessage } from '@/components';
-import { useReviewerKey } from '@/lib/reviewerKey';
+import { isValidName, useReviewerName } from '@/lib/reviewerName';
+import { ReviewerNameField } from './ReviewerNameField';
 import { useRetryCase } from '../hooks';
 
 export function canRetry(detail: CaseDetail): boolean {
@@ -13,7 +13,7 @@ export function canRetry(detail: CaseDetail): boolean {
 /** Re-queue a case after a processing dependency (OCR/model/config) is repaired. */
 export function RetryPanel({ detail }: { detail: CaseDetail }) {
   const [note, setNote] = useState('');
-  const reviewerKey = useReviewerKey();
+  const reviewer = useReviewerName();
   const mutation = useRetryCase(detail.id);
   if (!canRetry(detail)) return null;
   return (
@@ -22,13 +22,13 @@ export function RetryPanel({ detail }: { detail: CaseDetail }) {
         This case stopped because of a processing dependency, not a business rule. After fixing the backend configuration
         (OCR, model credentials), retry to re-run extraction.
       </p>
-      {!reviewerKey && <p className="small">Requires a reviewer key. Set it in <Link to="/settings">Settings</Link>.</p>}
+      <ReviewerNameField />
       <div className="row" style={{ flexWrap: 'nowrap' }}>
         <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Retry note, e.g. “Configured EXTRACTION_MODEL”" aria-label="Retry note" />
         <button
           className="btn btn-primary"
-          disabled={note.trim().length < 5 || mutation.isPending || !reviewerKey}
-          onClick={() => mutation.mutate({ expected_version: detail.version, note: note.trim() }, { onSuccess: () => setNote('') })}
+          disabled={note.trim().length < 5 || mutation.isPending || !isValidName(reviewer)}
+          onClick={() => mutation.mutate({ expected_version: detail.version, note: note.trim(), reviewer: reviewer.trim() }, { onSuccess: () => setNote('') })}
         >
           {mutation.isPending ? 'Retrying…' : 'Retry processing'}
         </button>

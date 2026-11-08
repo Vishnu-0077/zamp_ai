@@ -52,7 +52,7 @@ class BackendTests(unittest.TestCase):
                      'purchase_orders': [{'number': 'PO-1', 'vendor_id': 'V1', 'amount': '110', 'received_amount': '110', 'currency': 'USD', 'issue_date': '2026-09-01'}],
                      'fx_rates': [], 'policy': {'as_of_date': '2026-11-02', 'amount_tolerance': '.01'}}
         (root / 'refs.json').write_text(json.dumps(self.refs))
-        self.settings = Settings(db_path=root / 'db.sqlite3', procurement_path=root / 'refs.json', worker_enabled=False, reviewer_key='review-secret')
+        self.settings = Settings(db_path=root / 'db.sqlite3', procurement_path=root / 'refs.json', worker_enabled=False)
         self.e = extraction()
         class FakeExtractor:
             def extract(inner, pages): return ExtractionBatch(documents=[self.e])
@@ -89,6 +89,7 @@ class BackendTests(unittest.TestCase):
         self.assertTrue(self.service.process_next())
         def count(service, table):
             with service.store.connect() as c: return c.execute(f'SELECT COUNT(*) FROM {table}').fetchone()[0]
+        self.settings.reset_on_start = False
         kept = Service(self.settings, None)
         kept.start(); kept.stop()
         self.assertEqual(count(kept, 'jobs'), 1)
@@ -132,6 +133,90 @@ class BackendTests(unittest.TestCase):
         self.assertEqual(result['status'], 'review')
         self.assertIn('TOTAL_MISMATCH', self.codes(result))
         self.assertIn('BANK_ACCOUNT_CHANGED', self.codes(result))
+
+    def test_manual_approval_requires_acknowledging_every_issue_and_reserves_po(self):
+        e = self.e.model_copy(deep=True)
+        e.bank_details.value = 'ATTACKER'
+        job_id = self.seeded(e)
+        held = self.service.validate(job_id, e)
+        self.assertEqual(held['status'], 'review')
+        codes = held['decision']['reason_codes']
+        self.assertIn('BANK_ACCOUNT_CHANGED', codes)
+        with self.assertRaises(Conflict):
+            self.service.approve_manually(job_id, held['version'], 'Called vendor on file', [], 'reviewer')
+        approved = self.service.approve_manually(job_id, held['version'], 'Called vendor on file to confirm', codes, 'reviewer')
+        self.assertEqual(approved['status'], 'approved')
+        self.assertTrue(approved['decision']['manual_override'])
+        self.assertEqual(approved['decision']['reason_codes'], sorted(codes))
+        self.assertEqual(approved['findings'], held['findings'])
+        with self.service.store.connect() as c:
+            self.assertEqual(c.execute('SELECT po_number FROM reservations WHERE job_id=?', (job_id,)).fetchone()[0], 'PO-1')
+            events = [r[0] for r in c.execute('SELECT event FROM audit WHERE job_id=?', (job_id,))]
+        self.assertIn('manual_approval', events)
+        with self.assertRaises(Conflict):  # no longer in review / stale version
+            self.service.approve_manually(job_id, approved['version'], 'Called vendor on file to confirm', codes, 'reviewer')
+
+    def test_approved_invoices_excel_is_kept_current(self):
+        from io import BytesIO
+        from openpyxl import load_workbook
+        path = self.settings.export_path
+        self.assertTrue(path.is_relative_to(Path(self.temp.name)))  # never the real runtime folder
+        auto = self.seeded()
+        self.service.validate(auto, self.e)
+        held_e = extraction(number='INV-002')
+        held_e.bank_details.value = 'ATTACKER'
+        held = self.seeded(held_e)
+        case = self.service.validate(held, held_e)
+        self.service.approve_manually(held, case['version'], 'Vendor confirmed new account by phone', case['decision']['reason_codes'], 'reviewer:abc')
+        book = load_workbook(path)
+        self.assertEqual(book.sheetnames, ['Summary', 'Approved invoices', 'Line items'])
+        rows = list(book['Approved invoices'].iter_rows(values_only=True))
+        header = rows[0]
+        records = [dict(zip(header, r)) for r in rows[1:]]
+        self.assertEqual([r['Invoice number'] for r in records], ['INV-001', 'INV-002'])
+        self.assertEqual([r['Approval'] for r in records], ['Automatic', 'Manual'])
+        self.assertEqual(records[1]['Approved by'], 'reviewer:abc')
+        self.assertEqual(records[1]['Reviewer note'], 'Vendor confirmed new account by phone')
+        self.assertIn('BANK_ACCOUNT_CHANGED', records[1]['Overridden issues'])
+        self.assertEqual(float(records[0]['Total']), 110.0)
+        self.assertEqual((records[1]['Bank account on vendor record'], records[1]['Bank account on invoice']), ('ACCOUNT-1', 'ATTACKER'))
+        self.assertEqual(len(list(book['Line items'].iter_rows(values_only=True))), 3)
+        # The API download is generated from the same data.
+        app = FastAPI()
+        install(app, self.settings)
+        with TestClient(app) as client:
+            response = client.get('/api/v1/exports/approved-invoices.xlsx')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('attachment; filename="approved-invoices-', response.headers['content-disposition'])
+        self.assertEqual(load_workbook(BytesIO(response.content))['Summary']['B3'].value, 2)
+        # A reset empties the register.
+        self.service.reset()
+        self.assertEqual(load_workbook(path)['Approved invoices'].max_row, 1)
+
+    def test_manual_approval_refused_when_nothing_was_read(self):
+        job_id = self.ingest()
+        self.service.fail(job_id, 'PROCESSING_ERROR', 'Provider down')
+        case = self.service.store.get(job_id)
+        with self.assertRaises(Conflict):
+            self.service.approve_manually(job_id, case['version'], 'Looks fine to me honestly', ['PROCESSING_ERROR'], 'reviewer')
+
+    def test_manual_approval_api_needs_no_key_and_records_the_reviewer_name(self):
+        app = FastAPI()
+        install(app, self.settings)
+        e = self.e.model_copy(deep=True)
+        e.bank_details.value = 'ATTACKER'
+        job_id = self.seeded(e)
+        held = self.service.validate(job_id, e)
+        with TestClient(app) as client:
+            body = {'expected_version': held['version'], 'note': 'Checked against the PDF',
+                    'acknowledged_codes': held['decision']['reason_codes']}
+            self.assertEqual(client.post(f'/api/v1/cases/{job_id}/approve', json=body).status_code, 422)  # name required
+            response = client.post(f'/api/v1/cases/{job_id}/approve', json={**body, 'reviewer': '  Priya   S '})
+            self.assertEqual(response.status_code, 200, response.text)
+            self.assertNotIn('ReviewerKey', str(client.get('/openapi.json').json()))
+        with self.service.store.connect() as c:
+            actor = c.execute("SELECT actor FROM audit WHERE job_id=? AND event='manual_approval'", (job_id,)).fetchone()[0]
+        self.assertEqual(actor, 'reviewer:Priya S')
 
     def test_correction_reenters_validation_and_stale_write_rejected(self):
         e = self.e.model_copy(deep=True)
@@ -191,13 +276,16 @@ class BackendTests(unittest.TestCase):
         job_id = self.seeded()
         with TestClient(app) as client:
             self.assertEqual(client.get('/api/v1/cases').status_code, 401)
+            self.assertEqual(client.get('/api/v1/cases/').status_code, 401)
+            self.assertEqual(client.get('/health').status_code, 200)
+            self.assertEqual(client.get('/health/').status_code, 200)
             headers = {'X-API-Key':'api-secret'}
             self.assertEqual(client.get('/api/v1/cases?limit=0', headers=headers).status_code, 422)
             response = client.get('/api/v1/cases', headers=headers)
             self.assertEqual(response.json()['total'], 1)
             body = {'expected_version':1,'note':'All fields visually verified','extraction':self.e.model_dump(mode='json')}
-            self.assertEqual(client.post(f'/api/v1/cases/{job_id}/corrections',json=body,headers=headers).status_code,403)
-            headers['X-Reviewer-Key'] = 'review-secret'
+            self.assertEqual(client.post(f'/api/v1/cases/{job_id}/corrections',json=body,headers=headers).status_code,422)
+            body['reviewer'] = 'Sam'
             response = client.post(f'/api/v1/cases/{job_id}/corrections',json=body,headers=headers)
             self.assertEqual(response.status_code,200,response.text)
             self.assertEqual(response.json()['status'],'approved')

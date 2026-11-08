@@ -21,12 +21,13 @@ class ResetTests(unittest.TestCase):
     def tearDown(self):
         self.fixture.tearDown()
 
-    def test_api_reset_requires_application_key_and_clears_processing_and_references(self):
+    def test_api_reset_clears_processing_and_preserves_trusted_references(self):
         f = self.fixture
         f.settings.api_key = 'app-secret'
         app = FastAPI()
         service = install(app, f.settings, f.service.extractor)
         client = TestClient(app)
+        before = f.settings.procurement_path.read_bytes()
         job = service.ingest(b'example', '', 'source.pdf')['id']
         self.assertEqual(client.post('/api/v1/reset').status_code, 401)
         self.assertIsNotNone(service.store.get(job))
@@ -36,10 +37,10 @@ class ResetTests(unittest.TestCase):
             with service.store.connect() as c:
                 self.assertEqual(c.execute(f'SELECT count(*) FROM {table}').fetchone()[0], 0)
         refs = json.loads(f.settings.procurement_path.read_text())
-        self.assertEqual(refs, {'vendors': [], 'purchase_orders': [], 'fx_rates': [], 'validation_policy': {}})
+        self.assertEqual(f.settings.procurement_path.read_bytes(), before)
         response = client.get('/api/v1/references', headers={'X-API-Key': 'app-secret'})
-        self.assertEqual(response.json()['vendors'], [])
-        self.assertEqual(response.json()['purchase_orders'], [])
+        self.assertEqual(response.json()['vendors'], f.refs['vendors'])
+        self.assertEqual(response.json()['purchase_orders'], f.refs['purchase_orders'])
 
     def test_restart_clears_by_default(self):
         f = self.fixture
@@ -51,7 +52,7 @@ class ResetTests(unittest.TestCase):
         try:
             service.start()
             self.assertIsNone(service.store.get(job))
-            self.assertEqual(service.references()['vendors'], [])
+            self.assertEqual(service.references()['vendors'], f.refs['vendors'])
         finally:
             service.stop()
 

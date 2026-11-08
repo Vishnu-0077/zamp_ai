@@ -13,9 +13,8 @@ export function Alert({ tone = 'info', title, children }: { tone?: Tone; title?:
 
 const HINTS: Record<number, string> = {
   401: 'The backend requires X-API-Key. Set BACKEND_API_KEY for the frontend proxy (see frontend/README.md).',
-  403: 'The reviewer key was rejected. Update it in Settings.',
   409: 'The case changed since you loaded it. Reload and try again.',
-  503: 'The server is missing configuration (for review actions: REVIEWER_API_KEY).',
+  503: 'The server is missing required configuration.',
 };
 
 export function ErrorMessage({ error, title = 'Something went wrong' }: { error: unknown; title?: string }) {

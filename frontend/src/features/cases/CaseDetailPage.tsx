@@ -1,91 +1,31 @@
-import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { casesApi } from '@/api/endpoints';
-import { IN_FLIGHT, type CaseDetail, type InvoiceExtraction, type PageText } from '@/api/types';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { IN_FLIGHT, type CaseDetail, type PageText } from '@/api/types';
 import {
-  Alert, Card, ErrorMessage, JsonView, KeyValue, Loading, PageHeader, PdfViewer, StatusBadge, Tabs, type TabDef,
+  Alert, Card, ErrorMessage, JsonView, Loading, PageHeader, StatusBadge, Tabs, type TabDef,
 } from '@/components';
-import { formatAmount, formatDateTime, shortId } from '@/lib/format';
+import { formatDateTime, shortId } from '@/lib/format';
 import { STATUS_META } from '@/lib/tones';
 import { AuditTimeline } from './components/AuditTimeline';
 import { ChecksView } from './components/ChecksView';
-import { CorrectionForm } from './components/CorrectionForm';
-import { ExtractionView } from './components/ExtractionView';
-import { FindingsList } from './components/FindingsList';
 import { PagesView } from './components/PagesView';
-import { RetryPanel } from './components/RetryPanel';
-import { isSingleInvoice } from './correction';
+import { CaseOverview } from './overview/CaseOverview';
+import { ComparePanel } from './compare/ComparePanel';
+import { referencesFor } from './overview/insights';
 import { useCase } from './hooks';
 
-function DecisionBanner({ detail }: { detail: CaseDetail }) {
-  if (IN_FLIGHT.includes(detail.status)) {
-    return <Alert tone="info" title={STATUS_META[detail.status].label}>This page refreshes automatically when processing finishes.</Alert>;
-  }
-  if (!detail.decision) return null;
-  const tone = STATUS_META[detail.status].tone;
-  return (
-    <Alert tone={tone} title={`Decision: ${detail.decision.outcome}`}>
-      <div className="wrap">{detail.decision.explanation}</div>
-    </Alert>
-  );
-}
-
-function ReviewTab({ detail, editing, setEditing }: { detail: CaseDetail; editing: boolean; setEditing: (v: boolean) => void }) {
-  const extraction = detail.extraction;
-  const single = isSingleInvoice(extraction);
-  const flagged = new Set(detail.findings.map((f) => f.field).filter(Boolean) as string[]);
-  return (
-    <div className="split">
-      <div className="stack" style={{ minWidth: 0 }}>
-        {!editing && (
-          <Card title={`Findings (${detail.findings.length})`}>
-            <FindingsList findings={detail.findings} />
-          </Card>
-        )}
-        <Card
-          title={editing ? 'Correct extraction' : 'Extracted data'}
-          actions={
-            !editing && detail.status === 'review' && single ? (
-              <button className="btn btn-primary" onClick={() => setEditing(true)}>Correct &amp; revalidate</button>
-            ) : undefined
-          }
-        >
-          {!extraction && <Alert tone="neutral">No extraction is available for this case.</Alert>}
-          {extraction && !single && (
-            <>
-              <Alert tone="warn" title="Bundled documents">
-                This PDF contains {(extraction as { documents: unknown[] }).documents.length} documents. Split the original PDF
-                and ingest each document separately; a bundle cannot be attested as one invoice.
-              </Alert>
-              {(extraction as { documents: InvoiceExtraction[] }).documents.map((d, i) => (
-                <details key={i} open={i === 0}>
-                  <summary><strong>Document {i + 1}</strong></summary>
-                  <ExtractionView extraction={d} />
-                </details>
-              ))}
-            </>
-          )}
-          {single && (editing
-            ? <CorrectionForm key={detail.version} detail={detail} extraction={extraction} onDone={() => setEditing(false)} />
-            : <ExtractionView extraction={extraction} flagged={flagged} />)}
-        </Card>
-      </div>
-      <div className="sticky">
-        <Card>
-          <PdfViewer src={casesApi.documentUrl(detail.id)} />
-        </Card>
-      </div>
-    </div>
-  );
+function ProcessingBanner({ detail }: { detail: CaseDetail }) {
+  if (!IN_FLIGHT.includes(detail.status)) return null;
+  return <Alert tone="info" title={STATUS_META[detail.status].label}>This page refreshes automatically when processing finishes.</Alert>;
 }
 
 /**
  * Tabs on the case page. To add a view (e.g. "Payments", "Comments"), append a
  * TabDef here; it receives the full CaseDetail.
  */
-function buildTabs(detail: CaseDetail, editing: boolean, setEditing: (v: boolean) => void): TabDef[] {
+function buildTabs(detail: CaseDetail, openReview: () => void): TabDef[] {
   return [
-    { id: 'review', label: 'Review', render: () => <ReviewTab detail={detail} editing={editing} setEditing={setEditing} /> },
+    { id: 'overview', label: 'Summary', render: () => <CaseOverview detail={detail} onReview={detail.status === 'review' ? openReview : undefined} /> },
+    { id: 'review', label: detail.status === 'review' ? 'Compare & resolve' : 'Invoice vs PO', render: () => <ComparePanel detail={detail} /> },
     { id: 'checks', label: 'Checks', render: () => <Card><ChecksView checks={detail.checks as Record<string, unknown>} /></Card> },
     { id: 'pages', label: `Source text${detail.pages ? ` (${detail.pages.length})` : ''}`, render: () => <PagesView pages={detail.pages as PageText[] | null} /> },
     { id: 'audit', label: 'Audit trail', render: () => <Card><AuditTimeline caseId={detail.id} status={detail.status} /></Card> },
@@ -101,7 +41,10 @@ function buildTabs(detail: CaseDetail, editing: boolean, setEditing: (v: boolean
 export default function CaseDetailPage() {
   const { id = '' } = useParams();
   const { data: detail, error, isLoading, refetch, isFetching } = useCase(id);
-  const [editing, setEditing] = useState(false);
+  // The open tab lives in the URL so a reviewer can link straight to "Compare & resolve".
+  const [params, setParams] = useSearchParams();
+  const tab = params.get('tab') ?? 'overview';
+  const setTab = (id: string) => setParams((p) => { p.set('tab', id); return p; }, { replace: true });
 
   if (isLoading) return <Loading label="Loading case…" />;
   if (error || !detail) {
@@ -113,16 +56,23 @@ export default function CaseDetailPage() {
     );
   }
 
+  const invoice = detail.extraction && !('documents' in detail.extraction) ? detail.extraction : null;
+  const vendorName = referencesFor(detail).vendor?.name ?? invoice?.vendor_name.value;
   return (
     <>
       <PageHeader
         title={
           <span className="row">
-            {detail.invoice_number ?? detail.filename}
+            {vendorName ? `${vendorName} · ` : ''}{detail.invoice_number ?? detail.filename}
             <StatusBadge status={detail.status} />
           </span>
         }
-        subtitle={<span className="mono">Case {shortId(detail.id)} · version {detail.version}</span>}
+        subtitle={
+          <span className="small">
+            {detail.email_id != null ? `Inbox email #${detail.email_id}` : 'Uploaded'} · {detail.filename} · received {formatDateTime(detail.created_at)}
+            {' · '}<span className="mono">case {shortId(detail.id)} v{detail.version}</span>
+          </span>
+        }
         actions={
           <>
             <button className="btn" onClick={() => refetch()} disabled={isFetching}>{isFetching ? 'Refreshing…' : 'Refresh'}</button>
@@ -130,30 +80,8 @@ export default function CaseDetailPage() {
           </>
         }
       />
-      <DecisionBanner detail={detail} />
-      <RetryPanel detail={detail} />
-      <Card>
-        <div className="grid grid-2">
-          <KeyValue
-            items={[
-              ['Vendor', detail.vendor_id ?? '—'],
-              ['Sender', detail.sender || '—'],
-              ['File', detail.filename],
-              ['PO', detail.po_number ?? '—'],
-            ]}
-          />
-          <KeyValue
-            items={[
-              ['Amount', formatAmount(detail.amount, detail.currency)],
-              ['Invoice date', detail.invoice_date ?? '—'],
-              ['Created', formatDateTime(detail.created_at)],
-              ['Updated', formatDateTime(detail.updated_at)],
-            ]}
-          />
-        </div>
-        {detail.email_id != null && <p className="small muted" style={{ marginBottom: 0 }}>From inbox email #{detail.email_id} · model {detail.model ?? 'n/a'} · SHA-256 <span className="mono">{detail.hash.slice(0, 16)}…</span></p>}
-      </Card>
-      <Tabs tabs={buildTabs(detail, editing, setEditing)} />
+      <ProcessingBanner detail={detail} />
+      <Tabs key={tab} initial={tab} onChange={setTab} tabs={buildTabs(detail, () => setTab('review'))} />
     </>
   );
 }

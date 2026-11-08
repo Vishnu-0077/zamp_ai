@@ -1,12 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, buildUrl, request, toApiError } from './client';
-import { setReviewerKey } from '@/lib/reviewerKey';
 
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
 afterEach(() => {
   vi.restoreAllMocks();
-  setReviewerKey('');
 });
 
 describe('toApiError', () => {
@@ -19,8 +17,8 @@ describe('toApiError', () => {
     expect(e.message).toBe('note: too short');
   });
   it('reads string details', async () => {
-    const e = await toApiError(json(403, { detail: 'Valid X-Reviewer-Key required.' }));
-    expect(e).toMatchObject({ status: 403, message: 'Valid X-Reviewer-Key required.' });
+    const e = await toApiError(json(404, { detail: 'Not Found' }));
+    expect(e).toMatchObject({ status: 404, message: 'Not Found' });
   });
 });
 
@@ -28,16 +26,12 @@ describe('request', () => {
   it('builds query strings, skipping empty values', () => {
     expect(buildUrl('/api/v1/cases', { status: undefined, limit: 25, offset: 0 })).toBe('/api/v1/cases?limit=25&offset=0');
   });
-  it('refuses reviewer calls without a key', async () => {
-    await expect(request('/x', { reviewer: true })).rejects.toMatchObject({ code: 'REVIEWER_KEY_MISSING' });
-  });
-  it('sends the reviewer key header when set', async () => {
-    setReviewerKey('secret');
+  it('sends JSON bodies and never a reviewer key header', async () => {
     const spy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(json(200, { ok: true }));
-    await request('/x', { method: 'POST', json: { a: 1 }, reviewer: true });
+    await request('/x', { method: 'POST', json: { a: 1 } });
     const init = spy.mock.calls[0][1]!;
-    expect((init.headers as Record<string, string>)['X-Reviewer-Key']).toBe('secret');
     expect(init.body).toBe('{"a":1}');
+    expect(init.headers as Record<string, string>).not.toHaveProperty('X-Reviewer-Key');
   });
   it('maps network failures to ApiError', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'));

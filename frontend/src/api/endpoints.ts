@@ -35,10 +35,17 @@ export const casesApi = {
   documentUrl: (id: string) => buildUrl(`${V1}/cases/${enc(id)}/document`),
   audit: (id: string, after = 0, limit = 100) =>
     request<AuditPage>(`${V1}/cases/${enc(id)}/audit`, { query: { after, limit } }),
-  correct: (id: string, body: { expected_version: number; note: string; extraction: InvoiceExtractionInput }) =>
-    request<CaseDetail>(`${V1}/cases/${enc(id)}/corrections`, { method: 'POST', json: body, reviewer: true }),
-  retry: (id: string, body: { expected_version: number; note: string }) =>
-    request<CaseDetail>(`${V1}/cases/${enc(id)}/retry`, { method: 'POST', json: body, reviewer: true }),
+  correct: (id: string, body: { expected_version: number; note: string; reviewer: string; extraction: InvoiceExtractionInput }) =>
+    request<CaseDetail>(`${V1}/cases/${enc(id)}/corrections`, { method: 'POST', json: body }),
+  approve: (id: string, body: { expected_version: number; note: string; reviewer: string; acknowledged_codes: string[] }) =>
+    request<CaseDetail>(`${V1}/cases/${enc(id)}/approve`, { method: 'POST', json: body }),
+  retry: (id: string, body: { expected_version: number; note: string; reviewer: string }) =>
+    request<CaseDetail>(`${V1}/cases/${enc(id)}/retry`, { method: 'POST', json: body }),
+};
+
+export const exportsApi = {
+  /** Excel register of every approved invoice, generated from current data on each download. */
+  approvedInvoicesUrl: () => buildUrl(`${V1}/exports/approved-invoices.xlsx`),
 };
 
 export const ingestApi = {

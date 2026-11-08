@@ -5,13 +5,15 @@ React + TypeScript single-page app for the invoice processing backend in
 
 | Screen | Route | Backend endpoints |
 | --- | --- | --- |
-| Dashboard | `/` | `/api/v1/stats`, `/api/v1/cases`, `/health` |
-| Cases (filter, paginate, live refresh) | `/cases` | `/api/v1/cases` |
-| Case detail: findings, extraction with evidence, PDF side-by-side, correction, retry, checks, page text/OCR, audit trail, policy snapshot | `/cases/:id` | `/api/v1/cases/{id}`, `/document`, `/audit`, `/corrections`, `/retry` |
+| Dashboard, start fresh, Excel download | `/` | `/api/v1/stats`, `/api/v1/cases`, `/health`, `/api/v1/reset`, `/api/v1/exports/approved-invoices.xlsx` |
+| Cases (filter, paginate, live refresh, Excel download) | `/cases` | `/api/v1/cases`, `/api/v1/exports/approved-invoices.xlsx` |
+| Case **Summary**: key facts, plain-language reasons, invoice vs PO table, line items, verified fields | `/cases/:id` | `/api/v1/cases/{id}` |
+| Case **Compare & resolve**: invoice PDF beside the PO, correct & re-check, approve manually, retry | `/cases/:id?tab=review` | `/document`, `/corrections`, `/approve`, `/retry` |
+| Case checks, source text/OCR, audit trail, policy snapshot | `/cases/:id?tab=…` | `/api/v1/cases/{id}`, `/audit` |
 | Vendor inbox → send to processing | `/inbox` | `/emails`, `/emails/{id}/preview`, `/api/v1/ingest/email` |
 | Upload PDF / EML | `/upload` | `/api/v1/ingest/pdf`, `/api/v1/ingest/eml` |
 | Reference data (vendors, POs, FX, policy) | `/references` | `/api/v1/references` |
-| Settings (reviewer key, theme, backend status) | `/settings` | `/health` |
+| Settings (your name, theme, backend status) | `/settings` | `/health` |
 
 The legacy `inbox.html` in this folder is still served by the backend at `/`
 and requires application-key authentication when enabled. Use the React app
@@ -24,7 +26,7 @@ in the [backend guide](../backend/README.md) before starting.
 
 ```bash
 # terminal 1: backend (from repository root)
-export BACKEND_API_KEY=dev-app-key REVIEWER_API_KEY=dev-reviewer-key
+export BACKEND_API_KEY=dev-app-key
 ./zamp_venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --workers 1
 
 # terminal 2: frontend
@@ -33,10 +35,10 @@ npm ci
 BACKEND_API_KEY=dev-app-key npm run dev       # http://localhost:5173
 ```
 
-Then open **Settings** and enter the reviewer key (`dev-reviewer-key` above) to
-enable corrections and retries. **Refresh & start fresh** on the dashboard needs
-no reviewer key. It clears processing and reference data (vendors, POs, FX and
-policy), then reloads every dashboard query. The test inputs are kept.
+Then open **Settings** and enter your name. Anyone using the dashboard can
+correct, approve and retry cases; the name is recorded with each action.
+**Refresh & start fresh** on the dashboard clears processing results and reloads dashboard queries. Trusted vendor, PO,
+FX and policy configuration and test inputs are kept.
 
 `cp .env.example .env` works instead of exporting variables. `BACKEND_URL`
 defaults to `http://127.0.0.1:8000`.
@@ -46,8 +48,9 @@ defaults to `http://127.0.0.1:8000`.
 - **Application key (`X-API-Key`)** is added by the Vite dev/preview proxy from
   `BACKEND_API_KEY`. It is never part of the browser bundle, as the backend
   README requires.
-- **Reviewer key (`X-Reviewer-Key`)** is typed by the reviewer in Settings and
-  kept in `sessionStorage` for that tab only.
+- There is **no reviewer key**. Review actions send a self-reported `reviewer`
+  name (remembered in `localStorage`) for the audit trail. It identifies, it
+  does not authenticate.
 
 ### Production
 
@@ -90,7 +93,10 @@ src/
     App.tsx            Providers and router
   components/          Reusable UI (Badge, Card, DataTable, Tabs, PdfViewer…)
   features/<name>/     One folder per screen/domain, each with routes.ts
-  lib/                 Formatting, status tones, reviewer key, theme
+    cases/overview/    Summary tab; insights.ts turns findings into plain language
+                       and builds the invoice-vs-PO comparison (pure, unit-tested)
+    cases/compare/     Compare & resolve tab: PDF + PO panel, manual approval form
+  lib/                 Formatting, status tones, reviewer name, theme
   styles/tokens.css    Design tokens (colours, spacing, dark mode)
 ```
 
@@ -101,9 +107,13 @@ Design rules:
   lists every screen that needs updating.
 - **Decimal-safe.** Amounts stay as decimal strings end to end and are
   formatted without float conversion.
-- **Server is the authority.** The UI never decides approval. Corrections send
-  the complete extraction with `expected_version`, and a 409 tells the reviewer
-  to reload.
+- **Server is the authority.** The UI never decides approval or re-runs
+  business rules; it only explains the backend's findings. Corrections send the
+  complete extraction with `expected_version`, manual approval sends every open
+  reason code it acknowledges, and a 409 tells the reviewer to reload.
+- **Never infer identity.** The vendor shown is the one the backend matched.
+  When none matched, the page shows the name printed on the invoice and marks
+  the PO as another vendor's, instead of borrowing the PO's vendor.
 - **Tolerant of backend growth.** Unknown extraction fields appear under
   "Other fields" and stay editable. Unknown `checks` keys render generically.
 
@@ -129,6 +139,11 @@ code splitting pick it up automatically.
 
 **Add a tab to the case page.** Append a `TabDef` in `buildTabs()` in
 `src/features/cases/CaseDetailPage.tsx`.
+
+**Explain a new finding code.** Add an entry to `EXPLAIN` in
+`src/features/cases/overview/insights.ts` (title, why it matters, what to do,
+severity) and, if it belongs to a comparison row, to `ROW_CODES`. Unknown codes
+still show the backend's message.
 
 **Label a new extraction field.** Add it to `FIELD_GROUPS` in
 `src/features/cases/fieldConfig.ts`. Until then it still appears under "Other

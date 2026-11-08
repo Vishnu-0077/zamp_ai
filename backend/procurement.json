@@ -1,6 +1,533 @@
 {
-  "vendors": [],
-  "purchase_orders": [],
-  "fx_rates": [],
-  "validation_policy": {}
+  "vendors": [
+    {
+      "id": "V001",
+      "name": "Northstar Office Supplies",
+      "domain": "northstar.example",
+      "approved": true,
+      "payment_terms": "Net 30",
+      "currency": "USD",
+      "bank_account": "DEMO-ACCOUNT-001"
+    },
+    {
+      "id": "V002",
+      "name": "Harbor IT Services",
+      "domain": "harbor.example",
+      "approved": true,
+      "payment_terms": "Net 30",
+      "currency": "USD",
+      "bank_account": "DEMO-ACCOUNT-002",
+      "aliases": [
+        "HARBOR",
+        "HARBOR IT SERVICES / MANAGED SOLUTIONS"
+      ]
+    },
+    {
+      "id": "V003",
+      "name": "Cedar Facilities",
+      "domain": "cedar.example",
+      "approved": true,
+      "payment_terms": "Net 30",
+      "currency": "USD",
+      "bank_account": "DEMO-ACCOUNT-003"
+    },
+    {
+      "id": "V004",
+      "name": "Summit Packaging",
+      "domain": "summit.example",
+      "approved": true,
+      "payment_terms": "Net 30",
+      "currency": "USD",
+      "bank_account": "DEMO-ACCOUNT-004"
+    },
+    {
+      "id": "V005",
+      "name": "Brightline Print Studio",
+      "domain": "brightline.example",
+      "approved": true,
+      "payment_terms": "Net 30",
+      "currency": "USD",
+      "bank_account": "DEMO-ACCOUNT-005"
+    }
+  ],
+  "purchase_orders": [
+    {
+      "number": "PO-26001",
+      "vendor_id": "V001",
+      "amount": 281.6,
+      "received_amount": 281.6,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26002",
+      "vendor_id": "V002",
+      "amount": 935.0,
+      "received_amount": 935.0,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26003",
+      "vendor_id": "V003",
+      "amount": 550.0,
+      "received_amount": 550.0,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26004",
+      "vendor_id": "V004",
+      "amount": 316.8,
+      "received_amount": 316.8,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26005",
+      "vendor_id": "V005",
+      "amount": 247.5,
+      "received_amount": 247.5,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26006",
+      "vendor_id": "V001",
+      "amount": 316.8,
+      "received_amount": 316.8,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26007",
+      "vendor_id": "V002",
+      "amount": 1870.0,
+      "received_amount": 1870.0,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26008",
+      "vendor_id": "V003",
+      "amount": 687.5,
+      "received_amount": 687.5,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26009",
+      "vendor_id": "V004",
+      "amount": 369.6,
+      "received_amount": 369.6,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26010",
+      "vendor_id": "V005",
+      "amount": 330.0,
+      "received_amount": 330.0,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26011",
+      "vendor_id": "V001",
+      "amount": 352.0,
+      "received_amount": 352.0,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26012",
+      "vendor_id": "V002",
+      "amount": 234217.5,
+      "received_amount": 234217.5,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "INR",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26013",
+      "vendor_id": "V003",
+      "amount": 885.0,
+      "received_amount": 885.0,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "INR",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26014",
+      "vendor_id": "V004",
+      "amount": 422.4,
+      "received_amount": 422.4,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26015",
+      "vendor_id": "V005",
+      "amount": 412.5,
+      "received_amount": 412.5,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26016",
+      "vendor_id": "V001",
+      "amount": 387.2,
+      "received_amount": 387.2,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26017",
+      "vendor_id": "V002",
+      "amount": 3740.0,
+      "received_amount": 3740.0,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26018",
+      "vendor_id": "V003",
+      "amount": 1032.5,
+      "received_amount": 1032.5,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "INR",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26019",
+      "vendor_id": "V004",
+      "amount": 475.2,
+      "received_amount": 475.2,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26020",
+      "vendor_id": "V005",
+      "amount": 495.0,
+      "received_amount": 495.0,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26021",
+      "vendor_id": "V001",
+      "amount": 422.4,
+      "received_amount": 422.4,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26022",
+      "vendor_id": "V002",
+      "amount": 4675.0,
+      "received_amount": 4675.0,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26023",
+      "vendor_id": "V003",
+      "amount": 1100.0,
+      "received_amount": 1100.0,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26024",
+      "vendor_id": "V004",
+      "amount": 528.0,
+      "received_amount": 528.0,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26025",
+      "vendor_id": "V005",
+      "amount": 577.5,
+      "received_amount": 577.5,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26026",
+      "vendor_id": "V001",
+      "amount": 457.6,
+      "received_amount": 457.6,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26027",
+      "vendor_id": "V002",
+      "amount": 5610.0,
+      "received_amount": 5610.0,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26028",
+      "vendor_id": "V003",
+      "amount": 1237.5,
+      "received_amount": 1237.5,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26029",
+      "vendor_id": "V004",
+      "amount": 580.8,
+      "received_amount": 580.8,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26030",
+      "vendor_id": "V005",
+      "amount": 660.0,
+      "received_amount": 660.0,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26031",
+      "vendor_id": "V001",
+      "amount": 492.8,
+      "received_amount": 492.8,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26032",
+      "vendor_id": "V002",
+      "amount": 6545.0,
+      "received_amount": 6545.0,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26033",
+      "vendor_id": "V003",
+      "amount": 1375.0,
+      "received_amount": 1375.0,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26034",
+      "vendor_id": "V004",
+      "amount": 633.6,
+      "received_amount": 633.6,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26035",
+      "vendor_id": "V005",
+      "amount": 742.5,
+      "received_amount": 742.5,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26036",
+      "vendor_id": "V001",
+      "amount": 528.0,
+      "received_amount": 528.0,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26037",
+      "vendor_id": "V002",
+      "amount": 7480.0,
+      "received_amount": 7480.0,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26038",
+      "vendor_id": "V003",
+      "amount": 1512.5,
+      "received_amount": 1512.5,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26039",
+      "vendor_id": "V004",
+      "amount": 686.4,
+      "received_amount": 686.4,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26040",
+      "vendor_id": "V005",
+      "amount": 825.0,
+      "received_amount": 825.0,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26045",
+      "vendor_id": "V001",
+      "amount": 563.2,
+      "received_amount": 563.2,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26046",
+      "vendor_id": "V001",
+      "amount": 598.4,
+      "received_amount": 598.4,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26047",
+      "vendor_id": "V002",
+      "amount": 9350.0,
+      "received_amount": 9350.0,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-EXTRA-0047",
+      "vendor_id": "V002",
+      "amount": 275,
+      "received_amount": 275,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26048",
+      "vendor_id": "V003",
+      "amount": 1917.5,
+      "received_amount": 1917.5,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "INR",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26050",
+      "vendor_id": "V005",
+      "amount": 100000,
+      "received_amount": 100000,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "INR",
+      "issue_date": "2023-12-01"
+    }
+  ],
+  "fx_rates": [
+    {
+      "from_currency": "USD",
+      "to_currency": "INR",
+      "date": "2026-10-14",
+      "rate": "83.50",
+      "approved": true,
+      "source": "Synthetic treasury-approved demo rate, not a live quote"
+    }
+  ],
+  "validation_policy": {
+    "as_of_date": "2026-11-02",
+    "max_invoice_age_days": 365,
+    "amount_tolerance": "0.01",
+    "bank_change_action": "human_review",
+    "adjustment_action": "human_review",
+    "fx_rate_convention": "PO currency units per 1 invoice currency unit"
+  }
 }

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { App } from './App';
-import { setReviewerKey } from '@/lib/reviewerKey';
+import { setReviewerName } from '@/lib/reviewerName';
 import { caseDetail } from '@/test/fixtures';
 
 function mockBackend() {
@@ -23,7 +23,7 @@ function mockBackend() {
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
-  setReviewerKey('');
+  setReviewerName('');
 });
 
 describe('App', () => {
@@ -54,6 +54,9 @@ describe('App', () => {
     window.history.pushState({}, '', '/');
     render(<App />);
     expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeTruthy();
+    const download = screen.getByRole('link', { name: /Approved invoices \(Excel\)/ });
+    expect(download.getAttribute('href')).toBe('/api/v1/exports/approved-invoices.xlsx');
+    expect(download.hasAttribute('download')).toBe(true);
     const nav = within(screen.getByRole('navigation', { name: 'Main' }));
     for (const label of ['Dashboard', 'Cases', 'Inbox', 'Upload', 'Reference data', 'Settings']) {
       expect(nav.getByRole('link', { name: new RegExp(label) })).toBeTruthy();
@@ -61,12 +64,16 @@ describe('App', () => {
     expect(await screen.findByText('Extraction is not configured')).toBeTruthy();
   });
 
-  it('renders a case detail with findings and decision', async () => {
+  it('opens a review case on a plain-language summary, then the PDF and correction view', async () => {
     mockBackend();
     window.history.pushState({}, '', `/cases/${caseDetail().id}`);
     render(<App />);
-    expect(await screen.findByText('Decision: review')).toBeTruthy();
+    expect(await screen.findByText('Why this needs your review')).toBeTruthy();
     expect(screen.getByText('LOW_CONFIDENCE')).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Correct & revalidate/ })).toBeTruthy();
+    expect(screen.getByText('Invoice vs purchase order')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Compare with PDF & resolve/ }));
+    expect(await screen.findByText('Purchase order not found')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Save corrections & re-check/ })).toBeTruthy();
+    expect(screen.getByRole('radio', { name: /Approve manually/ })).toBeTruthy();
   });
 });

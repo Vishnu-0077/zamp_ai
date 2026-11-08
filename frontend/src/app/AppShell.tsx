@@ -4,19 +4,16 @@ import { useQuery } from '@tanstack/react-query';
 import { systemApi } from '@/api/endpoints';
 import { qk } from '@/api/queryKeys';
 import { Loading } from '@/components';
-import { useReviewerKey } from '@/lib/reviewerKey';
 import { navItems } from './registry';
 
 function HealthIndicator() {
   const { data, isError } = useQuery({ queryKey: qk.health, queryFn: systemApi.health, refetchInterval: 15000 });
-  const reviewerKey = useReviewerKey();
   const dot = (ok: boolean | undefined) => (ok ? '●' : '○');
   return (
     <div className="sidebar-foot" aria-label="Backend status">
       <span>{isError ? '○ Backend unreachable' : `${dot(data?.status === 'ok')} Backend ${data ? 'online' : '…'}`}</span>
       {data && <span>{dot(data.worker_alive)} Worker {data.worker_alive ? 'running' : 'stopped'}</span>}
       {data && <span>{dot(data.extraction_configured)} Extraction {data.extraction_configured ? 'configured' : 'not configured'}</span>}
-      <span>{dot(!!reviewerKey)} Reviewer key {reviewerKey ? 'set' : 'not set'}</span>
     </div>
   );
 }

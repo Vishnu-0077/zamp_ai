@@ -3,8 +3,10 @@
 The existing inbox stays at `/`. Processing is under `/api/v1`; Swagger is at
 `/docs`. No frontend changes are required to use the API. The backend never reads
 `expected.json`, never uses fixture scenario labels for decisions, and never
-executes payments. `approved` means all configured processing rules passed and
-PO/receipt value has been reserved in the local ledger.
+executes payments. `approved` means all configured processing rules passed, or
+a reviewer approved the case manually after acknowledging every open finding
+(`decision.manual_override`), and PO/receipt value has been reserved in the
+local ledger.
 
 ## Run locally
 
@@ -23,7 +25,6 @@ sudo apt-get install -y tesseract-ocr
 export OPENAI_API_KEY='your-key'
 export EXTRACTION_MODEL='your-model-id'
 export BACKEND_API_KEY='your-application-token'
-export REVIEWER_API_KEY='your-reviewer-token'
 ./zamp_venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --workers 1
 ```
 
@@ -39,7 +40,7 @@ quotas depend on your account.
 
 For local setup, `./backend/start.sh` loads keys from
 `${ZAMP_KEY_DIR:-$HOME/.config/zamp}/gemini.key` and `groq.key`, preferring
-exported keys. It supplies development application/reviewer keys, clears
+exported keys. It supplies a development application key, clears
 `OPENAI_API_KEY` and `OPENAI_BASE_URL`, and defaults to resetting processing
 state. Use `RESET_ON_START=false ./backend/start.sh` to retain cases; override
 model variables as needed. See the [root guide](../README.md) for the dashboard.
@@ -47,12 +48,11 @@ model variables as needed. See the [root guide](../README.md) for the dashboard.
 No credentials means processing goes to review with `EXTRACTION_NOT_CONFIGURED`.
 Missing Tesseract produces `OCR_UNAVAILABLE` for scans or mixed raster pages.
 
-`backend/procurement.json` starts with empty vendor, purchase-order and FX lists
-and an empty validation policy. Reset and default startup empty this file (or
-`PROCUREMENT_PATH`) too. Populate trusted references after startup to evaluate
-invoices against them, or set `RESET_ON_START=false` to keep your configured data
-across restarts. Never populate trusted data from invoice text. With no vendor/PO
-records, invoices require review. An unset policy date uses the current UTC date.
+`backend/procurement.json` contains the trusted synthetic vendor/PO/FX master
+and fixed demo evaluation date. Reset clears processing results while preserving
+this configuration. `aliases` lists explicitly trusted printed vendor names;
+matching remains exact and ambiguous identities require review. Never populate
+trusted reference data from model output or expected outcome labels.
 
 ## Container
 
@@ -73,12 +73,14 @@ Use `/openapi.json` (also exported as `backend/openapi.json`) for generated clie
 Case amounts are decimal strings, never binary floats. Dates are ISO strings.
 Nullable extraction values always remain explicit `null` values.
 
-Requests use `X-API-Key` when `BACKEND_API_KEY` is configured. Correction/retry
-requests additionally require `X-Reviewer-Key`, configured by `REVIEWER_API_KEY`.
-Keys must be provided through your authenticated server or a controlled local
-client, not embedded in a public frontend bundle. The shared reviewer token is
-an initial service credential, with a hashed credential identifier in the audit;
-an identity-aware gateway is needed for per-user identities. CORS allows only
+Requests use `X-API-Key` when `BACKEND_API_KEY` is configured. The key must be
+provided through your authenticated server or a controlled local client (the
+dashboard's proxy), not embedded in a public frontend bundle. Review actions
+(corrections, manual approval, retry) need no extra credential: anyone who can
+reach the API through the dashboard may perform them. Each request carries a
+self-reported `reviewer` name, which is recorded as the audit actor
+(`reviewer:<name>`) and in the Excel export. It is not authentication; put the
+dashboard behind your company sign-in if reviewers must be verified. CORS allows only
 `CORS_ORIGINS`. Documentation/schema/health are public; business routes and the
 legacy inbox routes use application-key authentication when enabled.
 
@@ -114,26 +116,51 @@ legacy inbox routes use application-key authentication when enabled.
    ```json
    {
      "expected_version": 3,
+     "reviewer": "Priya Sharma",
      "note": "Visually checked every submitted field against the source PDF",
      "extraction": "replace this string with the complete InvoiceExtraction object"
    }
    ```
 
    `extraction` must be the complete object returned in case detail, with edits;
-   the string above is only a placeholder, not a valid request. Include both
-   authentication headers. Submission explicitly attests all submitted values,
+   the string above is only a placeholder, not a valid request. Include the
+   application key header. Submission explicitly attests all submitted values,
    including nulls and line items. The server records before/after values and
    reviewer identity, and reruns validation, vendor/bank checks, duplicates,
    matching, math, dates, FX, PO balance and the rule engine. Human attestation
    replaces evidence/model/OCR confidence checks; it cannot waive missing
    critical values or business failures. A correction may remain in `review`.
    It never calls OCR or the model. A stale version or terminal case gives 409;
-   reload detail before editing again. There is no force-approve endpoint.
+   reload detail before editing again.
+
+   To approve a held case after checking it by eye, `POST /api/v1/cases/{id}/approve`
+   with `{"expected_version": n, "reviewer": "...", "note": "...", "acknowledged_codes": [...]}`.
+   `acknowledged_codes` must include every open reason code. The values
+   are not changed; the decision records `manual_override: true` and the overridden
+   codes, the PO value is reserved when a PO is known, and a `manual_approval` audit
+   event stores the note and reviewer. Refused (409) while nothing usable was
+   extracted (processing errors, bundled documents), when an open code is not
+   acknowledged, or when the version is stale.
 
 5. Read audit events with `GET /api/v1/cases/{id}/audit?after=0&limit=100`;
    pass the last event ID as `after` for the next page. `GET /api/v1/stats`
    returns counts by status. `GET /api/v1/references` returns trusted reference
    data including PO, vendor and policy information.
+
+6. Download the approved-invoice register with
+   `GET /api/v1/exports/approved-invoices.xlsx`. It is generated from current
+   data on every request. Sheets: *Summary* (counts, manual approvals, totals by
+   currency and by vendor), *Approved invoices* (one row per invoice: approval
+   time in UTC, Automatic/Manual, approver, vendor, invoice and PO numbers,
+   dates, subtotal, tax, total, PO currency and amount charged to the PO, the
+   bank account on the vendor record **and** the one on the invoice, payment
+   terms, items, reviewer note, overridden issues, source file, inbox email and
+   case ID; manual approvals highlighted) and *Line items*. The service also
+   rewrites a copy after every approval, on startup and on reset, at
+   `APPROVED_EXPORT_PATH` (default `exports/approved_invoices.xlsx` beside the
+   processing database). The file is replaced atomically and is world-readable,
+   so it can sit in a shared folder. A failed export is logged and never undoes
+   an approval.
 
 Other ingestion routes:
 
@@ -144,8 +171,8 @@ Other ingestion routes:
   Sender headers are provenance only, never vendor approval evidence.
 
 Standard FastAPI validation errors return 422. Missing cases return 404,
-invalid application credentials 401, reviewer credentials 403, conflicts 409,
-and oversized HTTP uploads 413. Service errors use
+invalid application credentials 401, conflicts 409 and oversized HTTP uploads
+413. Service errors use
 `{"error":{"code":"...","message":"..."}}`; framework HTTP/validation errors
 use FastAPI's `detail` format. PDF download remains behind application auth.
 
@@ -154,7 +181,12 @@ use FastAPI's `detail` format. PDF download remains behind application auth.
 - Source ingestion computes SHA-256 before extraction. Jobs and source bytes
   are committed before returning 202; identical source bytes share one case.
 - Every page gets digital text parsing or Tesseract OCR. Mixed image/text pages
-  are conservatively OCRed too, to avoid ignoring scanned content. PDF size,
+  are conservatively OCRed too, to avoid ignoring scanned content. Full-page
+  scans are OCRed at their native resolution (resampling turned an `11` into
+  `14`). Tesseract reads forms column by column, so its words are rebuilt into
+  visual rows by vertical overlap; a label and its value then stay on one line
+  and quoted evidence is contiguous. Digital text keeps its span order, because
+  geometric sorting merged distant columns (`INVOICEHARBOR`). PDF size,
   page count, text context and OCR subprocess time are bounded. Encrypted,
   malformed, blank or unsupported documents go to review.
 - `LangChainExtractor` calls `ChatOpenAI.with_structured_output` with a Pydantic
@@ -165,9 +197,12 @@ use FastAPI's `detail` format. PDF download remains behind application auth.
   `EXTRACTION_PROVIDER_RETRIES` retries per model with exponential backoff
   from `EXTRACTION_RETRY_BACKOFF_SECONDS`, honouring `Retry-After` or Google
   `retryDelay` hints up to 60 s. Longer hints, such as an exhausted daily quota,
-  move straight to the next model in `EXTRACTION_FALLBACK_MODELS`. Provider HTTP
-  413 responses also move immediately to the next model. Schema
-  failures and other non-transient errors are never retried across models. Each case
+  move straight to the next model in `EXTRACTION_FALLBACK_MODELS`. These also
+  move immediately to the next model: provider HTTP 413 (request too large),
+  a reply cut off at the output-token limit (`max_tokens` is 8192, because
+  reasoning models such as Groq gpt-oss spend output tokens thinking), and a
+  provider rejecting the output against the schema (Groq HTTP 400). Our own
+  schema-validation failures and other errors are not retried across models. Each case
   records the model that produced its extraction. Source instructions are
   treated as untrusted data; the model has no business tools or decision
   authority.
@@ -175,15 +210,16 @@ use FastAPI's `detail` format. PDF download remains behind application auth.
 - Model extraction retains document type, original reference, vendor, invoice
   and due dates, currency, PO, line items, subtotal, tax, total, account details,
   and optional GST components. Multipage invoices remain a single case.
-- Verbatim evidence must exist on the cited page. Numeric/string values are
+- Evidence must exist on the cited page; whitespace differences are ignored.
+  Unsupported quotations receive one bounded source-only extraction repair pass. Numeric/string values are
   checked against evidence; dates require an unambiguous recognized display
   form. Other date formats are conservatively reviewed. Critical fields require
   high model confidence; other present fields reject low confidence. OCR pages
   require page confidence >=85. These are gates, not calibrated probabilities.
   Math failures also mark affected aggregate fields low confidence.
-- Vendor matching uses exact normalized names only. Approval and account details
-  must match trusted master data. Duplicate identity uses vendor and normalized
-  invoice number; fuzzy checks combine vendor, amount, currency, date window,
+- Vendor matching uses exact normalized names or explicitly configured aliases only. Approval and account details
+  must match trusted master data. Duplicate identity uses vendor and the case-insensitive printed
+  invoice number (punctuation retained); fuzzy checks combine vendor, amount, currency, date window,
   invoice-number similarity or PO. Unresolved identity collisions stay in review.
 - Explicit PO references run first. Missing-PO candidates are advisory and cannot
   waive the required PO field. Candidates use vendor/currency/amount and the configured PO date window (365 days by default). Ambiguity
@@ -204,8 +240,8 @@ use FastAPI's `detail` format. PDF download remains behind application auth.
   and held with `MULTIPLE_DOCUMENTS`. Split the original PDF and ingest each
   document independently; a reviewer cannot attest a bundle into one invoice.
 - Dependency retry is distinct from correction. After repairing OCR/provider
-  configuration, `POST /api/v1/cases/{id}/retry` accepts `expected_version` and
-  a `note`, with reviewer auth. Only processing dependency failures qualify.
+  configuration, `POST /api/v1/cases/{id}/retry` accepts `expected_version`, a
+  `reviewer` name and a `note`. Only processing dependency failures qualify.
   Business findings cannot restart extraction through this route.
 
 ## Persistence and operational scope
@@ -218,7 +254,7 @@ to review with an explicit retry, rather than silently repeating external calls.
 reservations after the worker acquires the database lock. The default is
 `true` for both direct startup and the helper. Set `RESET_ON_START=false`
 explicitly to retain processing history.
-Source fixtures are retained; procurement reference records are cleared. Use reset only for local
+Source fixtures and trusted procurement configuration are retained. Use reset only for local
 development where losing processing history is intended.
 
 Do not use multiple independent databases against the same real PO ledger.
@@ -227,21 +263,22 @@ atomically reserve against its authoritative procurement ledger.
 
 Trusted master updates are done outside the invoice workflow. The API exposes
 no vendor/PO mutation or reservation reversal, no payment execution, and no
-manual terminal-case editing. Audit records are append-only through this API,
+editing of approved or duplicate cases. A manual approval accepts a changed
+bank account for that invoice only; it never updates the vendor master. Audit records are append-only through this API,
 not tamper-proof against filesystem/database administrators. Protect and back
 up the runtime volume and keys before exposing the service externally.
 
-`POST /api/v1/reset` requires the application key when configured; no reviewer
-key is needed. It waits for active processing, then atomically removes cases, source PDF
-bytes, extracted results, submissions, audit events and reservations. It also atomically replaces
-the current reference file with empty vendors, POs, FX rates and policy. No files under `test_cases/` are changed. The home
+`POST /api/v1/reset` requires the application key when configured. It waits for active processing, then atomically removes cases, source PDF
+bytes, extracted results, submissions, audit events and reservations. It preserves the trusted
+reference configuration needed for subsequent validation, and rewrites the
+Excel register (now empty). No files under `test_cases/` are changed. The home
 page's **Refresh & start fresh** button also clears the browser query cache.
 
 ## Verification
 
 ```bash
 RESET_ON_START=false ./zamp_venv/bin/python -m unittest discover -s test_cases -v
-./zamp_venv/bin/python -m unittest backend.test_reset.ResetTests -v
+./zamp_venv/bin/python -m unittest backend.test_reset backend.test_audit_fixes -v
 ./zamp_venv/bin/python -m unittest test_cases.test_invoice_checks -v
 ./zamp_venv/bin/python -m test_cases.validate_inbox
 ./zamp_venv/bin/python -m backend.export_openapi
@@ -250,8 +287,16 @@ RESET_ON_START=false ./zamp_venv/bin/python -m unittest discover -s test_cases -
 Backend tests use real temporary SQLite databases and generated PDFs with a
 mocked extractor. LangChain call configuration/schema retries are tested without
 paid calls. OCR and live model extraction need system Tesseract and provider
-credentials respectively; the synthetic 40/2/8 expected totals are not claimed
-as measured extraction performance.
+credentials respectively.
+
+`python -m backend.audit_inbox --output <dir> [--workers N] [--repair-cached]`
+runs the real pipeline over the 50 inbox emails in its own database (it refuses
+the application database and `test_cases/`), caches each extraction as
+`<dir>/<email>.json`, and writes `report.json` with counts and mismatches.
+Labels are read only after processing, for the comparison. A run on
+2026-11-08 with the Gemini/Groq chain matched all 50 (40 approved, 8 review,
+2 duplicate). Model output varies, so this is a spot check, not a measured
+accuracy rate.
 
 Implementation references: [LangChain structured-output API](https://reference.langchain.com/python/langchain-openai/chat_models/base/ChatOpenAI/with_structured_output)
 and [OpenAI structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs).

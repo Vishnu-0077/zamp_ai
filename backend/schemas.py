@@ -51,11 +51,20 @@ class ExtractionBatch(StrictModel):
                                                json_schema_extra=lambda s: s.pop('maxItems', None))
 
 class Correction(StrictModel):
+    reviewer: str = Field(min_length=2, max_length=80, pattern=r'\S')  # who is acting, shown in audit and export
     expected_version: int = Field(ge=1)
     note: str = Field(min_length=5, max_length=2000)
     extraction: InvoiceExtraction
 
+class ManualApproval(StrictModel):
+    reviewer: str = Field(min_length=2, max_length=80, pattern=r'\S')  # who is acting, shown in audit and export
+    expected_version: int = Field(ge=1)
+    note: str = Field(min_length=10, max_length=2000)
+    # Every open reason code must be acknowledged, so no issue is approved unseen.
+    acknowledged_codes: list[str]
+
 class RetryRequest(StrictModel):
+    reviewer: str = Field(min_length=2, max_length=80, pattern=r'\S')  # who is acting, shown in audit and export
     expected_version: int = Field(ge=1)
     note: str = Field(min_length=5, max_length=2000)
 
@@ -74,6 +83,8 @@ class Decision(StrictModel):
     outcome: Literal['review', 'approved', 'duplicate']
     reason_codes: list[str]
     explanation: str
+    # True when a reviewer approved despite open findings (reason_codes lists them).
+    manual_override: bool = False
 
 class CaseSummary(StrictModel):
     id: str

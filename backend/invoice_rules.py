@@ -30,7 +30,8 @@ def evaluate(extraction, pages, refs, existing, reservations, settings, verified
             checks[name] = {'status': 'missing'}
             return
         page = next((p for p in pages if p['page'] == field.page), None)
-        evidence_ok = bool(page and field.evidence and field.evidence in page['text'])
+        evidence_ok = bool(page and field.evidence and
+                           ' '.join(field.evidence.split()) in ' '.join(page['text'].split()))
         ocr_ok = bool(page and (page['route'] == 'digital' or (page['ocr_confidence'] or 0) >= settings.ocr_min_confidence))
         confidence_ok = field.confidence == 'high' if name in CRITICAL else field.confidence != 'low'
         human = name in verified
@@ -75,7 +76,8 @@ def evaluate(extraction, pages, refs, existing, reservations, settings, verified
         except ValueError: pass
     if values['currency'] and not re.fullmatch('[A-Z]{3}', values['currency']):
         flag('INVALID_CURRENCY', 'Currency must be a three-letter uppercase code.', 'currency')
-    vendors = [v for v in refs['vendors'] if normalize(v['name']) == normalize(values['vendor_name'])]
+    vendors = [v for v in refs['vendors']
+               if normalize(values['vendor_name']) in {normalize(name) for name in [v['name'], *v.get('aliases', [])]}]
     vendor = vendors[0] if len(vendors) == 1 else None
     pos = refs['purchase_orders']
     candidates = []
@@ -120,7 +122,7 @@ def evaluate(extraction, pages, refs, existing, reservations, settings, verified
     if vendor and values['invoice_number']:
         for old in existing:
             if old['vendor_id'] != vendor['id']: continue
-            if normalize(old['invoice_number']) == normalize(values['invoice_number']):
+            if str(old['invoice_number']).strip().casefold() == str(values['invoice_number']).strip().casefold():
                 exact.append(old['id']) if old['status'] == 'approved' else flag('POSSIBLE_DUPLICATE', f'Invoice identity matches unresolved case {old["id"]}.')
             elif (old['currency'] == values['currency'] and old['amount'] is not None and values['total_amount'] is not None
                   and abs(Decimal(old['amount']) - values['total_amount']) <= tolerance):

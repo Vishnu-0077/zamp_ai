@@ -8,6 +8,7 @@ import { Alert, Card, ErrorMessage, Loading, PageHeader } from '@/components';
 import { STATUS_META } from '@/lib/tones';
 import { CaseTable, compactCaseColumns } from '@/features/cases/CaseTable';
 import { useCases, useStats } from '@/features/cases/hooks';
+import { DownloadApprovedButton } from '@/features/cases/DownloadApprovedButton';
 
 export default function DashboardPage() {
   const client = useQueryClient();
@@ -35,18 +36,19 @@ export default function DashboardPage() {
         actions={
           <>
             <button className="btn" disabled={reset.isPending}
-              title="Clear processing data, vendors, purchase orders, FX rates and policy"
+              title="Clear processed cases and reload trusted reference data"
               onClick={() => reset.mutate()}>
               {reset.isPending ? 'Starting fresh…' : 'Refresh & start fresh'}
             </button>
+            <DownloadApprovedButton />
             <Link className="btn" to="/inbox">Process from inbox</Link>
             <Link className="btn btn-primary" to="/upload">Upload invoice</Link>
           </>
         }
       />
-      <p className="small muted">Refresh clears all processed cases, uploaded documents, audit history, PO reservations and reference data (vendors, purchase orders, FX rates and policy). Test inputs are kept.</p>
+      <p className="small muted">Refresh clears processed cases, uploaded documents, audit history and PO reservations. Trusted vendor, PO and FX configuration is retained to validate new invoices.</p>
       {reset.error && <ErrorMessage error={reset.error} title="Could not start fresh" />}
-      {fresh && <Alert tone="info" title="Fresh start complete">Processing and reference data have been cleared.</Alert>}
+      {fresh && <Alert tone="info" title="Fresh start complete">Processing results have been cleared; trusted reference data is ready for new invoices.</Alert>}
       {health.data && !health.data.extraction_configured && (
         <Alert tone="warn" title="Extraction is not configured">
           New cases go to review with <code>EXTRACTION_NOT_CONFIGURED</code>. Set <code>EXTRACTION_MODEL</code> and
@@ -56,6 +58,8 @@ export default function DashboardPage() {
       {health.data && health.data.worker_enabled && !health.data.worker_alive && (
         <Alert tone="danger" title="The processing worker is not running">Queued cases will not progress.</Alert>
       )}
+      {health.data?.references_configured === false && <Alert tone="warn" title="Reference data is missing">Load trusted vendors and purchase orders before processing. Without them, invoices must go to review.</Alert>}
+      {stats.data?.inbox_counts && <p>Inbox email outcomes: {CASE_STATUSES.map(s => `${STATUS_META[s].label}: ${stats.data?.inbox_counts?.[s] ?? 0}`).join(' · ')}. Identical attachments share one case in the tiles below.</p>}
       {stats.error && <ErrorMessage error={stats.error} title="Could not load statistics" />}
       <div className="grid grid-tiles" style={{ marginBottom: 16 }}>
         {CASE_STATUSES.map((s) => (

@@ -41,9 +41,11 @@ export const RETRYABLE_CODES = [
 
 // Endpoints below are untyped in the OpenAPI document; shapes follow the backend code.
 export interface Stats {
+  inbox_counts?: Partial<Record<CaseStatus, number>>;
   counts: Partial<Record<CaseStatus, number>>;
 }
 export interface Health {
+  references_configured?: boolean;
   status: string;
   worker_enabled: boolean;
   worker_alive: boolean;

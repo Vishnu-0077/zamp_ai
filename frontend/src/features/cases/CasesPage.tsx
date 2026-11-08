@@ -4,6 +4,7 @@ import { Card, ErrorMessage, Loading, PageHeader, Pagination } from '@/component
 import { STATUS_META } from '@/lib/tones';
 import { CaseTable } from './CaseTable';
 import { useCases, useStats } from './hooks';
+import { DownloadApprovedButton } from './DownloadApprovedButton';
 
 const LIMIT = 25;
 
@@ -25,7 +26,7 @@ export default function CasesPage() {
 
   return (
     <>
-      <PageHeader title="Cases" subtitle="Every processed invoice, newest first." />
+      <PageHeader title="Cases" subtitle="Every processed invoice, newest first." actions={<DownloadApprovedButton primary={status === 'approved'} />} />
       <div className="tabs" role="tablist" aria-label="Filter by status">
         <button role="tab" aria-selected={!status} onClick={() => update({ status: undefined })}>
           All {stats && <span className="muted">({total})</span>}

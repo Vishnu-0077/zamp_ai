@@ -268,6 +268,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/exports/approved-invoices.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Approved Invoices Export
+         * @description Download every approved invoice as an Excel workbook, generated from current data.
+         */
+        get: operations["approved_invoices_export_api_v1_exports_approved_invoices_xlsx_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/cases/{job_id}": {
         parameters: {
             query?: never;
@@ -339,6 +359,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/cases/{job_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve
+         * @description Approve a held case after a reviewer checked it by eye; open findings are recorded as overridden.
+         */
+        post: operations["approve_api_v1_cases__job_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/cases/{job_id}/retry": {
         parameters: {
             query?: never;
@@ -370,7 +410,7 @@ export interface paths {
         put?: never;
         /**
          * Reset
-         * @description Clear processing and reference data; preserve fixtures.
+         * @description Clear processing results; retain trusted validation configuration and fixtures.
          */
         post: operations["reset_api_v1_reset_post"];
         delete?: never;
@@ -509,6 +549,8 @@ export interface components {
         };
         /** Correction */
         Correction: {
+            /** Reviewer */
+            reviewer: string;
             /** Expected Version */
             expected_version: number;
             /** Note */
@@ -526,6 +568,11 @@ export interface components {
             reason_codes: string[];
             /** Explanation */
             explanation: string;
+            /**
+             * Manual Override
+             * @default false
+             */
+            manual_override: boolean;
         };
         /** ExtractedField[Decimal] */
         "ExtractedField_Decimal_-Input": {
@@ -693,8 +740,21 @@ export interface components {
             unit_price: components["schemas"]["ExtractedField_Decimal_-Output"];
             amount: components["schemas"]["ExtractedField_Decimal_-Output"];
         };
+        /** ManualApproval */
+        ManualApproval: {
+            /** Reviewer */
+            reviewer: string;
+            /** Expected Version */
+            expected_version: number;
+            /** Note */
+            note: string;
+            /** Acknowledged Codes */
+            acknowledged_codes: string[];
+        };
         /** RetryRequest */
         RetryRequest: {
+            /** Reviewer */
+            reviewer: string;
             /** Expected Version */
             expected_version: number;
             /** Note */
@@ -1142,6 +1202,27 @@ export interface operations {
             };
         };
     };
+    approved_invoices_export_api_v1_exports_approved_invoices_xlsx_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Excel workbook of all approved invoices */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
+            };
+        };
+    };
     detail_api_v1_cases__job_id__get: {
         parameters: {
             query?: never;
@@ -1241,9 +1322,7 @@ export interface operations {
     correct_api_v1_cases__job_id__corrections_post: {
         parameters: {
             query?: never;
-            header?: {
-                "x-reviewer-key"?: string;
-            };
+            header?: never;
             path: {
                 job_id: string;
             };
@@ -1275,12 +1354,45 @@ export interface operations {
             };
         };
     };
+    approve_api_v1_cases__job_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualApproval"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     retry_api_v1_cases__job_id__retry_post: {
         parameters: {
             query?: never;
-            header?: {
-                "x-reviewer-key"?: string;
-            };
+            header?: never;
             path: {
                 job_id: string;
             };

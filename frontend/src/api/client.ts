@@ -1,4 +1,3 @@
-import { getReviewerKey } from '@/lib/reviewerKey';
 
 /** Base URL for API calls. Empty means same origin (dev proxy or reverse proxy). */
 export const API_BASE = (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, '') ?? '';
@@ -21,8 +20,6 @@ export interface RequestOptions {
   json?: unknown;
   body?: BodyInit;
   headers?: Record<string, string>;
-  /** Attach X-Reviewer-Key for review actions (corrections / retry). */
-  reviewer?: boolean;
   signal?: AbortSignal;
 }
 
@@ -65,11 +62,6 @@ export async function request<T>(path: string, opts: RequestOptions = {}): Promi
   if (opts.json !== undefined) {
     headers['Content-Type'] = 'application/json';
     body = JSON.stringify(opts.json);
-  }
-  if (opts.reviewer) {
-    const key = getReviewerKey();
-    if (!key) throw new ApiError(0, 'REVIEWER_KEY_MISSING', 'Enter your reviewer key in Settings before submitting review actions.');
-    headers['X-Reviewer-Key'] = key;
   }
   let res: Response;
   try {

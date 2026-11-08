@@ -1,8 +1,6 @@
 import hashlib
 import json
 import logging
-import os
-import tempfile
 import sqlite3
 import threading
 import uuid
@@ -99,6 +97,8 @@ class Service:
                 c.execute('UPDATE jobs SET pages=?,model=? WHERE id=?', (dumps(pages), self.settings.model, job_id))
                 self.store.audit(c, job_id, 'parsed', {'routes': [p['route'] for p in pages], 'prompt_version': PROMPT_VERSION})
             batch = self.extractor.extract(pages)
+            if hasattr(self.extractor, 'repair_evidence'):
+                batch = self.extractor.repair_evidence(batch, pages)
             with self.store.connect() as c:
                 self.store.audit(c, job_id, 'extracted', batch.model_dump(mode='json'))
                 # Record the model that actually produced the extraction (may be a fallback).
@@ -171,7 +171,69 @@ class Service:
                 stage_findings = [f for f in findings if f['stage'] == stage]
                 self.store.audit(c, job_id, stage, {'passed': not stage_findings, 'findings': stage_findings}, actor)
             self.store.audit(c, job_id, 'decision', {'decision': decision, 'checks': result['checks'], 'policy': refs['policy']}, actor)
+        if outcome == 'approved':
+            self.refresh_export()
         return self.store.get(job_id)
+
+    @serialized
+    def approve_manually(self, job_id, expected_version, note, acknowledged, actor):
+        """A reviewer approves a held case after checking it by eye.
+
+        Findings are kept as history and listed in the decision as overridden. The PO
+        value is still reserved when a PO is known, so later invoices see the spend.
+        """
+        with self.store.connect() as c:
+            c.execute('BEGIN IMMEDIATE')
+            row = c.execute('SELECT * FROM jobs WHERE id=?', (job_id,)).fetchone()
+            if not row: raise NotFound('Case not found')
+            if row['status'] != 'review' or row['version'] != expected_version:
+                raise Conflict('Case changed or is not in review; reload before approving.')
+            extraction = json.loads(row['extraction']) if row['extraction'] else None
+            if not extraction or 'documents' in extraction:
+                raise Conflict('Nothing usable was extracted from this case. Correct the values or retry processing first.')
+            decision = json.loads(row['decision']) if row['decision'] else {}
+            codes = sorted(set(decision.get('reason_codes', [])))
+            blocked = set(codes) & {'OCR_UNAVAILABLE', 'OCR_FAILED', 'EXTRACTION_NOT_CONFIGURED',
+                                    'EXTRACTION_SCHEMA_FAILED', 'PROCESSING_ERROR', 'MULTIPLE_DOCUMENTS'}
+            if blocked:
+                raise Conflict(f'Cannot approve manually while {", ".join(sorted(blocked))} is open; correct or retry first.')
+            missing = set(codes) - set(acknowledged)
+            if missing:
+                raise Conflict(f'Acknowledge every open issue before approving: {", ".join(sorted(missing))}.')
+            reservation = None
+            if row['po_number']:
+                checks = json.loads(row['checks'] or '{}')
+                converted = (checks.get('po_match') or {}).get('converted_total')
+                po = next((p for p in self.references()['purchase_orders'] if p['number'] == row['po_number']), None)
+                if converted is None and po and row['amount'] is not None and row['currency'] == po.get('currency'):
+                    converted = row['amount']
+                if converted is not None:
+                    reservation = {'po_number': row['po_number'], 'amount': str(converted)}
+                    c.execute('INSERT OR REPLACE INTO reservations(job_id,po_number,amount) VALUES(?,?,?)',
+                              (job_id, reservation['po_number'], reservation['amount']))
+            approved = {'outcome': 'approved', 'reason_codes': codes, 'manual_override': True,
+                        'explanation': f'Approved manually by a reviewer: {note}'}
+            c.execute('UPDATE jobs SET status=?, decision=?, updated_at=?, version=version+1 WHERE id=?',
+                      ('approved', dumps(approved), now(), job_id))
+            self.store.audit(c, job_id, 'manual_approval', {'note': note, 'overridden_codes': codes,
+                             'previous_decision': decision, 'reservation': reservation}, actor)
+        self.refresh_export()
+        return self.store.get(job_id)
+
+    def export_approved(self):
+        """Current approved-invoice register as .xlsx bytes."""
+        from .approved_export import build_workbook
+        with self.store.connect() as c:
+            return build_workbook(c)
+
+    def refresh_export(self):
+        # The on-disk copy is a convenience; an export failure must never undo an approval.
+        try:
+            from .approved_export import write_file
+            with self.store.connect() as c:
+                write_file(c, self.settings.export_path)
+        except Exception:
+            log.exception('Could not refresh the approved-invoice export at %s', self.settings.export_path)
 
     @serialized
     def retry(self, job_id, expected_version, note, actor):
@@ -193,24 +255,11 @@ class Service:
     def reset(self):
         # Wait for an in-flight extraction to finish before removing its case.
         # Source bytes, results and reservations all live in these SQLite tables.
-        from .settings import TEST_ROOT
-        reference_path = self.settings.procurement_path.resolve()
-        if (reference_path.is_relative_to(TEST_ROOT.resolve()) or
-                self.settings.db_path.resolve().is_relative_to(TEST_ROOT.resolve())):
-            raise ValueError('Reset cannot modify files under test_cases.')
-        empty = {'vendors': [], 'purchase_orders': [], 'fx_rates': [], 'validation_policy': {}}
-        # Replace atomically so concurrent readers never see partial JSON.
-        with tempfile.NamedTemporaryFile(mode='w', dir=reference_path.parent,
-                                         prefix='.procurement-', delete=False) as stream:
-            temporary = stream.name
-            json.dump(empty, stream, indent=2)
-            stream.write('\n')
-        try:
-            os.replace(temporary, reference_path)
-        finally:
-            if os.path.exists(temporary):
-                os.unlink(temporary)
+        # References are validation configuration, not previous processing results.
+        # A fresh queue still needs approved vendors, POs, bank details and FX.
+        self.references()
         self.store.reset()
+        self.refresh_export()
         return {'status': 'reset'}
 
     def start(self):
@@ -226,6 +275,8 @@ class Service:
             # Only the lock owner may wipe, so a second process can never clear a live database.
             log.warning('RESET_ON_START=true: clearing all processed cases from %s', self.settings.db_path)
             self.reset()
+        else:
+            self.refresh_export()  # Make sure the register on disk matches the kept cases.
         # An interrupted in-flight case is reviewed; it is never silently replayed.
         with self.store.connect() as c:
             ids = [r['id'] for r in c.execute("SELECT id FROM jobs WHERE status='processing'")]
