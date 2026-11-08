@@ -156,6 +156,11 @@ def install(app: FastAPI, settings=None, extractor=None):
         """Retry a repaired processing dependency. Not available for business exceptions."""
         return service.retry(job_id, body.expected_version, body.note, actor)
 
+    @router.post('/reset')
+    def reset(actor=Depends(reviewer)):
+        """Clear processing state and reload trusted reference data; preserve fixtures."""
+        return service.reset()
+
     @router.get('/references')
     def references():
         return service.references()
@@ -171,7 +176,7 @@ def install(app: FastAPI, settings=None, extractor=None):
             for operation in methods.values():
                 if isinstance(operation, dict) and path != '/health':
                     security = {'ApiKey': []} if settings.api_key else {}
-                    if path.endswith(('/corrections', '/retry')):
+                    if path.endswith(('/corrections', '/retry', '/reset')):
                         security['ReviewerKey'] = []
                     operation['security'] = [security] if security else []
         return schema

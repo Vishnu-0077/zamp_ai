@@ -115,7 +115,7 @@ files:
 | `PROCUREMENT_PATH` | No | Trusted vendor/PO/policy file (default `backend/procurement.json`) |
 | `CORS_ORIGINS` | No | Only needed when the dashboard calls the backend directly |
 | `WORKER_ENABLED` | No | `true` (default) runs the processing worker in the API process |
-| `RESET_ON_START` | No | `true` wipes all processed cases, audit history and PO reservations each time the backend starts. Development only; default `false` |
+| `RESET_ON_START` | No | `true` wipes all processed cases, audit history and PO reservations each time the backend starts. Default `true`; set `false` to retain processing history |
 
 The dashboard reads `frontend/.env`, or the shell, for its proxy:
 
@@ -173,11 +173,16 @@ export EXTRACTION_MODEL=your-model-id     # optional, enables extraction
 
 Keep `--workers 1`: a single worker process owns the processing database.
 
-Processed cases are saved in `backend/runtime/processing.sqlite3` and survive
-restarts. To start from a clean slate on every restart, add
-`export RESET_ON_START=true` before starting the backend. This clears only the
-processing database; the sample inbox in `test_cases/test_inputs/` and
-`backend/procurement.json` are never changed.
+Processed cases and uploaded PDFs live in `backend/runtime/processing.sqlite3`.
+Every backend worker startup clears processing state by default, including
+results, audit history and PO reservations. Set `RESET_ON_START=false` explicitly
+to retain them. `test_cases/` is never modified by the reset.
+
+On the dashboard home page, **Refresh & start fresh** performs the same reset
+without restarting the backend and reloads all dashboard queries, including
+Reference data. Enter the reviewer key in Settings to enable the button. An
+active extraction finishes before reset clears its case. Reference data is
+reread from `PROCUREMENT_PATH`; trusted vendor/PO configuration is retained.
 
 **Terminal 2, the dashboard:**
 
@@ -333,7 +338,8 @@ frontend's architecture and how to add screens are in
 Backend tests and sample-input checks:
 
 ```bash
-./zamp_venv/bin/python -m unittest discover -s test_cases -v
+RESET_ON_START=false ./zamp_venv/bin/python -m unittest discover -s test_cases -v
+./zamp_venv/bin/python -m unittest backend.test_reset.ResetTests -v
 ./zamp_venv/bin/python -m test_cases.validate_inbox
 ./zamp_venv/bin/python -m backend.export_openapi
 ```

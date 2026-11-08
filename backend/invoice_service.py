@@ -4,6 +4,7 @@ import logging
 import sqlite3
 import threading
 import uuid
+from functools import wraps
 from .database import Store, now, dumps
 from .invoice_extractor import LangChainExtractor, parse_pdf, ProcessingError, PROMPT_VERSION
 from .schemas import InvoiceExtraction
@@ -15,8 +16,17 @@ class Conflict(Exception): pass
 class NotFound(Exception): pass
 
 
+def serialized(method):
+    @wraps(method)
+    def wrapped(self, *args, **kwargs):
+        with self.operation_lock:
+            return method(self, *args, **kwargs)
+    return wrapped
+
+
 class Service:
     def __init__(self, settings, extractor=None):
+        self.operation_lock = threading.RLock()
         self.settings = settings
         self.store = Store(settings.db_path)
         self.extractor = extractor or LangChainExtractor(settings)
@@ -33,6 +43,7 @@ class Service:
             refs['policy']['as_of_date'] = datetime.now(timezone.utc).date().isoformat()
         return refs
 
+    @serialized
     def ingest(self, content, sender, filename, email_id=None, actor='api'):
         if not content or len(content) > self.settings.max_pdf_bytes:
             raise ValueError('PDF must contain 1 to 20 MiB of data.')
@@ -74,6 +85,7 @@ class Service:
             self.store.audit(c, row['id'], 'processing_started', {})
             return row['id']
 
+    @serialized
     def process_next(self):
         job_id = self.claim()
         if not job_id: return False
@@ -108,6 +120,7 @@ class Service:
                       (dumps(findings), dumps(decision), now(), job_id))
             self.store.audit(c, job_id, 'review_required', decision)
 
+    @serialized
     def validate(self, job_id, extraction, actor='system', expected_version=None, note=None):
         refs = self.references()
         with self.store.connect() as c:
@@ -158,6 +171,7 @@ class Service:
             self.store.audit(c, job_id, 'decision', {'decision': decision, 'checks': result['checks'], 'policy': refs['policy']}, actor)
         return self.store.get(job_id)
 
+    @serialized
     def retry(self, job_id, expected_version, note, actor):
         with self.store.connect() as c:
             c.execute('BEGIN IMMEDIATE')
@@ -173,6 +187,14 @@ class Service:
             self.store.audit(c, job_id, 'dependency_retry_requested', {'note': note}, actor)
         return self.store.get(job_id)
 
+    @serialized
+    def reset(self):
+        # Wait for an in-flight extraction to finish before removing its case.
+        # Source bytes, results and reservations all live in these SQLite tables.
+        self.references()  # Validate/reload the current trusted file before clearing.
+        self.store.reset()
+        return {'status': 'reset'}
+
     def start(self):
         import fcntl
         self.worker_lock = open(str(self.settings.db_path) + '.worker.lock', 'a')
@@ -185,7 +207,7 @@ class Service:
         if self.settings.reset_on_start:
             # Only the lock owner may wipe, so a second process can never clear a live database.
             log.warning('RESET_ON_START=true: clearing all processed cases from %s', self.settings.db_path)
-            self.store.reset()
+            self.reset()
         # An interrupted in-flight case is reviewed; it is never silently replayed.
         with self.store.connect() as c:
             ids = [r['id'] for r in c.execute("SELECT id FROM jobs WHERE status='processing'")]

@@ -1,14 +1,29 @@
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { systemApi } from '@/api/endpoints';
 import { qk } from '@/api/queryKeys';
 import { CASE_STATUSES } from '@/api/types';
 import { Alert, Card, ErrorMessage, Loading, PageHeader } from '@/components';
+import { useReviewerKey } from '@/lib/reviewerKey';
 import { STATUS_META } from '@/lib/tones';
 import { CaseTable, compactCaseColumns } from '@/features/cases/CaseTable';
 import { useCases, useStats } from '@/features/cases/hooks';
 
 export default function DashboardPage() {
+  const client = useQueryClient();
+  const reviewerKey = useReviewerKey();
+  const [fresh, setFresh] = useState(false);
+  const reset = useMutation({
+    mutationFn: async () => {
+      setFresh(false);
+      await systemApi.reset();
+      await client.cancelQueries();
+      client.removeQueries({ predicate: (query) => query.getObserversCount() === 0 });
+      await client.resetQueries();
+    },
+    onSuccess: () => setFresh(true),
+  });
   const stats = useStats();
   const queue = useCases({ status: 'review', limit: 5, offset: 0 });
   const recent = useCases({ limit: 5, offset: 0 });
@@ -21,11 +36,19 @@ export default function DashboardPage() {
         subtitle="Invoice processing at a glance."
         actions={
           <>
+            <button className="btn" disabled={reset.isPending || !reviewerKey}
+              title={reviewerKey ? 'Clear processing data and reload reference data' : 'Set your reviewer key in Settings first'}
+              onClick={() => reset.mutate()}>
+              {reset.isPending ? 'Starting fresh…' : 'Refresh & start fresh'}
+            </button>
             <Link className="btn" to="/inbox">Process from inbox</Link>
             <Link className="btn btn-primary" to="/upload">Upload invoice</Link>
           </>
         }
       />
+      <p className="small muted">Refresh clears all processed cases, uploaded documents, audit history and PO reservations, and reloads reference data. Test inputs are kept. Set your reviewer key in <Link to="/settings">Settings</Link> to enable it.</p>
+      {reset.error && <ErrorMessage error={reset.error} title="Could not start fresh" />}
+      {fresh && <Alert tone="info" title="Fresh start complete">Processing data has been cleared and reference data reloaded.</Alert>}
       {health.data && !health.data.extraction_configured && (
         <Alert tone="warn" title="Extraction is not configured">
           New cases go to review with <code>EXTRACTION_NOT_CONFIGURED</code>. Set <code>EXTRACTION_MODEL</code> and

@@ -217,7 +217,8 @@ API-only processes may use `WORKER_ENABLED=false`. Restarted in-flight jobs go
 to review with an explicit retry, rather than silently repeating external calls.
 `RESET_ON_START=true` clears jobs, submissions, audit history and local PO
 reservations after the worker acquires the database lock. The default is
-`false` when starting the app directly; the startup helper defaults to `true`.
+`true` for both direct startup and the helper. Set `RESET_ON_START=false`
+explicitly to retain processing history.
 Source fixtures and procurement data are retained. Use reset only for local
 development where losing processing history is intended.
 
@@ -231,10 +232,17 @@ manual terminal-case editing. Audit records are append-only through this API,
 not tamper-proof against filesystem/database administrators. Protect and back
 up the runtime volume and keys before exposing the service externally.
 
+`POST /api/v1/reset` requires the application key (when configured) and reviewer
+key. It waits for active processing, then atomically removes cases, source PDF
+bytes, extracted results, submissions, audit events and reservations. It reloads
+the current reference file. No files under `test_cases/` are changed. The home
+page's **Refresh & start fresh** button also clears the browser query cache.
+
 ## Verification
 
 ```bash
-./zamp_venv/bin/python -m unittest discover -s test_cases -v
+RESET_ON_START=false ./zamp_venv/bin/python -m unittest discover -s test_cases -v
+./zamp_venv/bin/python -m unittest backend.test_reset.ResetTests -v
 ./zamp_venv/bin/python -m unittest test_cases.test_invoice_checks -v
 ./zamp_venv/bin/python -m test_cases.validate_inbox
 ./zamp_venv/bin/python -m backend.export_openapi

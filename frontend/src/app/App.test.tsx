@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { App } from './App';
+import { setReviewerKey } from '@/lib/reviewerKey';
 import { caseDetail } from '@/test/fixtures';
 
 function mockBackend() {
@@ -22,9 +23,34 @@ function mockBackend() {
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  setReviewerKey('');
 });
 
 describe('App', () => {
+  it('starts fresh from the home page and reloads the case list', async () => {
+    setReviewerKey('review-secret');
+    let cleared = false;
+    const fetch = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, options) => {
+      const path = new URL(String(input), 'http://localhost').pathname;
+      if (path === '/api/v1/reset') {
+        expect(options?.method).toBe('POST');
+        expect(new Headers(options?.headers).get('X-Reviewer-Key')).toBe('review-secret');
+        cleared = true;
+        return Response.json({ status: 'reset' });
+      }
+      if (path === '/health') return Response.json({ status: 'ok', worker_enabled: true, worker_alive: true, extraction_configured: true });
+      if (path === '/api/v1/stats') return Response.json({ counts: cleared ? {} : { review: 1 } });
+      return Response.json({ items: cleared ? [] : [caseDetail()], total: cleared ? 0 : 1, limit: 5, offset: 0 });
+    });
+    window.history.pushState({}, '', '/');
+    render(<App />);
+    const button = await screen.findByRole('button', { name: 'Refresh & start fresh' });
+    fireEvent.click(button);
+    expect(await screen.findByText('Fresh start complete')).toBeTruthy();
+    expect(await screen.findByText('Nothing waiting for review.')).toBeTruthy();
+    expect(fetch.mock.calls.some(([url]) => String(url).includes('/api/v1/reset'))).toBe(true);
+  });
+
   it('renders the dashboard with navigation built from the feature registry', async () => {
     mockBackend();
     window.history.pushState({}, '', '/');

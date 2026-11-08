@@ -34,7 +34,9 @@ BACKEND_API_KEY=dev-app-key npm run dev       # http://localhost:5173
 ```
 
 Then open **Settings** and enter the reviewer key (`dev-reviewer-key` above) to
-enable corrections and retries.
+enable corrections, retries and **Refresh & start fresh** on the dashboard.
+Refresh clears processing data and reloads every dashboard query, including
+Reference data. The test inputs and trusted reference configuration are kept.
 
 `cp .env.example .env` works instead of exporting variables. `BACKEND_URL`
 defaults to `http://127.0.0.1:8000`.

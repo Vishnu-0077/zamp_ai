@@ -29,4 +29,4 @@ class Settings:
     worker_enabled: bool = field(default_factory=lambda: os.getenv('WORKER_ENABLED', 'true').lower() == 'true')
     # Development only: wipe processed cases, audit and PO reservations when the worker starts.
     # The test inbox and procurement file are never touched.
-    reset_on_start: bool = field(default_factory=lambda: os.getenv('RESET_ON_START', 'false').lower() == 'true')
+    reset_on_start: bool = field(default_factory=lambda: os.getenv('RESET_ON_START', 'true').lower() == 'true')
