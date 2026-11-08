@@ -16,6 +16,7 @@ backend/                 All backend code, configuration, dependencies and API d
   settings.py            Environment configuration and repository paths
   procurement.json       Trusted synthetic procurement master and policy
   requirements.txt       Python dependencies
+  start.sh               Local provider startup helper
   Dockerfile             Container build with Tesseract OCR
   .env.example           Environment configuration example
   README.md              Setup, API integration and operational guide
@@ -105,7 +106,8 @@ files:
 | `REVIEWER_API_KEY` | Yes, for corrections and retries | Key a reviewer enters in the dashboard |
 | `OPENAI_API_KEY` | For extraction | Model provider credential |
 | `EXTRACTION_MODEL` | For extraction | Model ID with JSON-schema structured output |
-| `OPENAI_BASE_URL` | No | OpenAI-compatible endpoint |
+| `OPENAI_BASE_URL` | No | OpenAI-compatible endpoint for unprefixed models |
+| `GEMINI_API_KEY` / `GROQ_API_KEY` | For prefixed models | Credentials for `gemini:` / `groq:` model entries |
 | `EXTRACTION_FALLBACK_MODELS` | No | Comma-separated models tried when the main one is overloaded or out of quota |
 | `EXTRACTION_PROVIDER_RETRIES` | No | Retries per model for 429, 5xx and timeouts (default `0`) |
 | `EXTRACTION_RETRY_BACKOFF_SECONDS` | No | First retry delay; doubles each retry (default `2`) |
@@ -113,6 +115,7 @@ files:
 | `PROCUREMENT_PATH` | No | Trusted vendor/PO/policy file (default `backend/procurement.json`) |
 | `CORS_ORIGINS` | No | Only needed when the dashboard calls the backend directly |
 | `WORKER_ENABLED` | No | `true` (default) runs the processing worker in the API process |
+| `RESET_ON_START` | No | `true` wipes all processed cases, audit history and PO reservations each time the backend starts. Development only; default `false` |
 
 The dashboard reads `frontend/.env`, or the shell, for its proxy:
 
@@ -125,39 +128,38 @@ The dashboard reads `frontend/.env`, or the shell, for its proxy:
 cp frontend/.env.example frontend/.env    # then set BACKEND_API_KEY in it
 ```
 
-**Free option: Google Gemini.** Gemini's free tier works through its
-OpenAI-compatible endpoint. It has been tested with `gemini-3.5-flash`,
-`gemini-3-flash-preview` and `gemini-3.5-flash-lite`.
+#### Provider configuration and fallback
 
-1. Create a key at https://aistudio.google.com/apikey.
-2. Store it outside the repository, without echoing it:
-   ```bash
-   mkdir -p ~/.config/zamp && read -rsp "Gemini key: " K && printf '%s' "$K" > ~/.config/zamp/gemini.key && chmod 600 ~/.config/zamp/gemini.key && unset K
-   ```
-3. Start the backend with these settings (see step 4):
-   ```bash
-   export OPENAI_API_KEY="$(cat ~/.config/zamp/gemini.key)"
-   export OPENAI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
-   export EXTRACTION_MODEL=gemini-3.5-flash
-   export EXTRACTION_FALLBACK_MODELS=gemini-3-flash-preview,gemini-3.5-flash-lite
-   export EXTRACTION_PROVIDER_RETRIES=3
-   export EXTRACTION_RETRY_BACKOFF_SECONDS=5
-   ```
+Unprefixed model IDs use `OPENAI_API_KEY` and optional `OPENAI_BASE_URL`.
+Prefix a model with `gemini:` or `groq:` to use that provider's endpoint and
+its own `GEMINI_API_KEY` or `GROQ_API_KEY`. Entries without the corresponding
+provider key are skipped. Set model IDs available to your account that support
+native JSON-schema structured output and temperature 0.
 
-Free-tier caveats:
-- Each model allows about **20 requests per day** and a few per minute. The
-  three-model chain above gives roughly 60 invoices a day. Once a model's
-  daily quota is used up, the backend moves to the next model straight away.
-- Google often returns 503 "high demand". The retries and fallbacks above
-  absorb most of these. If every model fails, the case goes to review with
-  `PROCESSING_ERROR`; click **Retry processing** later.
-- Older models such as `gemini-2.5-flash` are closed to new keys. List the
-  models your key can use with
-  `curl -s https://generativelanguage.googleapis.com/v1beta/openai/models -H "Authorization: Bearer $(cat ~/.config/zamp/gemini.key)"`.
-- Google may use free-tier inputs to improve its models, so don't send
-  confidential invoices.
+```bash
+export GEMINI_API_KEY='your-gemini-key'
+export GROQ_API_KEY='your-groq-key'
+export EXTRACTION_MODEL='gemini:your-model-id'
+export EXTRACTION_FALLBACK_MODELS='groq:your-model-id'
+export EXTRACTION_PROVIDER_RETRIES=3
+export EXTRACTION_RETRY_BACKOFF_SECONDS=5
+```
+
+Fallbacks run in order after transient provider failures or a provider HTTP 413
+(request too large). Schema failures do not trigger another model. Quotas,
+model access and billing depend on your provider account; check your account
+before sending invoices. Keep credentials out of Git.
 
 ### 4. Start
+
+**Provider startup helper:** `./backend/start.sh` loads
+`~/.config/zamp/gemini.key` and `~/.config/zamp/groq.key`, defaults to a
+Gemini/Groq model chain, clears `OPENAI_API_KEY` and
+`OPENAI_BASE_URL`, and resets processed cases on each start (run it as
+`RESET_ON_START=false ./backend/start.sh` to keep them). It prints which keys
+were found, never their values. Override `EXTRACTION_MODEL` and
+`EXTRACTION_FALLBACK_MODELS` with model IDs
+available to your account. The manual start below preserves cases by default.
 
 **Terminal 1, the backend:**
 
@@ -171,6 +173,12 @@ export EXTRACTION_MODEL=your-model-id     # optional, enables extraction
 
 Keep `--workers 1`: a single worker process owns the processing database.
 
+Processed cases are saved in `backend/runtime/processing.sqlite3` and survive
+restarts. To start from a clean slate on every restart, add
+`export RESET_ON_START=true` before starting the backend. This clears only the
+processing database; the sample inbox in `test_cases/test_inputs/` and
+`backend/procurement.json` are never changed.
+
 **Terminal 2, the dashboard:**
 
 ```bash
@@ -182,7 +190,7 @@ BACKEND_API_KEY=dev-app-key npm run dev   # or rely on frontend/.env
 | --- | --- |
 | http://localhost:5173 | **The dashboard** |
 | http://127.0.0.1:8000/docs | Interactive API documentation (Swagger) |
-| http://127.0.0.1:8000/ | Legacy read-only inbox page |
+| http://127.0.0.1:8000/ | Legacy read-only inbox page. Works only when `BACKEND_API_KEY` is unset; otherwise it shows `UNAUTHORIZED`, because a browser page cannot send the key. Use the dashboard |
 | http://127.0.0.1:8000/health | Backend health JSON |
 
 ### 5. First run walkthrough
@@ -300,7 +308,7 @@ only fixes misread data.
 | Errors mention `401` / `X-API-Key` | The dashboard's `BACKEND_API_KEY` differs from the backend's; set the same value and restart `npm run dev` |
 | Correction or retry fails with `403` | Wrong reviewer key; update it in Settings |
 | Correction or retry fails with `503` | `REVIEWER_API_KEY` is not set on the backend |
-| Every case shows `EXTRACTION_NOT_CONFIGURED` | Set `OPENAI_API_KEY` and `EXTRACTION_MODEL`, restart the backend, then use **Retry processing** |
+| Every case shows `EXTRACTION_NOT_CONFIGURED` | Set `EXTRACTION_MODEL` and its provider key, restart the backend, then use **Retry processing** |
 | Scanned invoices show `OCR_UNAVAILABLE` | Install `tesseract-ocr`, restart the backend, then retry |
 | Cases stay *Queued* | The worker is not running: check `WORKER_ENABLED` and that only one backend process uses the database |
 | Backend refuses to start a second worker | Only one process may own a processing database; stop the other one |

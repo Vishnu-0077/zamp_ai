@@ -182,6 +182,10 @@ class Service:
             self.worker_lock.close()
             self.worker_lock = None
             raise RuntimeError('Only one worker process may own a processing database. Set WORKER_ENABLED=false on API-only replicas.')
+        if self.settings.reset_on_start:
+            # Only the lock owner may wipe, so a second process can never clear a live database.
+            log.warning('RESET_ON_START=true: clearing all processed cases from %s', self.settings.db_path)
+            self.store.reset()
         # An interrupted in-flight case is reviewed; it is never silently replayed.
         with self.store.connect() as c:
             ids = [r['id'] for r in c.execute("SELECT id FROM jobs WHERE status='processing'")]

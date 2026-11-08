@@ -56,6 +56,13 @@ class Store:
         finally:
             c.close()
 
+    def reset(self):
+        # Children first so foreign keys hold; sqlite_sequence restarts the AUTOINCREMENT ids.
+        with self.connect() as c:
+            for table in ('reservations', 'audit', 'submissions', 'jobs'):
+                c.execute(f'DELETE FROM {table}')
+            c.execute("DELETE FROM sqlite_sequence WHERE name IN ('audit','submissions')")
+
     def audit(self, c, job_id, event, payload, actor='system'):
         c.execute('INSERT INTO audit(job_id,at,actor,event,payload) VALUES(?,?,?,?,?)',
                   (job_id, now(), actor, event, dumps(payload)))

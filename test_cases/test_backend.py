@@ -84,6 +84,25 @@ class BackendTests(unittest.TestCase):
         with self.service.store.connect() as c:
             self.assertEqual(c.execute('SELECT count(*) FROM reservations').fetchone()[0], 1)
 
+    def test_reset_on_start_clears_cases_only_when_enabled(self):
+        self.ingest()
+        self.assertTrue(self.service.process_next())
+        def count(service, table):
+            with service.store.connect() as c: return c.execute(f'SELECT COUNT(*) FROM {table}').fetchone()[0]
+        kept = Service(self.settings, None)
+        kept.start(); kept.stop()
+        self.assertEqual(count(kept, 'jobs'), 1)
+        self.assertEqual(count(kept, 'reservations'), 1)
+        self.settings.reset_on_start = True
+        fresh = Service(self.settings, None)
+        fresh.start(); fresh.stop()
+        for table in ('jobs', 'submissions', 'audit', 'reservations'):
+            self.assertEqual(count(fresh, table), 0, table)
+        # The same invoice is processed again instead of being treated as a duplicate.
+        self.ingest()
+        self.assertTrue(self.service.process_next())
+        self.assertEqual(count(fresh, 'reservations'), 1)
+
     def test_evidence_hallucination_blocks_approval(self):
         e = self.e.model_copy(deep=True)
         e.total_amount.evidence = 'made up'
@@ -264,7 +283,7 @@ class LangChainContractTests(unittest.TestCase):
 def api_error(status, headers=None, body=None):
     import httpx, openai
     response = httpx.Response(status, headers=headers or {}, request=httpx.Request('POST', 'https://provider.invalid/chat/completions'))
-    cls = {400: openai.BadRequestError, 429: openai.RateLimitError, 503: openai.InternalServerError}[status]
+    cls = {400: openai.BadRequestError, 413: openai.APIStatusError, 429: openai.RateLimitError, 503: openai.InternalServerError}[status]
     return cls('provider error', response=response, body=body)
 
 
@@ -321,6 +340,42 @@ class ProviderRetryTests(unittest.TestCase):
         self.assertEqual(structured['m1'].invoke.call_count, 1)
         self.assertEqual(sleeps, [])
         self.assertEqual(extractor.last_model, 'm2')
+
+    def test_provider_prefix_routes_to_that_provider(self):
+        settings = Settings(model='gemini:g1', fallback_models=['groq:openai/gpt-oss-120b'], provider_retries=0,
+                            provider_keys={'gemini': 'gk', 'groq': 'qk'})
+        calls = []
+        def chat(**kwargs):
+            from unittest.mock import Mock
+            calls.append(kwargs)
+            s = Mock()
+            s.invoke.side_effect = [api_error(503)] if kwargs['model'] == 'g1' else [self.ok()]
+            model = Mock(); model.with_structured_output.return_value = s
+            return model
+        extractor = LangChainExtractor(settings, sleep=lambda _: None)
+        with patch('langchain_openai.ChatOpenAI', side_effect=chat):
+            self.assertEqual(len(extractor.extract([{'page':1,'text':'source'}]).documents), 1)
+        self.assertEqual([(c['model'], c['base_url'], c['api_key']) for c in calls],
+                         [('g1', 'https://generativelanguage.googleapis.com/v1beta/openai/', 'gk'),
+                          ('openai/gpt-oss-120b', 'https://api.groq.com/openai/v1', 'qk')])
+        self.assertEqual(extractor.last_model, 'groq:openai/gpt-oss-120b')
+
+    def test_request_too_large_moves_to_next_model(self):
+        settings = Settings(model='m1', fallback_models=['m2'], provider_retries=3)
+        result, extractor, structured, sleeps = self.run_extract(settings, {'m1': [api_error(413)], 'm2': [self.ok()]})
+        self.assertEqual(len(result.documents), 1)
+        self.assertEqual(structured['m1'].invoke.call_count, 1)
+        self.assertEqual(sleeps, [])
+        self.assertEqual(extractor.last_model, 'm2')
+
+    def test_provider_without_key_is_skipped(self):
+        settings = Settings(model='groq:m1', fallback_models=['m2'], provider_keys={'groq': ''})
+        result, extractor, structured, _ = self.run_extract(settings, {'m2': [self.ok()]})
+        self.assertEqual(len(result.documents), 1)
+        self.assertEqual(extractor.last_model, 'm2')
+        only = Settings(model='groq:m1', provider_keys={'groq': ''})
+        result, *_ = self.run_extract(only, {})
+        self.assertEqual(result.code, 'EXTRACTION_NOT_CONFIGURED')
 
     def test_short_retry_delay_in_body_is_respected(self):
         limited = api_error(429, body={'error': {'details': [{'retryDelay': '12s'}]}})

@@ -8,6 +8,13 @@ PO/receipt value has been reserved in the local ledger.
 
 ## Run locally
 
+Requires Python 3.11+ on Linux/WSL (worker locking uses `fcntl`). Run commands
+from the repository root. Create the environment first if needed:
+
+```bash
+python3 -m venv zamp_venv
+```
+
 ```bash
 ./zamp_venv/bin/python -m pip install -r backend/requirements.txt
 # Install the system OCR dependency (Ubuntu/Debian):
@@ -24,6 +31,19 @@ export REVIEWER_API_KEY='your-reviewer-token'
 app does not implicitly load `.env`). `OPENAI_BASE_URL` supports compatible
 providers with native JSON-schema structured output and temperature 0. Provider
 credentials are handled by `langchain-openai`. No model is silently selected.
+Model entries can also use `gemini:<model-id>` or `groq:<model-id>` with
+`GEMINI_API_KEY` or `GROQ_API_KEY`. `EXTRACTION_FALLBACK_MODELS` accepts a
+comma-separated mix of providers; missing provider keys cause those entries to
+be skipped. Choose model IDs available to your account. Provider billing and
+quotas depend on your account.
+
+For local setup, `./backend/start.sh` loads keys from
+`${ZAMP_KEY_DIR:-$HOME/.config/zamp}/gemini.key` and `groq.key`, preferring
+exported keys. It supplies development application/reviewer keys, clears
+`OPENAI_API_KEY` and `OPENAI_BASE_URL`, and defaults to resetting processing
+state. Use `RESET_ON_START=false ./backend/start.sh` to retain cases; override
+model variables as needed. See the [root guide](../README.md) for the dashboard.
+
 No credentials means processing goes to review with `EXTRACTION_NOT_CONFIGURED`.
 Missing Tesseract produces `OCR_UNAVAILABLE` for scans or mixed raster pages.
 
@@ -146,8 +166,9 @@ use FastAPI's `detail` format. PDF download remains behind application auth.
   `EXTRACTION_PROVIDER_RETRIES` retries per model with exponential backoff
   from `EXTRACTION_RETRY_BACKOFF_SECONDS`, honouring `Retry-After` or Google
   `retryDelay` hints up to 60 s. Longer hints, such as an exhausted daily quota,
-  move straight to the next model in `EXTRACTION_FALLBACK_MODELS`. Schema
-  failures and other errors are never retried across models. Each case
+  move straight to the next model in `EXTRACTION_FALLBACK_MODELS`. Provider HTTP
+  413 responses also move immediately to the next model. Schema
+  failures and other non-transient errors are never retried across models. Each case
   records the model that produced its extraction. Source instructions are
   treated as untrusted data; the model has no business tools or decision
   authority.
@@ -194,6 +215,12 @@ SQLite is the initial persistence layer, with WAL and a durable queue. Use one
 worker process per database; a Linux file lock rejects a second worker owner.
 API-only processes may use `WORKER_ENABLED=false`. Restarted in-flight jobs go
 to review with an explicit retry, rather than silently repeating external calls.
+`RESET_ON_START=true` clears jobs, submissions, audit history and local PO
+reservations after the worker acquires the database lock. The default is
+`false` when starting the app directly; the startup helper defaults to `true`.
+Source fixtures and procurement data are retained. Use reset only for local
+development where losing processing history is intended.
+
 Do not use multiple independent databases against the same real PO ledger.
 This implementation reserves locally; a real ERP deployment must reconcile and
 atomically reserve against its authoritative procurement ledger.

@@ -81,6 +81,37 @@ def parse_pdf(content, settings):
 TRANSIENT_STATUS = {408, 429, 500, 502, 503, 504}
 
 
+# OpenAI-compatible providers selectable per model as "<provider>:<model id>".
+# Unprefixed models use OPENAI_BASE_URL and OPENAI_API_KEY as before.
+PROVIDERS = {
+    'gemini': 'https://generativelanguage.googleapis.com/v1beta/openai/',
+    'groq': 'https://api.groq.com/openai/v1',
+}
+
+
+def provider_of(entry):
+    provider, sep, _ = entry.partition(':')
+    return provider if sep and provider in PROVIDERS else None
+
+
+def resolve_model(entry, settings):
+    """Return (model id, base_url, api_key or None) for a configured model entry."""
+    provider = provider_of(entry)
+    if provider:
+        return entry.partition(':')[2], PROVIDERS[provider], settings.provider_keys.get(provider) or None
+    return entry, settings.base_url, None
+
+
+def has_status(exc, status):
+    seen, current = set(), exc
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        if getattr(current, 'status_code', None) == status:
+            return True
+        current = current.__cause__ or current.__context__
+    return False
+
+
 def is_transient(exc):
     """True for provider failures that may succeed on retry (walks the exception chain)."""
     import openai
@@ -131,6 +162,12 @@ class LangChainExtractor:
             raise ProcessingError('EXTRACTION_NOT_CONFIGURED', 'Set EXTRACTION_MODEL and provider credentials.')
         text = '\n\n'.join(f'PAGE {p["page"]}\n{p["text"]}' for p in pages)
         models = [self.settings.model] + [m for m in self.settings.fallback_models if m != self.settings.model]
+        missing = [m for m in models if provider_of(m) and not self.settings.provider_keys.get(provider_of(m))]
+        for name in missing:
+            log.warning('Skipping %s: %s_API_KEY is not set.', name, provider_of(name).upper())
+        models = [m for m in models if m not in missing]
+        if not models:
+            raise ProcessingError('EXTRACTION_NOT_CONFIGURED', 'No configured model has provider credentials.')
         retries = self.settings.provider_retries
         last_error = None
         # Transient provider failures are retried with exponential backoff, then the
@@ -144,6 +181,11 @@ class LangChainExtractor:
                 except ProcessingError:
                     raise
                 except Exception as exc:
+                    if has_status(exc, 413):
+                        # Request larger than this model's token limit (e.g. Groq free tier): try the next model.
+                        last_error = exc
+                        log.warning('%s rejected the request as too large; moving to the next model.', name)
+                        break
                     if not is_transient(exc):
                         raise
                     last_error = exc
@@ -161,8 +203,10 @@ class LangChainExtractor:
         from langchain_openai import ChatOpenAI
         from langchain_core.exceptions import OutputParserException
         from langchain_core.messages import SystemMessage, HumanMessage
-        model = ChatOpenAI(model=model_name, temperature=0, timeout=90,
-                           max_retries=0, base_url=self.settings.base_url)
+        model_id, base_url, api_key = resolve_model(model_name, self.settings)
+        options = {'api_key': api_key} if api_key else {}
+        model = ChatOpenAI(model=model_id, temperature=0, timeout=90,
+                           max_retries=0, base_url=base_url, **options)
         structured = model.with_structured_output(ExtractionBatch, method='json_schema', strict=True, include_raw=True)
         for attempt in range(2):
             try:

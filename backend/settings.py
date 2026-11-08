@@ -13,6 +13,9 @@ class Settings:
     api_key: str = field(default_factory=lambda: os.getenv('BACKEND_API_KEY', ''))
     reviewer_key: str = field(default_factory=lambda: os.getenv('REVIEWER_API_KEY', ''))
     model: str = field(default_factory=lambda: os.getenv('EXTRACTION_MODEL', ''))
+    # Keys for providers named with a prefix, e.g. EXTRACTION_FALLBACK_MODELS=groq:openai/gpt-oss-120b.
+    provider_keys: dict[str, str] = field(default_factory=lambda: {
+        name: os.getenv(f'{name.upper()}_API_KEY', '') for name in ('gemini', 'groq')})
     base_url: str | None = field(default_factory=lambda: os.getenv('OPENAI_BASE_URL') or None)
     # Transient provider failures (429, 5xx, timeouts) only. Defaults keep a single attempt.
     fallback_models: list[str] = field(default_factory=lambda: [s.strip() for s in os.getenv('EXTRACTION_FALLBACK_MODELS', '').split(',') if s.strip()])
@@ -24,3 +27,6 @@ class Settings:
     max_text_chars: int = 150000
     ocr_min_confidence: float = 85
     worker_enabled: bool = field(default_factory=lambda: os.getenv('WORKER_ENABLED', 'true').lower() == 'true')
+    # Development only: wipe processed cases, audit and PO reservations when the worker starts.
+    # The test inbox and procurement file are never touched.
+    reset_on_start: bool = field(default_factory=lambda: os.getenv('RESET_ON_START', 'false').lower() == 'true')

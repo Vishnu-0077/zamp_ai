@@ -1,8 +1,20 @@
+# API and schema validation
 fastapi>=0.115,<1
 uvicorn>=0.30,<1
+pydantic>=2.7,<3
+
+# PDF parsing, synthetic fixtures and image rendering
 reportlab>=4,<5
 Pillow>=11,<13
 PyMuPDF>=1.25,<2
+
+# Structured extraction through OpenAI-compatible providers
 langchain>=1.0,<2
+langchain-core>=1.0,<2
 langchain-openai>=1.0,<2
+openai>=2.45,<4
+
+# HTTP client and FastAPI TestClient
 httpx>=0.28,<1
+
+# System dependency for scanned PDFs: tesseract-ocr (install separately).

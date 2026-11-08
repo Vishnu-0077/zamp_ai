@@ -14,11 +14,13 @@ React + TypeScript single-page app for the invoice processing backend in
 | Settings (reviewer key, theme, backend status) | `/settings` | `/health` |
 
 The legacy `inbox.html` in this folder is still served by the backend at `/`
-and is untouched.
+and requires application-key authentication when enabled. Use the React app
+for the authenticated reviewer workflow.
 
 ## Run
 
-Requires Node 20+.
+Requires Node 20.19+ or 22.12+ and npm. Install backend requirements as described
+in the [backend guide](../backend/README.md) before starting.
 
 ```bash
 # terminal 1: backend (from repository root)
@@ -27,7 +29,7 @@ export BACKEND_API_KEY=dev-app-key REVIEWER_API_KEY=dev-reviewer-key
 
 # terminal 2: frontend
 cd frontend
-npm install
+npm ci
 BACKEND_API_KEY=dev-app-key npm run dev       # http://localhost:5173
 ```
 
