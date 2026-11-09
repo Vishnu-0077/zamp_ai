@@ -20,8 +20,9 @@ sudo apt-get install -y tesseract-ocr     # OCR for scanned PDFs (Ubuntu/Debian)
 ```
 
 Save a Gemini and/or Groq key in `~/.config/zamp/gemini.key` and
-`~/.config/zamp/groq.key` (see [Configure](../README.md#3-configure) in the
-root guide), then start:
+`~/.config/zamp/groq.key` (see [Save your API keys](../README.md#2-save-your-api-keys-once) in the
+root guide), then start the backend on its own, or use `./run.sh` from the
+repository root to start the backend and dashboard together:
 
 ```bash
 ./backend/start.sh                        # RESET_ON_START=false ./backend/start.sh keeps cases
