@@ -13,7 +13,10 @@ import type {
   InboxEmail,
   IngestResult,
   InvoiceExtractionInput,
+  PurchaseOrderInput,
+  PurchaseOrderUploadResult,
   References,
+  Statistics,
   Stats,
 } from './types';
 
@@ -24,6 +27,8 @@ export const systemApi = {
   reset: () => request<{ status: string }>(`${V1}/reset`, { method: 'POST' }),
   health: () => request<Health>('/health'),
   stats: () => request<Stats>(`${V1}/stats`),
+  /** Totals, per-vendor and per-problem statistics over every current case. */
+  statistics: () => request<Statistics>(`${V1}/statistics`),
   references: () => request<References>(`${V1}/references`),
   extractionSchema: () => request<Record<string, unknown>>(`${V1}/schema/extraction`),
 };
@@ -67,6 +72,20 @@ export const ingestApi = {
       body: file,
       headers: { 'Content-Type': 'message/rfc822' },
     }),
+};
+
+/** Purchase orders added from the dashboard. Every row is saved only when every row passes; dryRun only checks. */
+export const purchaseOrdersApi = {
+  add: (body: { reviewer: string; items: PurchaseOrderInput[]; dry_run?: boolean }) =>
+    request<PurchaseOrderUploadResult>(`${V1}/purchase-orders`, { method: 'POST', json: body }),
+  importCsv: (file: Blob, reviewer: string, dryRun = false) =>
+    request<PurchaseOrderUploadResult>(`${V1}/purchase-orders/csv`, {
+      method: 'POST',
+      query: { reviewer, dry_run: dryRun },
+      body: file,
+      headers: { 'Content-Type': 'text/csv' },
+    }),
+  templateUrl: () => buildUrl(`${V1}/purchase-orders/template.csv`),
 };
 
 export const inboxApi = {

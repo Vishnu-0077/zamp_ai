@@ -11,7 +11,7 @@ export default function ReferencesPage() {
 
   return (
     <>
-      <PageHeader title="Reference data" subtitle="Trusted procurement master data and validation policy (read-only)." />
+      <PageHeader title="Reference data" subtitle="Trusted procurement master data and validation policy. Add purchase orders under Upload → Upload PO." />
       {error && <ErrorMessage error={error} />}
       {isLoading && <Loading />}
       {data && (
@@ -47,7 +47,20 @@ export default function ReferencesPage() {
                     rows={data.purchase_orders}
                     rowKey={(p) => p.number}
                     columns={[
-                      { key: 'number', header: 'PO', render: (p) => <code>{p.number}</code> },
+                      {
+                        key: 'number',
+                        header: 'PO',
+                        render: (p) => (
+                          <span className="row">
+                            <code>{p.number}</code>
+                            {p.source === 'uploaded' && (
+                              <span title={`Added ${String(p.uploaded_at ?? '')} by ${String(p.uploaded_by ?? '').replace(/^reviewer:/, '')}`}>
+                                <Badge tone="info">Uploaded</Badge>
+                              </span>
+                            )}
+                          </span>
+                        ),
+                      },
                       { key: 'vendor', header: 'Vendor', render: (p) => vendorName(p.vendor_id) },
                       { key: 'amount', header: 'Amount', numeric: true, render: (p) => formatAmount(String(p.amount), p.currency) },
                       { key: 'received', header: 'Received', numeric: true, render: (p) => formatAmount(p.received_amount != null ? String(p.received_amount) : null) },

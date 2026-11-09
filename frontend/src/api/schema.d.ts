@@ -268,6 +268,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/statistics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Statistics
+         * @description Totals, per-vendor and per-problem statistics over every current case.
+         */
+        get: operations["statistics_api_v1_statistics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/exports/approved-invoices.xlsx": {
         parameters: {
             query?: never;
@@ -428,6 +448,66 @@ export interface paths {
         };
         /** References */
         get: operations["references_api_v1_references_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/purchase-orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Purchase Orders
+         * @description Add POs typed in the form. All rows are saved only when every row passes; dry_run only checks.
+         */
+        post: operations["add_purchase_orders_api_v1_purchase_orders_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/purchase-orders/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Purchase Orders
+         * @description Raw text/csv body with a header row (see the template). Row numbers in the result match the spreadsheet.
+         */
+        post: operations["import_purchase_orders_api_v1_purchase_orders_csv_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/purchase-orders/template.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Purchase Order Template
+         * @description A CSV with the expected columns and one example row.
+         */
+        get: operations["purchase_order_template_api_v1_purchase_orders_template_csv_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -751,6 +831,103 @@ export interface components {
             /** Acknowledged Codes */
             acknowledged_codes: string[];
         };
+        /** Money */
+        Money: {
+            /** Currency */
+            currency: string;
+            /** Amount */
+            amount: string;
+        };
+        /** ProblemField */
+        ProblemField: {
+            /** Field */
+            field: string;
+            /** Cases */
+            cases: number;
+        };
+        /** ProblemStats */
+        ProblemStats: {
+            /** Code */
+            code: string;
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "invoice" | "processing";
+            /** Cases */
+            cases: number;
+            /** Share Of Cases */
+            share_of_cases: number | null;
+            /** Vendors */
+            vendors: components["schemas"]["ProblemVendor"][];
+            /** Fields */
+            fields: components["schemas"]["ProblemField"][];
+        };
+        /** ProblemVendor */
+        ProblemVendor: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Cases */
+            cases: number;
+        };
+        /**
+         * PurchaseOrderInput
+         * @description One PO as typed in the form or read from a CSV row. Values are checked row by row by the service.
+         */
+        PurchaseOrderInput: {
+            /** Number */
+            number?: string | null;
+            /** Vendor Id */
+            vendor_id?: string | null;
+            /** Currency */
+            currency?: string | null;
+            /** Amount */
+            amount?: string | number | null;
+            /** Received Amount */
+            received_amount?: string | number | null;
+            /** Previously Invoiced */
+            previously_invoiced?: string | number | null;
+            /** Tolerance Percent */
+            tolerance_percent?: string | number | null;
+            /** Issue Date */
+            issue_date?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /** PurchaseOrderRowResult */
+        PurchaseOrderRowResult: {
+            /** Row */
+            row: number;
+            /** Number */
+            number: string | null;
+            /** Errors */
+            errors: string[];
+        };
+        /** PurchaseOrderUpload */
+        PurchaseOrderUpload: {
+            /** Reviewer */
+            reviewer: string;
+            /** Items */
+            items: components["schemas"]["PurchaseOrderInput"][];
+            /**
+             * Dry Run
+             * @default false
+             */
+            dry_run: boolean;
+        };
+        /** PurchaseOrderUploadResult */
+        PurchaseOrderUploadResult: {
+            /** Saved */
+            saved: boolean;
+            /** Valid */
+            valid: boolean;
+            /** Added */
+            added: number;
+            /** Rows */
+            rows: components["schemas"]["PurchaseOrderRowResult"][];
+        };
         /** RetryRequest */
         RetryRequest: {
             /** Reviewer */
@@ -759,6 +936,55 @@ export interface components {
             expected_version: number;
             /** Note */
             note: string;
+        };
+        /** Statistics */
+        Statistics: {
+            /** Generated At */
+            generated_at: string;
+            totals: components["schemas"]["StatsTotals"];
+            /** Vendors */
+            vendors: components["schemas"]["VendorStats"][];
+            /** Problems */
+            problems: components["schemas"]["ProblemStats"][];
+            highlights: components["schemas"]["StatsHighlights"];
+        };
+        /** StatsHighlights */
+        StatsHighlights: {
+            /** Most Problematic Vendors */
+            most_problematic_vendors: string[];
+            /** Most Common Problems */
+            most_common_problems: string[];
+        };
+        /** StatsTotals */
+        StatsTotals: {
+            /** Cases */
+            cases: number;
+            /** By Status */
+            by_status: {
+                [key: string]: number;
+            };
+            /** Finished */
+            finished: number;
+            /** Approved Automatic */
+            approved_automatic: number;
+            /** Approved Manual */
+            approved_manual: number;
+            /** Approval Rate */
+            approval_rate: number | null;
+            /** Straight Through Rate */
+            straight_through_rate: number | null;
+            /** Cases With Problems */
+            cases_with_problems: number;
+            /** Cases With Invoice Problems */
+            cases_with_invoice_problems: number;
+            /** Cases With Processing Problems */
+            cases_with_processing_problems: number;
+            /** Vendors */
+            vendors: number;
+            /** Approved Value */
+            approved_value: components["schemas"]["Money"][];
+            /** Held Value */
+            held_value: components["schemas"]["Money"][];
         };
         /** TaxComponent */
         "TaxComponent-Input": {
@@ -790,6 +1016,52 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** VendorProblem */
+        VendorProblem: {
+            /** Code */
+            code: string;
+            /** Cases */
+            cases: number;
+        };
+        /** VendorStats */
+        VendorStats: {
+            /** Key */
+            key: string;
+            /** Vendor Id */
+            vendor_id: string | null;
+            /** Name */
+            name: string;
+            /** In Master */
+            in_master: boolean;
+            /** Cases */
+            cases: number;
+            /** Approved */
+            approved: number;
+            /** Approved Manual */
+            approved_manual: number;
+            /** Review */
+            review: number;
+            /** Duplicate */
+            duplicate: number;
+            /** In Progress */
+            in_progress: number;
+            /** Problem Cases */
+            problem_cases: number;
+            /** Problem Rate */
+            problem_rate: number | null;
+            /** Approval Rate */
+            approval_rate: number | null;
+            /** Problem Occurrences */
+            problem_occurrences: number;
+            /** Problems */
+            problems: components["schemas"]["VendorProblem"][];
+            /** Top Problems */
+            top_problems: string[];
+            /** Top Problem Cases */
+            top_problem_cases: number;
+            /** Approved Value */
+            approved_value: components["schemas"]["Money"][];
         };
     };
     responses: never;
@@ -1202,6 +1474,26 @@ export interface operations {
             };
         };
     };
+    statistics_api_v1_statistics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Statistics"];
+                };
+            };
+        };
+    };
     approved_invoices_export_api_v1_exports_approved_invoices_xlsx_get: {
         parameters: {
             query?: never;
@@ -1460,6 +1752,96 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    add_purchase_orders_api_v1_purchase_orders_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurchaseOrderUpload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseOrderUploadResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_purchase_orders_api_v1_purchase_orders_csv_post: {
+        parameters: {
+            query: {
+                reviewer: string;
+                dry_run?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "text/csv": string;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseOrderUploadResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    purchase_order_template_api_v1_purchase_orders_template_csv_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                    "text/csv": unknown;
                 };
             };
         };

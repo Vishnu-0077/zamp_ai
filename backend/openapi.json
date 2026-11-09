@@ -569,6 +569,30 @@
         "security": []
       }
     },
+    "/api/v1/statistics": {
+      "get": {
+        "tags": [
+          "processing",
+          "statistics"
+        ],
+        "summary": "Statistics",
+        "description": "Totals, per-vendor and per-problem statistics over every current case.",
+        "operationId": "statistics_api_v1_statistics_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Statistics"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
     "/api/v1/exports/approved-invoices.xlsx": {
       "get": {
         "tags": [
@@ -937,6 +961,142 @@
               "application/json": {
                 "schema": {}
               }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/v1/purchase-orders": {
+      "post": {
+        "tags": [
+          "processing",
+          "purchase orders"
+        ],
+        "summary": "Add Purchase Orders",
+        "description": "Add POs typed in the form. All rows are saved only when every row passes; dry_run only checks.",
+        "operationId": "add_purchase_orders_api_v1_purchase_orders_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseOrderUpload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderUploadResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/v1/purchase-orders/csv": {
+      "post": {
+        "tags": [
+          "processing",
+          "purchase orders"
+        ],
+        "summary": "Import Purchase Orders",
+        "description": "Raw text/csv body with a header row (see the template). Row numbers in the result match the spreadsheet.",
+        "operationId": "import_purchase_orders_api_v1_purchase_orders_csv_post",
+        "parameters": [
+          {
+            "name": "reviewer",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 80,
+              "pattern": "\\S",
+              "title": "Reviewer"
+            }
+          },
+          {
+            "name": "dry_run",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Dry Run"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderUploadResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "text/csv": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/v1/purchase-orders/template.csv": {
+      "get": {
+        "tags": [
+          "processing",
+          "purchase orders"
+        ],
+        "summary": "Purchase Order Template",
+        "description": "A CSV with the expected columns and one example row.",
+        "operationId": "purchase_order_template_api_v1_purchase_orders_template_csv_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "text/csv": {}
             }
           }
         },
@@ -2101,6 +2261,324 @@
         ],
         "title": "ManualApproval"
       },
+      "Money": {
+        "properties": {
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "currency",
+          "amount"
+        ],
+        "title": "Money"
+      },
+      "ProblemField": {
+        "properties": {
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "cases": {
+            "type": "integer",
+            "title": "Cases"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "cases"
+        ],
+        "title": "ProblemField"
+      },
+      "ProblemStats": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "invoice",
+              "processing"
+            ],
+            "title": "Category"
+          },
+          "cases": {
+            "type": "integer",
+            "title": "Cases"
+          },
+          "share_of_cases": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share Of Cases"
+          },
+          "vendors": {
+            "items": {
+              "$ref": "#/components/schemas/ProblemVendor"
+            },
+            "type": "array",
+            "title": "Vendors"
+          },
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/ProblemField"
+            },
+            "type": "array",
+            "title": "Fields"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "category",
+          "cases",
+          "share_of_cases",
+          "vendors",
+          "fields"
+        ],
+        "title": "ProblemStats"
+      },
+      "ProblemVendor": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "cases": {
+            "type": "integer",
+            "title": "Cases"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "cases"
+        ],
+        "title": "ProblemVendor"
+      },
+      "PurchaseOrderInput": {
+        "properties": {
+          "number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "vendor_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Id"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "received_amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received Amount"
+          },
+          "previously_invoiced": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previously Invoiced"
+          },
+          "tolerance_percent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tolerance Percent"
+          },
+          "issue_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue Date"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PurchaseOrderInput",
+        "description": "One PO as typed in the form or read from a CSV row. Values are checked row by row by the service."
+      },
+      "PurchaseOrderRowResult": {
+        "properties": {
+          "row": {
+            "type": "integer",
+            "title": "Row"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "row",
+          "number",
+          "errors"
+        ],
+        "title": "PurchaseOrderRowResult"
+      },
+      "PurchaseOrderUpload": {
+        "properties": {
+          "reviewer": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 2,
+            "pattern": "\\S",
+            "title": "Reviewer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseOrderInput"
+            },
+            "type": "array",
+            "maxItems": 1000,
+            "minItems": 1,
+            "title": "Items"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "title": "Dry Run",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "reviewer",
+          "items"
+        ],
+        "title": "PurchaseOrderUpload"
+      },
+      "PurchaseOrderUploadResult": {
+        "properties": {
+          "saved": {
+            "type": "boolean",
+            "title": "Saved"
+          },
+          "valid": {
+            "type": "boolean",
+            "title": "Valid"
+          },
+          "added": {
+            "type": "integer",
+            "title": "Added"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseOrderRowResult"
+            },
+            "type": "array",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "saved",
+          "valid",
+          "added",
+          "rows"
+        ],
+        "title": "PurchaseOrderUploadResult"
+      },
       "RetryRequest": {
         "properties": {
           "reviewer": {
@@ -2130,6 +2608,163 @@
           "note"
         ],
         "title": "RetryRequest"
+      },
+      "Statistics": {
+        "properties": {
+          "generated_at": {
+            "type": "string",
+            "title": "Generated At"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/StatsTotals"
+          },
+          "vendors": {
+            "items": {
+              "$ref": "#/components/schemas/VendorStats"
+            },
+            "type": "array",
+            "title": "Vendors"
+          },
+          "problems": {
+            "items": {
+              "$ref": "#/components/schemas/ProblemStats"
+            },
+            "type": "array",
+            "title": "Problems"
+          },
+          "highlights": {
+            "$ref": "#/components/schemas/StatsHighlights"
+          }
+        },
+        "type": "object",
+        "required": [
+          "generated_at",
+          "totals",
+          "vendors",
+          "problems",
+          "highlights"
+        ],
+        "title": "Statistics"
+      },
+      "StatsHighlights": {
+        "properties": {
+          "most_problematic_vendors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Most Problematic Vendors"
+          },
+          "most_common_problems": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Most Common Problems"
+          }
+        },
+        "type": "object",
+        "required": [
+          "most_problematic_vendors",
+          "most_common_problems"
+        ],
+        "title": "StatsHighlights"
+      },
+      "StatsTotals": {
+        "properties": {
+          "cases": {
+            "type": "integer",
+            "title": "Cases"
+          },
+          "by_status": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "By Status"
+          },
+          "finished": {
+            "type": "integer",
+            "title": "Finished"
+          },
+          "approved_automatic": {
+            "type": "integer",
+            "title": "Approved Automatic"
+          },
+          "approved_manual": {
+            "type": "integer",
+            "title": "Approved Manual"
+          },
+          "approval_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Rate"
+          },
+          "straight_through_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Straight Through Rate"
+          },
+          "cases_with_problems": {
+            "type": "integer",
+            "title": "Cases With Problems"
+          },
+          "cases_with_invoice_problems": {
+            "type": "integer",
+            "title": "Cases With Invoice Problems"
+          },
+          "cases_with_processing_problems": {
+            "type": "integer",
+            "title": "Cases With Processing Problems"
+          },
+          "vendors": {
+            "type": "integer",
+            "title": "Vendors"
+          },
+          "approved_value": {
+            "items": {
+              "$ref": "#/components/schemas/Money"
+            },
+            "type": "array",
+            "title": "Approved Value"
+          },
+          "held_value": {
+            "items": {
+              "$ref": "#/components/schemas/Money"
+            },
+            "type": "array",
+            "title": "Held Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cases",
+          "by_status",
+          "finished",
+          "approved_automatic",
+          "approved_manual",
+          "approval_rate",
+          "straight_through_rate",
+          "cases_with_problems",
+          "cases_with_invoice_problems",
+          "cases_with_processing_problems",
+          "vendors",
+          "approved_value",
+          "held_value"
+        ],
+        "title": "StatsTotals"
       },
       "TaxComponent-Input": {
         "properties": {
@@ -2232,6 +2867,152 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VendorProblem": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "cases": {
+            "type": "integer",
+            "title": "Cases"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "cases"
+        ],
+        "title": "VendorProblem"
+      },
+      "VendorStats": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "vendor_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "in_master": {
+            "type": "boolean",
+            "title": "In Master"
+          },
+          "cases": {
+            "type": "integer",
+            "title": "Cases"
+          },
+          "approved": {
+            "type": "integer",
+            "title": "Approved"
+          },
+          "approved_manual": {
+            "type": "integer",
+            "title": "Approved Manual"
+          },
+          "review": {
+            "type": "integer",
+            "title": "Review"
+          },
+          "duplicate": {
+            "type": "integer",
+            "title": "Duplicate"
+          },
+          "in_progress": {
+            "type": "integer",
+            "title": "In Progress"
+          },
+          "problem_cases": {
+            "type": "integer",
+            "title": "Problem Cases"
+          },
+          "problem_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Problem Rate"
+          },
+          "approval_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Rate"
+          },
+          "problem_occurrences": {
+            "type": "integer",
+            "title": "Problem Occurrences"
+          },
+          "problems": {
+            "items": {
+              "$ref": "#/components/schemas/VendorProblem"
+            },
+            "type": "array",
+            "title": "Problems"
+          },
+          "top_problems": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Top Problems"
+          },
+          "top_problem_cases": {
+            "type": "integer",
+            "title": "Top Problem Cases"
+          },
+          "approved_value": {
+            "items": {
+              "$ref": "#/components/schemas/Money"
+            },
+            "type": "array",
+            "title": "Approved Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "vendor_id",
+          "name",
+          "in_master",
+          "cases",
+          "approved",
+          "approved_manual",
+          "review",
+          "duplicate",
+          "in_progress",
+          "problem_cases",
+          "problem_rate",
+          "approval_rate",
+          "problem_occurrences",
+          "problems",
+          "top_problems",
+          "top_problem_cases",
+          "approved_value"
+        ],
+        "title": "VendorStats"
       }
     },
     "securitySchemes": {

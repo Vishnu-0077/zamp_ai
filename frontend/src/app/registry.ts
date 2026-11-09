@@ -6,6 +6,7 @@
 import type { FeatureRoute } from './types';
 import { dashboardRoutes } from '@/features/dashboard/routes';
 import { casesRoutes } from '@/features/cases/routes';
+import { statisticsRoutes } from '@/features/statistics/routes';
 import { inboxRoutes } from '@/features/inbox/routes';
 import { uploadRoutes } from '@/features/upload/routes';
 import { referencesRoutes } from '@/features/references/routes';
@@ -14,6 +15,7 @@ import { settingsRoutes } from '@/features/settings/routes';
 export const featureRoutes: FeatureRoute[] = [
   ...dashboardRoutes,
   ...casesRoutes,
+  ...statisticsRoutes,
   ...inboxRoutes,
   ...uploadRoutes,
   ...referencesRoutes,

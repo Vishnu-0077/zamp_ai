@@ -34,6 +34,14 @@ class Settings:
     # The test inbox and procurement file are never touched.
     reset_on_start: bool = field(default_factory=lambda: os.getenv('RESET_ON_START', 'true').lower() == 'true')
 
+    # Purchase orders added from the dashboard. Kept beside the database, outside
+    # procurement.json, and cleared by every reset.
+    po_uploads_override: Path | None = field(default_factory=lambda: Path(p) if (p := os.getenv('PO_UPLOADS_PATH')) else None)
+
+    @property
+    def po_uploads_path(self) -> Path:
+        return self.po_uploads_override or self.db_path.parent / 'uploaded_purchase_orders.json'
+
     @property
     def export_path(self) -> Path:
         return self.export_override or self.db_path.parent / 'exports' / 'approved_invoices.xlsx'

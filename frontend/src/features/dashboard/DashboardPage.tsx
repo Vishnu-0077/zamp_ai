@@ -41,12 +41,13 @@ export default function DashboardPage() {
               {reset.isPending ? 'Starting fresh…' : 'Refresh & start fresh'}
             </button>
             <DownloadApprovedButton />
+            <Link className="btn" to="/statistics">Statistics</Link>
             <Link className="btn" to="/inbox">Process from inbox</Link>
             <Link className="btn btn-primary" to="/upload">Upload invoice</Link>
           </>
         }
       />
-      <p className="small muted">Refresh clears processed cases, uploaded documents, audit history and PO reservations. Trusted vendor, PO and FX configuration is retained to validate new invoices.</p>
+      <p className="small muted">Refresh clears processed cases, uploaded documents, audit history, PO reservations and purchase orders added under Upload → Upload PO. The built-in vendor, PO and FX configuration is retained to validate new invoices.</p>
       {reset.error && <ErrorMessage error={reset.error} title="Could not start fresh" />}
       {fresh && <Alert tone="info" title="Fresh start complete">Processing results have been cleared; trusted reference data is ready for new invoices.</Alert>}
       {health.data && !health.data.extraction_configured && (

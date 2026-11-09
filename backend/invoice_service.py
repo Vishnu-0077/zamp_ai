@@ -9,6 +9,7 @@ from .database import Store, now, dumps
 from .invoice_extractor import LangChainExtractor, parse_pdf, ProcessingError, PROMPT_VERSION
 from .schemas import InvoiceExtraction
 from .invoice_rules import evaluate
+from .purchase_orders import PurchaseOrderStore
 
 log = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ class Service:
         self.settings = settings
         self.store = Store(settings.db_path)
         self.extractor = extractor or LangChainExtractor(settings)
+        self.purchase_orders = PurchaseOrderStore(settings.po_uploads_path)
         self.stop_event = threading.Event()
         self.thread = None
         self.worker_lock = None
@@ -37,11 +39,19 @@ class Service:
     def references(self):
         # Procurement reference file is explicitly trusted configuration; expected.json is never read.
         refs = json.loads(self.settings.procurement_path.read_text())
+        # POs added from the dashboard join the trusted master; a master PO always wins a number clash.
+        master = {str(p['number']).strip().upper() for p in refs.get('purchase_orders', [])}
+        refs['purchase_orders'] = refs.get('purchase_orders', []) + [
+            p for p in self.purchase_orders.load() if str(p.get('number', '')).strip().upper() not in master]
         refs['policy'] = refs.get('policy', refs.get('validation_policy', {}))
         if not refs['policy'].get('as_of_date'):
             from datetime import datetime, timezone
             refs['policy']['as_of_date'] = datetime.now(timezone.utc).date().isoformat()
         return refs
+
+    def add_purchase_orders(self, rows, actor, dry_run=False):
+        # Own lock, not operation_lock: adding a PO must not wait for a model call to finish.
+        return self.purchase_orders.add(rows, self.references(), actor, dry_run)
 
     @serialized
     def ingest(self, content, sender, filename, email_id=None, actor='api'):
@@ -259,6 +269,8 @@ class Service:
         # A fresh queue still needs approved vendors, POs, bank details and FX.
         self.references()
         self.store.reset()
+        # Dashboard-added POs belong to this run; a fresh start returns to the built-in master.
+        self.purchase_orders.clear()
         self.refresh_export()
         return {'status': 'reset'}
 

@@ -19,14 +19,15 @@ Nothing here pays an invoice or sends an email.
 1. [Quick start](#quick-start)
 2. [How it works](#how-it-works)
 3. [Using the dashboard](#using-the-dashboard)
-4. [Reviewing a held case](#reviewing-a-held-case)
-5. [Configuration](#configuration)
-6. [Running the parts separately](#running-the-parts-separately)
-7. [Data and resets](#data-and-resets)
-8. [Troubleshooting](#troubleshooting)
-9. [Tests](#tests)
-10. [Production build](#production-build)
-11. [Project layout](#project-layout)
+4. [Adding purchase orders](#adding-purchase-orders)
+5. [Reviewing a held case](#reviewing-a-held-case)
+6. [Configuration](#configuration)
+7. [Running the parts separately](#running-the-parts-separately)
+8. [Data and resets](#data-and-resets)
+9. [Troubleshooting](#troubleshooting)
+10. [Tests](#tests)
+11. [Production build](#production-build)
+12. [Project layout](#project-layout)
 
 ## Quick start
 
@@ -166,8 +167,8 @@ The sample inputs in `test_cases/` are never modified.
 - The latest five cases waiting for review and the latest five cases overall.
 - Warnings when extraction is not configured or the worker is stopped.
 - **Refresh & start fresh** (see [Data and resets](#data-and-resets)), the
-  **Approved invoices (Excel)** download, and shortcuts to the inbox and to
-  upload.
+  **Approved invoices (Excel)** download, and shortcuts to Statistics, the
+  inbox and upload.
 
 **Cases** (`/cases`)
 - Every case, newest first, with status tabs and counts.
@@ -176,6 +177,28 @@ The sample inputs in `test_cases/` are never modified.
   shared.
 - The list refreshes every few seconds while any case on screen is still
   processing.
+
+**Statistics** (`/statistics`)
+- **Overall:** total cases, approved (automatically and manually), needs
+  review, duplicates, approval rate, straight-through rate (approved with no
+  person involved), invoices with problems, approved value and value held for
+  review, plus a bar showing the outcome of every case.
+- **Highlights:** the most problematic vendor (most invoices with problems,
+  then the highest share of its invoices) with its most common problem, and the
+  most common problem overall with the vendors it came from. Ties show every
+  tied vendor or problem.
+- **By vendor:** a chart of invoices with problems per vendor; a table with
+  each vendor's invoices, approved, needs review, duplicates, problem rate,
+  most common problem and approved value; and each vendor's problems with
+  counts, its most common one highlighted.
+- **By problem:** a chart of cases affected per problem; a table with each
+  problem in plain language, its risk, cases, share of all cases, the vendors
+  affected and the fields involved.
+- Each problem counts once per case. OCR and model failures are listed
+  separately as processing problems and never count against a vendor.
+  Vendors not in the vendor master appear by their printed name.
+- The page refreshes every 10 seconds and covers the cases currently in the
+  system, so a reset starts it over. API: `GET /api/v1/statistics`.
 
 **Case detail** (`/cases/<id>`)
 - **Header:** vendor and invoice number with the status, then the source
@@ -207,18 +230,23 @@ The sample inputs in `test_cases/` are never modified.
 - **Send to processing** creates a case. Sending the same PDF again reuses the
   existing case and records the extra submission.
 
-**Upload** (`/upload`)
-- Drag and drop, or choose `.pdf` files (up to 20 MiB) or `.eml` emails (up to
-  40 MiB, with at most 20 PDF attachments; each PDF becomes its own case).
-- An optional sender address for PDFs, recorded for provenance only.
-- Results link straight to each new case. Identical files are never processed
-  or reserved twice.
+**Upload** (`/upload`) has two tabs.
 
-**Reference data** (`/references`, read-only)
+- **Upload invoice**
+  - Drag and drop, or choose `.pdf` files (up to 20 MiB) or `.eml` emails (up
+    to 40 MiB, with at most 20 PDF attachments; each PDF becomes its own case).
+  - An optional sender address for PDFs, recorded for provenance only.
+  - Results link straight to each new case. Identical files are never
+    processed or reserved twice.
+- **Upload PO** (`/upload?tab=po`): add purchase orders that new invoices are
+  checked against. See [Adding purchase orders](#adding-purchase-orders).
+
+**Reference data** (`/references`)
 - **Vendors:** ID, name, domain, approval, payment terms, currency and bank
   account.
 - **Purchase orders:** amount, received amount, previously invoiced, tolerance
-  and issue date.
+  and issue date. POs added under **Upload PO** are marked *Uploaded*; hover
+  the badge to see who added them and when.
 - **FX rates:** the approved dated conversion rates.
 - **Policy:** evaluation date, invoice age limit, amount tolerance, and the
   bank-change and adjustment actions.
@@ -244,6 +272,46 @@ The backend also rewrites a copy at
 `backend/runtime/exports/approved_invoices.xlsx` after every approval and
 reset. Set `APPROVED_EXPORT_PATH` to keep it somewhere else, such as a shared
 folder. API: `GET /api/v1/exports/approved-invoices.xlsx`.
+
+## Adding purchase orders
+
+Invoices are approved only against a known purchase order. The built-in POs
+come from `backend/procurement.json`; you can add more under **Upload → Upload
+PO** in two ways. A person enters every value, and no AI is involved, so the
+checks can trust them.
+
+Enter your name at the top of the tab first. It is saved with each PO.
+
+**One PO: the form.** Fill in the PO number, pick the vendor (the currency is
+filled in from the vendor), the PO amount, the received amount and the issue
+date, then click **Save purchase order**. Previously invoiced and tolerance
+are optional and default to 0.
+
+**Many POs: a CSV file.**
+
+1. Click **Download template** and open it in Excel or Google Sheets.
+2. Fill in one PO per row and save as **CSV UTF-8**.
+3. Drop the file on the tab. It is checked first and every row is listed with
+   *OK* or what is wrong. Row numbers match your spreadsheet.
+4. If every row is OK, click **Save N purchase orders**. If any row has a
+   problem, nothing is saved: fix the file and upload it again.
+
+| Column | Required | What to enter |
+| --- | --- | --- |
+| `number` | Yes | PO number, e.g. `PO-26050`. Letters, digits and `. _ / -`; must not already exist (case is ignored) |
+| `vendor_id` | Yes | A vendor ID from **Reference data → Vendors**, e.g. `V001` |
+| `currency` | No | 3-letter code, e.g. `USD`. Blank uses the vendor's currency |
+| `amount` | Yes | Total PO value, greater than 0, at most 2 decimals, e.g. `1500.00` |
+| `received_amount` | Yes | Value received so far, from 0 up to the PO amount. Use the PO amount if everything has arrived |
+| `previously_invoiced` | No | Already invoiced outside this system, up to the PO amount. Default `0` |
+| `tolerance_percent` | No | `0` to `100`. Default `0` |
+| `issue_date` | Yes | `YYYY-MM-DD`, e.g. `2026-11-01` |
+
+New POs are used for every invoice processed from then on, and appear under
+**Reference data → Purchase orders**. They last until the next reset:
+**Refresh & start fresh** or a backend restart removes them (see
+[Data and resets](#data-and-resets)). For POs that should always be there, add
+them to `backend/procurement.json`.
 
 ## Reviewing a held case
 
@@ -352,6 +420,7 @@ files. Defaults marked *(start.sh)* are filled in by the startup scripts.
 | `PROCESSING_DB` | `backend/runtime/processing.sqlite3` | SQLite database path |
 | `APPROVED_EXPORT_PATH` | `exports/approved_invoices.xlsx` beside the database | Where the approved-invoice Excel is kept up to date |
 | `PROCUREMENT_PATH` | `backend/procurement.json` | Trusted vendor, PO, FX and policy data |
+| `PO_UPLOADS_PATH` | `uploaded_purchase_orders.json` beside the database | Where POs added from the dashboard are kept until the next reset |
 | `WORKER_ENABLED` | `true` | Runs the processing worker inside the API process |
 | `CORS_ORIGINS` | `http://localhost:3000,http://localhost:5173` | Only needed when a browser calls the backend directly |
 | `ZAMP_KEY_DIR` | `~/.config/zamp` | Where the startup scripts look for key files |
@@ -433,7 +502,8 @@ Keep `--workers 1`: a single worker process owns the processing database.
 | --- | --- | --- |
 | Processed cases, uploaded PDFs, audit history, PO reservations | `backend/runtime/processing.sqlite3` | Yes |
 | Approved-invoice Excel copy | `backend/runtime/exports/` | Rewritten (empty) |
-| Trusted vendor, PO, FX and policy data | `backend/procurement.json` | No |
+| Purchase orders added under **Upload PO** | `backend/runtime/uploaded_purchase_orders.json` | Yes |
+| Built-in vendor, PO, FX and policy data | `backend/procurement.json` | No |
 | Sample emails, PDFs, inbox and labels | `test_cases/` | No, never modified |
 
 A reset happens:
@@ -462,6 +532,10 @@ submissions.
 | Sidebar shows *Backend unreachable* | The backend isn't running on port 8000, or `BACKEND_URL` points elsewhere |
 | Errors mention `401` / `X-API-Key` | The dashboard's `BACKEND_API_KEY` differs from the backend's. Set the same value and restart the dashboard |
 | Review buttons stay disabled | Enter your name (at least 2 characters) in the form or in **Settings** |
+| **Save purchase order** stays disabled, or the CSV drop area says *Enter your name above first* | Enter your name at the top of the **Upload PO** tab |
+| CSV upload says *missing column(s)* or *unknown column(s)* | The header row must use the template's column names. Start from **Download template** |
+| CSV upload says *must be UTF-8 text* | Save the file from Excel with **Save as → CSV UTF-8** |
+| An uploaded PO disappeared | A reset removes uploaded POs: **Refresh & start fresh** or a backend restart. Use `RESET_ON_START=false ./run.sh` to keep them across restarts |
 | Cases stay *Queued* | The worker isn't running. Check `WORKER_ENABLED`, and that only one backend process uses the database |
 | Backend refuses to start a second worker | Only one process may own a processing database. Stop the other one |
 | **Approve manually** or the Excel download fails with `404` | The running backend is older than the dashboard. Restart it (`RESET_ON_START=false ./run.sh` keeps cases) |
@@ -472,7 +546,7 @@ Backend tests and sample-input checks:
 
 ```bash
 RESET_ON_START=false ./zamp_venv/bin/python -m unittest discover -s test_cases -v
-./zamp_venv/bin/python -m unittest backend.test_reset backend.test_audit_fixes -v
+./zamp_venv/bin/python -m unittest backend.test_reset backend.test_audit_fixes backend.test_po_upload backend.test_statistics -v
 ./zamp_venv/bin/python -m test_cases.validate_inbox
 ./zamp_venv/bin/python -m backend.export_openapi
 ```
@@ -540,6 +614,8 @@ backend/                 All backend code, configuration, dependencies and API d
   invoice_rules.py       Matching, confidence and decision rules
   invoice_checks.py      Deterministic financial and vendor checks
   approved_export.py     Excel register of approved invoices
+  purchase_orders.py     Purchase orders added from the dashboard (form and CSV)
+  statistics.py          Totals, per-vendor and per-problem statistics
   audit_inbox.py         Live end-to-end audit of the 50-email inbox against the labels
   schemas.py             Extraction and API schemas
   database.py            SQLite persistence and audit storage
@@ -554,9 +630,11 @@ backend/                 All backend code, configuration, dependencies and API d
   export_openapi.py      API contract export utility
   test_reset.py          Reset regression tests
   test_audit_fixes.py    Regression tests for fixes found by the live audit
-  runtime/               Local processing data and the Excel export (ignored by Git)
+  test_po_upload.py      Purchase-order upload tests
+  test_statistics.py     Statistics tests
+  runtime/               Local processing data, uploaded POs and the Excel export (ignored by Git)
 frontend/                React + TypeScript review dashboard (see frontend/README.md)
-  src/                   API client, feature modules (case summary, compare & resolve), shared components
+  src/                   API client, feature modules (case summary, compare & resolve, statistics, upload invoice/PO), shared components
   inbox.html             Legacy inbox page, still served by the backend at /
 test_cases/              All tests, test-data tools and sample documents
   test_backend.py        Processing and API regression tests

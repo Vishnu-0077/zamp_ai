@@ -165,6 +165,45 @@ legacy inbox routes use application-key authentication when enabled.
    so it can sit in a shared folder. A failed export is logged and never undoes
    an approval.
 
+7. Add purchase orders. `POST /api/v1/purchase-orders` takes
+   `{"reviewer": "...", "items": [{...}], "dry_run": false}`; each item has
+   `number`, `vendor_id`, `currency` (optional, defaults to the vendor's),
+   `amount`, `received_amount`, `previously_invoiced` (optional),
+   `tolerance_percent` (optional) and `issue_date` (`YYYY-MM-DD`).
+   `POST /api/v1/purchase-orders/csv?reviewer=...&dry_run=true` takes a raw
+   `text/csv` body (UTF-8, up to 1 MiB and 1000 rows) with those columns as the
+   header; `GET /api/v1/purchase-orders/template.csv` returns the header and an
+   example row. Both return `{saved, valid, added, rows: [{row, number,
+   errors}]}`; CSV row numbers match the spreadsheet (the header is row 1).
+   Rows are saved only when **every** row is valid, so a bad file never adds
+   half its POs; `dry_run` only checks. Numbers must be new across the master
+   and earlier uploads (case-insensitive), the vendor must exist, amounts are
+   non-negative decimals with at most 2 places (`amount` > 0, `received_amount`
+   and `previously_invoiced` ≤ `amount`), and tolerance is 0–100. Saved POs are
+   stored with exact decimal strings plus `source: "uploaded"`, `uploaded_by`
+   and `uploaded_at` in `PO_UPLOADS_PATH` (default
+   `uploaded_purchase_orders.json` beside the database), never in
+   `procurement.json`, and are merged into `GET /api/v1/references` and every
+   later validation. A master PO wins a number clash. Every reset deletes the
+   file, so a fresh start returns to the master POs.
+
+8. Read statistics with `GET /api/v1/statistics`, computed from every current
+   case on each request. It returns `totals` (cases by status, automatic and
+   manual approvals, approval and straight-through rates over finished cases,
+   cases with invoice and processing problems, approved and held value per
+   currency), `vendors` (per vendor: outcome counts, cases with problems and
+   their rate, every problem code with the cases it affected, `top_problems`
+   with all codes tied for most cases, approved value), `problems` (per code:
+   `category` `invoice` or `processing`, cases, share of all cases, vendors and
+   fields affected) and `highlights` (`most_problematic_vendors`,
+   `most_common_problems`; more than one entry only on a tie). A problem is a
+   finding or decision reason code, counted once per case. Processing codes
+   (`OCR_UNAVAILABLE`, `OCR_FAILED`, `EXTRACTION_NOT_CONFIGURED`,
+   `EXTRACTION_SCHEMA_FAILED`, `PROCESSING_ERROR`) never count against a vendor.
+   Vendors are ranked by cases with problems, then problem rate, then total
+   problems. A case without a matched vendor is grouped by its printed vendor
+   name (`name:<name>`), or under `unidentified`.
+
 Other ingestion routes:
 
 - `POST /api/v1/ingest/pdf`: raw PDF body, optional `X-Filename` and `X-Sender`.
@@ -264,16 +303,19 @@ Do not use multiple independent databases against the same real PO ledger.
 This implementation reserves locally; a real ERP deployment must reconcile and
 atomically reserve against its authoritative procurement ledger.
 
-Trusted master updates are done outside the invoice workflow. The API exposes
-no vendor/PO mutation or reservation reversal, no payment execution, and no
+Vendor and built-in PO updates are done outside the invoice workflow, in
+`procurement.json`. The API can only add purchase orders (see step 7 above),
+held until the next reset; it exposes no vendor mutation, PO editing or
+deletion, reservation reversal, no payment execution, and no
 editing of approved or duplicate cases. A manual approval accepts a changed
 bank account for that invoice only; it never updates the vendor master. Audit records are append-only through this API,
 not tamper-proof against filesystem/database administrators. Protect and back
 up the runtime volume and keys before exposing the service externally.
 
 `POST /api/v1/reset` requires the application key when configured. It waits for active processing, then atomically removes cases, source PDF
-bytes, extracted results, submissions, audit events and reservations. It preserves the trusted
-reference configuration needed for subsequent validation, and rewrites the
+bytes, extracted results, submissions, audit events, reservations and purchase orders
+added through the API. It preserves the trusted reference configuration in
+`procurement.json` needed for subsequent validation, and rewrites the
 Excel register (now empty). No files under `test_cases/` are changed. The home
 page's **Refresh & start fresh** button also clears the browser query cache.
 
@@ -281,7 +323,7 @@ page's **Refresh & start fresh** button also clears the browser query cache.
 
 ```bash
 RESET_ON_START=false ./zamp_venv/bin/python -m unittest discover -s test_cases -v
-./zamp_venv/bin/python -m unittest backend.test_reset backend.test_audit_fixes -v
+./zamp_venv/bin/python -m unittest backend.test_reset backend.test_audit_fixes backend.test_po_upload backend.test_statistics -v
 ./zamp_venv/bin/python -m unittest test_cases.test_invoice_checks -v
 ./zamp_venv/bin/python -m test_cases.validate_inbox
 ./zamp_venv/bin/python -m backend.export_openapi

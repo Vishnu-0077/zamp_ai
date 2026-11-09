@@ -6,13 +6,15 @@ React + TypeScript single-page app for the invoice processing backend in
 | Screen | Route | Backend endpoints |
 | --- | --- | --- |
 | Dashboard, start fresh, Excel download | `/` | `/api/v1/stats`, `/api/v1/cases`, `/health`, `/api/v1/reset`, `/api/v1/exports/approved-invoices.xlsx` |
+| Statistics: totals, outcome bar, most problematic vendor, most common problem, per-vendor and per-problem charts and tables | `/statistics` | `/api/v1/statistics` |
 | Cases (filter, paginate, live refresh, Excel download) | `/cases` | `/api/v1/cases`, `/api/v1/exports/approved-invoices.xlsx` |
 | Case **Summary**: key facts, plain-language reasons, invoice vs PO table, line items, verified fields | `/cases/:id` | `/api/v1/cases/{id}` |
 | Case **Compare & resolve**: invoice PDF beside the PO, correct & re-check, approve manually, retry | `/cases/:id?tab=review` | `/document`, `/corrections`, `/approve`, `/retry` |
 | Case checks, source text/OCR, audit trail, policy snapshot | `/cases/:id?tab=…` | `/api/v1/cases/{id}`, `/audit` |
 | Vendor inbox → send to processing | `/inbox` | `/emails`, `/emails/{id}/preview`, `/api/v1/ingest/email` |
-| Upload PDF / EML | `/upload` | `/api/v1/ingest/pdf`, `/api/v1/ingest/eml` |
-| Reference data (vendors, POs, FX, policy) | `/references` | `/api/v1/references` |
+| Upload invoice: PDF / EML | `/upload` | `/api/v1/ingest/pdf`, `/api/v1/ingest/eml` |
+| Upload PO: form, CSV check & save, template | `/upload?tab=po` | `/api/v1/purchase-orders`, `/api/v1/purchase-orders/csv`, `/api/v1/purchase-orders/template.csv`, `/api/v1/references` |
+| Reference data (vendors, POs with *Uploaded* badge, FX, policy) | `/references` | `/api/v1/references` |
 | Settings (your name, theme, backend status) | `/settings` | `/health` |
 
 The legacy `inbox.html` in this folder is still served by the backend at `/`

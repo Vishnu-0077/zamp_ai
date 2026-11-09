@@ -4,6 +4,7 @@ import type { CaseStatus } from './types';
 export const qk = {
   health: ['health'] as const,
   stats: ['stats'] as const,
+  statistics: ['statistics'] as const,
   references: ['references'] as const,
   cases: {
     all: ['cases'] as const,

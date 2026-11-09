@@ -9,7 +9,10 @@ from fastapi import APIRouter, FastAPI, Header, HTTPException, Query, Request, R
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from .settings import Settings
-from .schemas import Correction, IngestRequest, ManualApproval, RetryRequest, InvoiceExtraction, CaseSummary, CaseDetail, CasePage, IngestResult
+from .schemas import (Correction, IngestRequest, ManualApproval, RetryRequest, InvoiceExtraction, CaseSummary, CaseDetail, CasePage,
+                      IngestResult, PurchaseOrderUpload, PurchaseOrderUploadResult, Statistics)
+from .purchase_orders import parse_csv, template_csv
+from . import statistics as stats_module
 from .invoice_service import Service, Conflict, NotFound
 
 
@@ -136,6 +139,13 @@ def install(app: FastAPI, settings=None, extractor=None):
                                  GROUP BY 1""")
             return {'counts': counts, 'inbox_counts': {r['status']: r['n'] for r in rows}}
 
+    @router.get('/statistics', response_model=Statistics, tags=['statistics'])
+    def statistics():
+        """Totals, per-vendor and per-problem statistics over every current case."""
+        with service.store.connect() as c:
+            rows = c.execute('SELECT status, vendor_id, amount, currency, findings, decision, extraction FROM jobs').fetchall()
+        return stats_module.compute(rows, service.references())
+
     @router.get('/exports/approved-invoices.xlsx', tags=['exports'],
                 responses={200: {'content': {XLSX: {}}, 'description': 'Excel workbook of all approved invoices'}})
     def approved_invoices_export():
@@ -185,6 +195,27 @@ def install(app: FastAPI, settings=None, extractor=None):
     @router.get('/references')
     def references():
         return service.references()
+
+    @router.post('/purchase-orders', response_model=PurchaseOrderUploadResult, tags=['purchase orders'])
+    def add_purchase_orders(body: PurchaseOrderUpload):
+        """Add POs typed in the form. All rows are saved only when every row passes; dry_run only checks."""
+        rows = [(i, item.model_dump(exclude_unset=True)) for i, item in enumerate(body.items, start=1)]
+        return service.add_purchase_orders(rows, reviewer(body.reviewer), body.dry_run)
+
+    @router.post('/purchase-orders/csv', response_model=PurchaseOrderUploadResult, tags=['purchase orders'],
+                 openapi_extra={'requestBody': {'required': True, 'content': {'text/csv': {'schema': {'type': 'string', 'format': 'binary'}}}}})
+    async def import_purchase_orders(request: Request, reviewer_name: str = Query(alias='reviewer', min_length=2, max_length=80, pattern=r'\S'),
+                                     dry_run: bool = False):
+        """Raw text/csv body with a header row (see the template). Row numbers in the result match the spreadsheet."""
+        rows = parse_csv(await read_limited(request, 1024 * 1024))
+        from starlette.concurrency import run_in_threadpool
+        return await run_in_threadpool(service.add_purchase_orders, rows, reviewer(reviewer_name), dry_run)
+
+    @router.get('/purchase-orders/template.csv', tags=['purchase orders'], responses={200: {'content': {'text/csv': {}}}})
+    def purchase_order_template():
+        """A CSV with the expected columns and one example row."""
+        return Response(template_csv(service.references()), media_type='text/csv',
+                        headers={'Content-Disposition': 'attachment; filename="purchase-orders-template.csv"'})
 
     app.include_router(router)
     original_openapi = app.openapi
