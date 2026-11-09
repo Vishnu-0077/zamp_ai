@@ -16,7 +16,7 @@ Nothing here pays an invoice or sends an email.
 
 ## Contents
 
-1. [Quick start](#quick-start)
+1. [Quick start](#quick-start) (including [sharing a public link](#share-it-with-other-people))
 2. [How it works](#how-it-works)
 3. [Using the dashboard](#using-the-dashboard)
 4. [Adding purchase orders](#adding-purchase-orders)
@@ -83,6 +83,8 @@ That one command:
 4. Starts the backend through `backend/start.sh` and waits until it is
    healthy.
 5. Starts the dashboard with the same application key.
+6. With `--share`, also opens a public link to the dashboard (see
+   [Share it with other people](#share-it-with-other-people)).
 
 The first run takes a few minutes while dependencies install. After that it
 starts in seconds. Output from both processes appears in the same terminal,
@@ -108,6 +110,36 @@ RESET_ON_START=false ./run.sh
 ```
 
 The sample inputs in `test_cases/` are never modified.
+
+### Share it with other people
+
+```bash
+./run.sh --share
+```
+
+This does everything `./run.sh` does, then opens a free
+[Cloudflare quick tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/)
+to the dashboard and prints a public link:
+
+```text
+  Public link https://some-random-words.trycloudflare.com
+```
+
+Anyone with the link can open the dashboard from any browser or device. You
+don't need a Cloudflare account. The first `--share` downloads `cloudflared`
+to `~/.local/bin` (no sudo).
+
+Before you share the link, note that:
+
+- **Everything still runs on your computer.** The link works only while
+  `./run.sh --share` is running and your computer is awake and online.
+  Ctrl+C closes the link.
+- **The link changes on every start.** Send the new one each time.
+- **There is no login.** Anyone with the link can upload invoices and POs,
+  approve cases and reset the data. Share it only with people you trust, and
+  don't use real payment data.
+- Quick tunnels are meant for testing and demos: Cloudflare gives no uptime
+  guarantee for them.
 
 ### 4. Process your first invoice
 
@@ -536,6 +568,9 @@ submissions.
 | CSV upload says *missing column(s)* or *unknown column(s)* | The header row must use the template's column names. Start from **Download template** |
 | CSV upload says *must be UTF-8 text* | Save the file from Excel with **Save as → CSV UTF-8** |
 | An uploaded PO disappeared | A reset removes uploaded POs: **Refresh & start fresh** or a backend restart. Use `RESET_ON_START=false ./run.sh` to keep them across restarts |
+| `--share` says *The tunnel did not start* | Read `runtime/cloudflared.log`. Usually there's no internet access, or a firewall blocks outbound connections to Cloudflare |
+| The public link shows *Blocked request. This host is not allowed* | The dashboard was started before `vite.config.ts` allowed `*.trycloudflare.com`. Restart `./run.sh --share` |
+| The public link stopped working | `./run.sh --share` was stopped, or your computer slept or went offline. Start it again and share the new link |
 | Cases stay *Queued* | The worker isn't running. Check `WORKER_ENABLED`, and that only one backend process uses the database |
 | Backend refuses to start a second worker | Only one process may own a processing database. Stop the other one |
 | **Approve manually** or the Excel download fails with `404` | The running backend is older than the dashboard. Restart it (`RESET_ON_START=false ./run.sh` keeps cases) |
@@ -605,6 +640,8 @@ More detail:
 
 ```text
 run.sh                   One-command local start: dependencies, backend, dashboard
+                         (--share adds a public Cloudflare quick-tunnel link)
+runtime/                 cloudflared.log from ./run.sh --share (ignored by Git)
 backend/                 All backend code, configuration, dependencies and API docs
   main.py                FastAPI application entry point
   processing_api.py      Ingestion, case management and review endpoints

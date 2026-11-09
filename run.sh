@@ -5,9 +5,20 @@
 #
 #   ./run.sh                          fresh start (processed cases are reset)
 #   RESET_ON_START=false ./run.sh     keep the cases from the previous run
+#   ./run.sh --share                  also publish the dashboard on a public
+#                                     https://*.trycloudflare.com link (Cloudflare quick tunnel)
 set -euo pipefail
 cd "$(dirname "$0")"
 ROOT=$PWD
+
+SHARE="${SHARE:-false}"
+for arg in "$@"; do
+  case "$arg" in
+    --share) SHARE=true ;;
+    -h|--help) sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *) printf 'Unknown option: %s (try --help)\n' "$arg" >&2; exit 2 ;;
+  esac
+done
 
 BACKEND_PORT=8000
 FRONTEND_PORT=5173
@@ -70,6 +81,24 @@ for port in "$BACKEND_PORT" "$FRONTEND_PORT"; do
 done
 
 # ---------------------------------------------------------------- dependencies
+if [[ "$SHARE" == true ]] && ! command -v cloudflared >/dev/null; then
+  if [[ ! -x "$HOME/.local/bin/cloudflared" ]]; then
+    case "$(uname -m)" in
+      x86_64|amd64) cf_arch=amd64 ;;
+      aarch64|arm64) cf_arch=arm64 ;;
+      *) die "cloudflared not found. Install it: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/" ;;
+    esac
+    say "Downloading cloudflared to ~/.local/bin (one time, no sudo)"
+    mkdir -p "$HOME/.local/bin"
+    curl -fsSL -o "$HOME/.local/bin/cloudflared.part" \
+      "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-$cf_arch" \
+      || die "Could not download cloudflared; check your internet connection."
+    chmod +x "$HOME/.local/bin/cloudflared.part"
+    mv "$HOME/.local/bin/cloudflared.part" "$HOME/.local/bin/cloudflared"
+  fi
+  export PATH="$HOME/.local/bin:$PATH"
+fi
+
 if [[ ! -x zamp_venv/bin/python ]]; then
   say "Creating Python environment (zamp_venv)"
   python3 -m venv zamp_venv
@@ -115,13 +144,40 @@ say "Starting dashboard on http://localhost:$FRONTEND_PORT"
   > >(sed -u 's/^/[frontend] /') 2>&1 &
 pids+=($!)
 
+public_url=""
+if [[ "$SHARE" == true ]]; then
+  say "Opening a Cloudflare quick tunnel"
+  mkdir -p runtime
+  tunnel_log=runtime/cloudflared.log
+  setsid cloudflared tunnel --no-autoupdate --url "http://localhost:$FRONTEND_PORT" > "$tunnel_log" 2>&1 &
+  pids+=($!)
+  tunnel_pid=$!
+  for _ in $(seq 1 30); do
+    public_url=$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' "$tunnel_log" | head -1 || true)
+    [[ -n "$public_url" ]] && break
+    kill -0 "$tunnel_pid" 2>/dev/null || break
+    sleep 1
+  done
+  [[ -n "$public_url" ]] || die "The tunnel did not start; see $tunnel_log."
+fi
+
 cat <<EOF
 
   Dashboard   http://localhost:$FRONTEND_PORT
   API docs    http://127.0.0.1:$BACKEND_PORT/docs
   Health      http://127.0.0.1:$BACKEND_PORT/health
+EOF
+if [[ -n "$public_url" ]]; then
+  cat <<EOF
 
-  Press Ctrl+C to stop both.
+  Public link $public_url
+              Anyone with this link can use the dashboard (upload, approve,
+              reset) while this script runs. It changes on every --share start.
+EOF
+fi
+cat <<EOF
+
+  Press Ctrl+C to stop.
 
 EOF
 

@@ -34,8 +34,10 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), spaRoutesOverLegacyHtml()],
     resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
-    server: { port: 5173, proxy },
-    preview: { port: 4173, proxy },
+    // ./run.sh --share exposes the dashboard through a Cloudflare quick tunnel,
+    // so requests arrive with a *.trycloudflare.com Host header.
+    server: { port: 5173, proxy, allowedHosts: ['.trycloudflare.com'] },
+    preview: { port: 4173, proxy, allowedHosts: ['.trycloudflare.com'] },
     test: { environment: 'jsdom' },
   };
 });
