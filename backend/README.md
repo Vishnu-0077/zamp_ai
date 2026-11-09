@@ -11,42 +11,44 @@ local ledger.
 ## Run locally
 
 Requires Python 3.11+ on Linux/WSL (worker locking uses `fcntl`). Run commands
-from the repository root. Create the environment first if needed:
+from the repository root.
 
 ```bash
-python3 -m venv zamp_venv
-```
-
-```bash
+python3 -m venv zamp_venv                 # skip if it already exists
 ./zamp_venv/bin/python -m pip install -r backend/requirements.txt
-# Install the system OCR dependency (Ubuntu/Debian):
-sudo apt-get install -y tesseract-ocr
-# Set provider credentials and an available structured-output model:
-export OPENAI_API_KEY='your-key'
-export EXTRACTION_MODEL='your-model-id'
-export BACKEND_API_KEY='your-application-token'
-./zamp_venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --workers 1
+sudo apt-get install -y tesseract-ocr     # OCR for scanned PDFs (Ubuntu/Debian)
 ```
 
-`backend/.env.example` lists configuration; environment variables must be exported (the
-app does not implicitly load `.env`). `OPENAI_BASE_URL` supports compatible
-providers with native JSON-schema structured output and temperature 0. Provider
-credentials are handled by `langchain-openai`. No model is silently selected.
-Model entries can also use `gemini:<model-id>` or `groq:<model-id>` with
-`GEMINI_API_KEY` or `GROQ_API_KEY`. `EXTRACTION_FALLBACK_MODELS` accepts a
-comma-separated mix of providers; missing provider keys cause those entries to
-be skipped. Choose model IDs available to your account. Provider billing and
-quotas depend on your account.
+Save a Gemini and/or Groq key in `~/.config/zamp/gemini.key` and
+`~/.config/zamp/groq.key` (see [Configure](../README.md#3-configure) in the
+root guide), then start:
 
-For local setup, `./backend/start.sh` loads keys from
-`${ZAMP_KEY_DIR:-$HOME/.config/zamp}/gemini.key` and `groq.key`, preferring
-exported keys. It supplies a development application key, clears
-`OPENAI_API_KEY` and `OPENAI_BASE_URL`, and defaults to resetting processing
-state. Use `RESET_ON_START=false ./backend/start.sh` to retain cases; override
-model variables as needed. See the [root guide](../README.md) for the dashboard.
+```bash
+./backend/start.sh                        # RESET_ON_START=false ./backend/start.sh keeps cases
+```
 
-No credentials means processing goes to review with `EXTRACTION_NOT_CONFIGURED`.
-Missing Tesseract produces `OCR_UNAVAILABLE` for scans or mixed raster pages.
+`start.sh` loads the key files from `${ZAMP_KEY_DIR:-$HOME/.config/zamp}`,
+sets `BACKEND_API_KEY=dev-app-key`, uses the Gemini/Groq model chain
+(`gemini:gemini-3.5-flash`, then `groq:openai/gpt-oss-120b`,
+`gemini:gemini-3-flash-preview`, `gemini:gemini-3.5-flash-lite`,
+`groq:qwen/qwen3.8-27b`) with 3 retries per model, clears `OPENAI_API_KEY` and
+`OPENAI_BASE_URL`, and resets processing state. It prints which keys it found,
+never their values. **Variables already exported in your shell take priority**,
+so start from a clean terminal: an exported placeholder such as
+`EXTRACTION_MODEL=your-model-id` makes every case fail with `PROCESSING_ERROR`.
+
+The app reads exported variables only and never loads `.env` files;
+`backend/.env.example` lists them. Model IDs with a `gemini:` or `groq:` prefix
+use that provider with `GEMINI_API_KEY` or `GROQ_API_KEY`; entries whose key is
+missing are skipped. An unprefixed model ID goes to OpenAI (or
+`OPENAI_BASE_URL`) with `OPENAI_API_KEY`; this setup does not use it. Models
+must support native JSON-schema structured output and temperature 0. No model
+is silently selected. Provider quotas and billing depend on your account.
+
+No usable model key means processing goes to review with
+`EXTRACTION_NOT_CONFIGURED`. Missing Tesseract produces `OCR_UNAVAILABLE` for
+scans or mixed raster pages. See the [root guide](../README.md) for the
+dashboard.
 
 `backend/procurement.json` contains the trusted synthetic vendor/PO/FX master
 and fixed demo evaluation date. Reset clears processing results while preserving

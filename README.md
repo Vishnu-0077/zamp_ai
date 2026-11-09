@@ -51,8 +51,9 @@ All commands below run from the repository root.
 2. The backend reads every page, using digital text or Tesseract OCR for scans.
    OCR output is rebuilt into visual rows, so a label and its value
    ("Issued 2026-10-18") stay on one line.
-3. LangChain and an OpenAI-compatible model extract structured facts. The
-   model only extracts; it never decides.
+3. LangChain sends the page text to a structured-output model, Gemini first,
+   with Groq and other Gemini models as fallbacks. The model only extracts
+   facts; it never decides.
 4. Deterministic Python validates the facts, checks the vendor and bank
    details, detects duplicates, matches the PO, checks the math, dates, FX and
    GST, then decides.
@@ -80,10 +81,10 @@ a local proxy.
 | Python 3.11+ | Backend | `python3 --version` |
 | Node.js 20+ and npm | Dashboard | `node -v && npm -v` |
 | Tesseract OCR (optional) | Scanned or image-only PDFs | `tesseract --version` |
-| Model API key (optional) | Automatic extraction | An OpenAI or compatible provider key |
+| Gemini and/or Groq API key (optional) | Automatic extraction | Free-tier keys from Google AI Studio and GroqCloud |
 
 Without Tesseract, scanned invoices stop in review with `OCR_UNAVAILABLE`.
-Without a model, every invoice stops in review with
+Without a Gemini or Groq key, every invoice stops in review with
 `EXTRACTION_NOT_CONFIGURED`. The dashboard still works in both cases, and
 those cases can be retried once the dependency is installed.
 
@@ -107,111 +108,163 @@ cd ..
 
 ### 3. Configure
 
-The backend reads **exported shell variables** and does not load `.env`
-files:
+#### Save your provider keys (once)
 
-| Variable | Required | Purpose |
-| --- | --- | --- |
-| `BACKEND_API_KEY` | Recommended | Application key every API call must send as `X-API-Key` |
-| `OPENAI_API_KEY` | For extraction | Model provider credential |
-| `EXTRACTION_MODEL` | For extraction | Model ID with JSON-schema structured output |
-| `OPENAI_BASE_URL` | No | OpenAI-compatible endpoint for unprefixed models |
-| `GEMINI_API_KEY` / `GROQ_API_KEY` | For prefixed models | Credentials for `gemini:` / `groq:` model entries |
-| `EXTRACTION_FALLBACK_MODELS` | No | Comma-separated models tried when the main one is overloaded or out of quota |
-| `EXTRACTION_PROVIDER_RETRIES` | No | Retries per model for 429, 5xx and timeouts (default `0`) |
-| `EXTRACTION_RETRY_BACKOFF_SECONDS` | No | First retry delay; doubles each retry (default `2`) |
-| `PROCESSING_DB` | No | SQLite path (default `backend/runtime/processing.sqlite3`) |
-| `PROCUREMENT_PATH` | No | Trusted vendor/PO/policy file (default `backend/procurement.json`) |
-| `CORS_ORIGINS` | No | Only needed when the dashboard calls the backend directly |
-| `WORKER_ENABLED` | No | `true` (default) runs the processing worker in the API process |
-| `RESET_ON_START` | No | `true` wipes all processed cases, audit history, PO reservations each time the backend starts. Default `true`; set `false` to retain processing history |
-| `APPROVED_EXPORT_PATH` | No | Where the approved-invoice Excel is kept up to date (default `exports/approved_invoices.xlsx` beside the database) |
+The startup script reads one key per file from `~/.config/zamp/`. Each
+command asks for the key without echoing it, so it never lands in your shell
+history:
 
-The dashboard reads `frontend/.env`, or the shell, for its proxy:
+```bash
+mkdir -p ~/.config/zamp && chmod 700 ~/.config/zamp
+read -rsp 'Gemini key: ' k && printf '%s' "$k" > ~/.config/zamp/gemini.key; echo
+read -rsp 'Groq key: '   k && printf '%s' "$k" > ~/.config/zamp/groq.key;   echo
+chmod 600 ~/.config/zamp/*.key; unset k
+```
+
+One provider is enough. Models from a provider without a key are skipped.
+Set `ZAMP_KEY_DIR` to keep the key files somewhere else.
+
+#### Point the dashboard at the backend (once)
+
+```bash
+cp frontend/.env.example frontend/.env    # then set BACKEND_API_KEY=dev-app-key in it
+```
+
+The dashboard's dev proxy reads `frontend/.env`, or the shell:
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `BACKEND_URL` | `http://127.0.0.1:8000` | Where the proxy forwards API calls |
-| `BACKEND_API_KEY` | (empty) | Must equal the backend's `BACKEND_API_KEY`. The proxy adds it server-side, so it never reaches the browser |
+| `BACKEND_API_KEY` | (empty) | Must equal the backend's `BACKEND_API_KEY` (`dev-app-key` with `start.sh`). The proxy adds it server-side, so it never reaches the browser |
 
-```bash
-cp frontend/.env.example frontend/.env    # then set BACKEND_API_KEY in it
-```
+#### Model chain
 
-#### Provider configuration and fallback
+`./backend/start.sh` uses this chain unless you override it:
 
-Unprefixed model IDs use `OPENAI_API_KEY` and optional `OPENAI_BASE_URL`.
-Prefix a model with `gemini:` or `groq:` to use that provider's endpoint and
-its own `GEMINI_API_KEY` or `GROQ_API_KEY`. Entries without the corresponding
-provider key are skipped. Set model IDs available to your account that support
-native JSON-schema structured output and temperature 0.
+| Order | Model | Variable |
+| --- | --- | --- |
+| 1 | `gemini:gemini-3.5-flash` | `EXTRACTION_MODEL` |
+| 2 | `groq:openai/gpt-oss-120b` | `EXTRACTION_FALLBACK_MODELS` |
+| 3 | `gemini:gemini-3-flash-preview` | `EXTRACTION_FALLBACK_MODELS` |
+| 4 | `gemini:gemini-3.5-flash-lite` | `EXTRACTION_FALLBACK_MODELS` |
+| 5 | `groq:qwen/qwen3.8-27b` | `EXTRACTION_FALLBACK_MODELS` |
 
-```bash
-export GEMINI_API_KEY='your-gemini-key'
-export GROQ_API_KEY='your-groq-key'
-export EXTRACTION_MODEL='gemini:your-model-id'
-export EXTRACTION_FALLBACK_MODELS='groq:your-model-id'
-export EXTRACTION_PROVIDER_RETRIES=3
-export EXTRACTION_RETRY_BACKOFF_SECONDS=5
-```
+The `gemini:` or `groq:` prefix picks the provider and its key
+(`GEMINI_API_KEY` or `GROQ_API_KEY`). A model ID **without** a prefix is sent
+to OpenAI with `OPENAI_API_KEY`. `start.sh` never does this: it clears
+`OPENAI_API_KEY` and `OPENAI_BASE_URL`, so nothing is billed to OpenAI by
+accident.
 
-Fallbacks run in order after transient provider failures (429, 5xx,
-timeouts), a provider HTTP 413 (request too large), a reply cut off at the
-output-token limit, or a provider rejecting the model's output against the
-schema (Groq HTTP 400). Our own schema-validation failures retry once on the
-same model and then go to review. Quotas,
-model access and billing depend on your provider account; check your account
-before sending invoices. Keep credentials out of Git.
+The next model in the chain is tried after a transient provider failure (429,
+5xx or timeout, retried up to `EXTRACTION_PROVIDER_RETRIES` times first), a
+provider HTTP 413 (request too large), a reply cut off at the output-token
+limit, or a provider rejecting the output against the schema (Groq HTTP 400).
+A `Retry-After` hint longer than 60 s, such as an exhausted daily quota, moves
+straight to the next model. Our own schema-validation failures retry once on
+the same model and then go to review. Quotas and model access depend on your
+provider account.
+
+#### All backend variables
+
+The backend reads **exported shell variables only**; it does not load `.env`
+files. `start.sh` fills in the defaults marked *(start.sh)*.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `BACKEND_API_KEY` | `dev-app-key` (start.sh) | Application key every API call must send as `X-API-Key` |
+| `GEMINI_API_KEY` / `GROQ_API_KEY` | from `~/.config/zamp/*.key` (start.sh) | Credentials for `gemini:` / `groq:` models |
+| `EXTRACTION_MODEL` | `gemini:gemini-3.5-flash` (start.sh) | First model in the chain |
+| `EXTRACTION_FALLBACK_MODELS` | the chain above (start.sh) | Comma-separated models tried in order |
+| `EXTRACTION_PROVIDER_RETRIES` | `3` (start.sh), else `0` | Retries per model for 429, 5xx and timeouts |
+| `EXTRACTION_RETRY_BACKOFF_SECONDS` | `5` (start.sh), else `2` | First retry delay; doubles each retry |
+| `RESET_ON_START` | `true` | Wipes processed cases, audit history and PO reservations on each start. Set `false` to keep them |
+| `PROCESSING_DB` | `backend/runtime/processing.sqlite3` | SQLite database path |
+| `APPROVED_EXPORT_PATH` | `exports/approved_invoices.xlsx` beside the database | Where the approved-invoice Excel is kept up to date |
+| `PROCUREMENT_PATH` | `backend/procurement.json` | Trusted vendor/PO/FX/policy file |
+| `WORKER_ENABLED` | `true` | Runs the processing worker inside the API process |
+| `CORS_ORIGINS` | `http://localhost:3000,http://localhost:5173` | Only needed when a browser calls the backend directly |
+| `ZAMP_KEY_DIR` | `~/.config/zamp` | Where `start.sh` looks for key files |
+| `OPENAI_API_KEY` / `OPENAI_BASE_URL` | unset (cleared by start.sh) | Only for unprefixed model IDs. Not used by this setup |
 
 ### 4. Start
 
-**Provider startup helper:** `./backend/start.sh` loads
-`~/.config/zamp/gemini.key` and `~/.config/zamp/groq.key`, defaults to a
-Gemini/Groq model chain, clears `OPENAI_API_KEY` and
-`OPENAI_BASE_URL`, and resets processed cases on each start (run it as
-`RESET_ON_START=false ./backend/start.sh` to keep them). It prints which keys
-were found, never their values. Override `EXTRACTION_MODEL` and
-`EXTRACTION_FALLBACK_MODELS` with model IDs
-available to your account. The manual start below also resets by default; add
-`export RESET_ON_START=false` to keep cases.
+You need two terminals, both opened in the repository root.
 
 **Terminal 1, the backend:**
 
 ```bash
+./backend/start.sh
+```
+
+It should print:
+
+```text
+Provider keys:
+  GEMINI_API_KEY: loaded from /home/<you>/.config/zamp/gemini.key
+  GROQ_API_KEY: loaded from /home/<you>/.config/zamp/groq.key
+Model chain: gemini:gemini-3.5-flash,groq:openai/gpt-oss-120b,...
+Reset processed cases on start: true (run with RESET_ON_START=false to keep them)
+```
+
+> **Start from a clean terminal.** Anything already exported in your shell
+> takes priority over `start.sh`'s defaults. If you earlier exported example
+> values such as `EXTRACTION_MODEL=your-model-id` or `OPENAI_API_KEY=sk-...`,
+> the backend sends every invoice to that non-existent model, and every case
+> fails with `PROCESSING_ERROR`. Open a new terminal, or run
+> `unset EXTRACTION_MODEL EXTRACTION_FALLBACK_MODELS OPENAI_API_KEY OPENAI_BASE_URL`
+> first.
+
+To keep the cases from the previous run, start with
+`RESET_ON_START=false ./backend/start.sh`.
+
+<details>
+<summary>Starting the backend without <code>start.sh</code></summary>
+
+This is the same thing `start.sh` does:
+
+```bash
+unset OPENAI_API_KEY OPENAI_BASE_URL
 export BACKEND_API_KEY=dev-app-key
-export OPENAI_API_KEY=sk-...              # optional, enables extraction
-export EXTRACTION_MODEL=your-model-id     # optional, enables extraction
+export GEMINI_API_KEY="$(< ~/.config/zamp/gemini.key)"
+export GROQ_API_KEY="$(< ~/.config/zamp/groq.key)"
+export EXTRACTION_MODEL='gemini:gemini-3.5-flash'
+export EXTRACTION_FALLBACK_MODELS='groq:openai/gpt-oss-120b,gemini:gemini-3-flash-preview,gemini:gemini-3.5-flash-lite,groq:qwen/qwen3.8-27b'
+export EXTRACTION_PROVIDER_RETRIES=3
+export EXTRACTION_RETRY_BACKOFF_SECONDS=5
 ./zamp_venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --workers 1
 ```
 
+</details>
+
 Keep `--workers 1`: a single worker process owns the processing database.
-
-Processed cases and uploaded PDFs live in `backend/runtime/processing.sqlite3`.
-Every backend worker startup clears processing state by default, including
-results, audit history, PO reservations. Set `RESET_ON_START=false` explicitly
-to retain them. `test_cases/` is never modified by the reset.
-
-On the dashboard home page, **Refresh & start fresh** performs the same reset
-without restarting the backend and reloads all dashboard queries, including
-Reference data. An active extraction
-finishes before reset clears its case. Trusted vendor/PO/FX configuration in
-`PROCUREMENT_PATH` is retained: these records are needed to validate new invoices.
-The dashboard shows both unique case counts and distinct inbox email outcomes;
-identical attachments share a case, but count as duplicate email submissions.
 
 **Terminal 2, the dashboard:**
 
 ```bash
 cd frontend
-BACKEND_API_KEY=dev-app-key npm run dev   # or rely on frontend/.env
+npm run dev                               # uses frontend/.env
+# or, without frontend/.env:
+BACKEND_API_KEY=dev-app-key npm run dev
 ```
 
 | URL | What |
 | --- | --- |
 | http://localhost:5173 | **The dashboard** |
 | http://127.0.0.1:8000/docs | Interactive API documentation (Swagger) |
-| http://127.0.0.1:8000/ | Legacy read-only inbox page. Works only when `BACKEND_API_KEY` is unset; otherwise it shows `UNAUTHORIZED`, because a browser page cannot send the key. Use the dashboard |
 | http://127.0.0.1:8000/health | Backend health JSON |
+| http://127.0.0.1:8000/ | Legacy read-only inbox page. Works only when `BACKEND_API_KEY` is unset; otherwise it shows `UNAUTHORIZED`, because a browser page cannot send the key. Use the dashboard |
+
+**Data and resets.** Processed cases and uploaded PDFs live in
+`backend/runtime/processing.sqlite3`. Each backend start clears results, audit
+history and PO reservations unless `RESET_ON_START=false`. On the dashboard
+home page, **Refresh & start fresh** does the same reset without restarting
+the backend and reloads every dashboard query, including Reference data. An
+extraction that is already running finishes before the reset clears its case.
+The trusted vendor/PO/FX configuration in `PROCUREMENT_PATH` and everything
+under `test_cases/` are never touched, because new invoices are validated
+against them. The dashboard shows both unique case counts and distinct inbox
+email outcomes: identical attachments share a case but count as separate
+duplicate email submissions.
 
 ### 5. First run walkthrough
 
@@ -366,7 +419,10 @@ only fixes misread data. To accept such a case after checking it yourself, use
 | Sidebar shows *Backend unreachable* | Start the backend on port 8000, or set `BACKEND_URL` |
 | Errors mention `401` / `X-API-Key` | The dashboard's `BACKEND_API_KEY` differs from the backend's; set the same value and restart `npm run dev` |
 | Review buttons stay disabled | Enter your name (at least 2 characters) in the form or in Settings |
-| Every case shows `EXTRACTION_NOT_CONFIGURED` | Set `EXTRACTION_MODEL` and its provider key, restart the backend, then use **Retry processing** |
+| Every case shows `PROCESSING_ERROR` right after a start | Usually example values exported in the shell, such as `EXTRACTION_MODEL=your-model-id` or `OPENAI_API_KEY=sk-...`; these take priority over `start.sh`. Stop the backend, open a new terminal (or `unset EXTRACTION_MODEL EXTRACTION_FALLBACK_MODELS OPENAI_API_KEY OPENAI_BASE_URL`), run `./backend/start.sh`, then use **Retry processing**. Other causes appear in the backend terminal as `Processing failed for case …` |
+| `start.sh` prints `GEMINI_API_KEY: NOT SET` (or `GROQ_…`) | The key file in `~/.config/zamp/` is missing or empty; save it as shown in [Configure](#3-configure) |
+| Every case shows `EXTRACTION_NOT_CONFIGURED` | No model in the chain has a key. Save at least one provider key, restart with `./backend/start.sh`, then use **Retry processing** |
+| Backend log shows `Transient provider error` or `moving to the next model` | A provider quota or rate limit was hit; the fallback chain handles it. If every model is exhausted, the case goes to review; retry later |
 | Scanned invoices show `OCR_UNAVAILABLE` | Install `tesseract-ocr`, restart the backend, then retry |
 | Cases stay *Queued* | The worker is not running: check `WORKER_ENABLED` and that only one backend process uses the database |
 | Backend refuses to start a second worker | Only one process may own a processing database; stop the other one |
