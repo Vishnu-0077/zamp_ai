@@ -3572,5 +3572,222 @@
     "reason": "PDF requires an unavailable password; request it through a trusted channel and route to human review.",
     "sha256": "3be990c0d74b04f4e4af18f23b0964bdb4fcc5409e93150339ad1a88b4a91468",
     "duplicate_of": null
+  },
+  {
+    "id": 53,
+    "scenario": "valid_installment_billing",
+    "is_edge_case": true,
+    "vendor_id": "V002",
+    "fields": {
+      "document_type": "INVOICE",
+      "vendor": "Harbor IT Services",
+      "number": "HI-2026-0053-1",
+      "date": "2026-10-21",
+      "due_date": "2026-11-20",
+      "po": "PO-26053",
+      "description": "IT support milestone 1 of 2",
+      "quantity": 1,
+      "unit_price": 400,
+      "subtotal": 400,
+      "tax": 40.0,
+      "total": 440.0,
+      "currency": "USD",
+      "terms": "Net 30",
+      "contact": "Daniel Reed",
+      "address": "102 Market Street, Portland, OR 97205",
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-002"
+    },
+    "missing_fields": [],
+    "added_features": [
+      "multiple_invoices_one_pdf",
+      "valid_installment_billing"
+    ],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Harbor IT Services",
+          "number": "HI-2026-0053-1",
+          "date": "2026-10-21",
+          "due_date": "2026-11-20",
+          "po": "PO-26053",
+          "description": "IT support milestone 1 of 2",
+          "quantity": 1,
+          "unit_price": 400,
+          "subtotal": 400,
+          "tax": 40.0,
+          "total": 440.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Daniel Reed",
+          "address": "102 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-002"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve",
+        "previously_invoiced": 0,
+        "cumulative_billed": 440.0,
+        "remaining_po_before": 1100,
+        "expected_review_codes": [],
+        "reason": "Installment fits remaining PO and received balance."
+      },
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Harbor IT Services",
+          "number": "HI-2026-0053-2",
+          "date": "2026-10-22",
+          "due_date": "2026-11-21",
+          "po": "PO-26053",
+          "description": "IT support milestone 2 of 2",
+          "quantity": 1,
+          "unit_price": 600,
+          "subtotal": 600,
+          "tax": 60.0,
+          "total": 660.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Daniel Reed",
+          "address": "102 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-002"
+        },
+        "page_range": [
+          2,
+          2
+        ],
+        "expected": "approve",
+        "previously_invoiced": 440.0,
+        "cumulative_billed": 1100.0,
+        "remaining_po_before": 660.0,
+        "expected_review_codes": [],
+        "reason": "Installment fits remaining PO and received balance."
+      }
+    ],
+    "page_count": 2,
+    "email_style": "structured",
+    "pdf_kind": "text_extractable",
+    "requires_ocr": false,
+    "template_id": "harbor-teal",
+    "scan_variation": null,
+    "expected": "approve",
+    "reason": "Both installments fit the PO; cumulative billing equals USD 1,100.",
+    "sha256": "e0d23ae5e6719a1815376d758f3573db852dcb78a824829a280d3b4c8dd8a731",
+    "duplicate_of": null
+  },
+  {
+    "id": 54,
+    "scenario": "cumulative_po_overrun",
+    "is_edge_case": true,
+    "vendor_id": "V002",
+    "fields": {
+      "document_type": "INVOICE",
+      "vendor": "Harbor IT Services",
+      "number": "HI-2026-0054-1",
+      "date": "2026-10-21",
+      "due_date": "2026-11-20",
+      "po": "PO-26054",
+      "description": "IT support milestone 1 of 2",
+      "quantity": 1,
+      "unit_price": 600,
+      "subtotal": 600,
+      "tax": 60.0,
+      "total": 660.0,
+      "currency": "USD",
+      "terms": "Net 30",
+      "contact": "Daniel Reed",
+      "address": "102 Market Street, Portland, OR 97205",
+      "phone": "+1-202-555-0142",
+      "bank_account": "DEMO-ACCOUNT-002"
+    },
+    "missing_fields": [],
+    "added_features": [
+      "multiple_invoices_one_pdf",
+      "cumulative_po_overrun"
+    ],
+    "documents": [
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Harbor IT Services",
+          "number": "HI-2026-0054-1",
+          "date": "2026-10-21",
+          "due_date": "2026-11-20",
+          "po": "PO-26054",
+          "description": "IT support milestone 1 of 2",
+          "quantity": 1,
+          "unit_price": 600,
+          "subtotal": 600,
+          "tax": 60.0,
+          "total": 660.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Daniel Reed",
+          "address": "102 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-002"
+        },
+        "page_range": [
+          1,
+          1
+        ],
+        "expected": "approve",
+        "previously_invoiced": 0,
+        "cumulative_billed": 660.0,
+        "remaining_po_before": 1100,
+        "expected_review_codes": [],
+        "reason": "Installment fits remaining PO and received balance."
+      },
+      {
+        "fields": {
+          "document_type": "INVOICE",
+          "vendor": "Harbor IT Services",
+          "number": "HI-2026-0054-2",
+          "date": "2026-10-22",
+          "due_date": "2026-11-21",
+          "po": "PO-26054",
+          "description": "IT support milestone 2 of 2",
+          "quantity": 1,
+          "unit_price": 500,
+          "subtotal": 500,
+          "tax": 50.0,
+          "total": 550.0,
+          "currency": "USD",
+          "terms": "Net 30",
+          "contact": "Daniel Reed",
+          "address": "102 Market Street, Portland, OR 97205",
+          "phone": "+1-202-555-0142",
+          "bank_account": "DEMO-ACCOUNT-002"
+        },
+        "page_range": [
+          2,
+          2
+        ],
+        "expected": "human_review",
+        "previously_invoiced": 660.0,
+        "cumulative_billed": 1210.0,
+        "remaining_po_before": 440.0,
+        "expected_review_codes": [
+          "PO_BALANCE_EXCEEDED",
+          "RECEIPT_BALANCE_EXCEEDED"
+        ],
+        "reason": "Second invoice exceeds remaining PO and received balance."
+      }
+    ],
+    "page_count": 2,
+    "email_style": "structured",
+    "pdf_kind": "text_extractable",
+    "requires_ocr": false,
+    "template_id": "harbor-teal",
+    "scan_variation": null,
+    "expected": "human_review",
+    "reason": "First invoice passes; second takes cumulative billing to USD 1,210 against a USD 1,100 PO.",
+    "sha256": "9e0e5978924eab92728cd2965e4ed47f9081ba0bf00c8597b48e49e982941dac",
+    "duplicate_of": null
   }
 ]

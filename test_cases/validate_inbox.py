@@ -18,11 +18,11 @@ def validate():
     with sqlite3.connect(base/'inbox.sqlite3') as db:
         db.row_factory=sqlite3.Row
         rows=list(db.execute('SELECT * FROM emails ORDER BY id'))
-    assert len(rows)==len(truth)==52
-    assert len(list((base/'emails').glob('*.eml')))==52
-    assert len(list((base/'attachments').glob('*.pdf')))==52
-    assert sum(t['is_edge_case'] for t in truth)==12
-    assert Counter(t['expected'] for t in truth)=={'approve':40,'duplicate':2,'human_review':10}
+    assert len(rows)==len(truth)==54
+    assert len(list((base/'emails').glob('*.eml')))==54
+    assert len(list((base/'attachments').glob('*.pdf')))==54
+    assert sum(t['is_edge_case'] for t in truth)==14
+    assert Counter(t['expected'] for t in truth)=={'approve':41,'duplicate':2,'human_review':11}
     assert {t['id'] for t in truth if t['requires_ocr']}==SCAN_IDS
     templates=defaultdict(set)
     procurement=json.loads((base/'ground_truth/procurement.json').read_text())
@@ -83,6 +83,9 @@ def validate():
                 # No words may be clipped off the page.
                 for x0,y0,x1,y1,*_ in pdf[0].get_text('words'):
                     assert 0<=x0<x1<=612 and 0<=y0<y1<=792,(t['id'],'clipped text')
+        if t['id'] in (53, 54):
+            validate_installments(t, data, procurement)
+            continue
         if t['vendor_id']:
             templates[t['vendor_id']].add(t['template_id'])
         if t['expected']=='approve':
@@ -101,8 +104,8 @@ def validate():
             if document['expected']=='approve':
                 fields=document['fields']
                 assert not check_document(fields,vendors.get(t['vendor_id']),pos.get(fields['po']),procurement['fx_rates'],procurement['validation_policy'])
-    assert sum(len(t['documents']) for t in truth)==52
-    assert sum(t['page_count'] for t in truth[:50])==53
+    assert sum(len(t['documents']) for t in truth)==56
+    assert sum(t['page_count'] for t in truth if t['id'] not in (51,52))==57
     required={44:{'negative_invoice','unapproved_vendor'},45:{'bank_account_changed'},
               46:{'future_invoice_date','missing_number'},47:{'missing_total'},
               48:{'missing_currency','gst_split_total','gst_component_amount','invoice_before_po'},
@@ -128,7 +131,50 @@ def validate():
     assert truth[41]['sha256']!=truth[1]['sha256']
     assert truth[41]['fields']==truth[1]['fields']
     assert truth[42]['fields']['number']==truth[2]['fields']['number'].replace('-','')
-    print('PASS: 52 emails, 40 routine + 12 edge cases; 35 searchable PDFs + 15 image-only PDFs + 1 corrupt + 1 encrypted; 52 readable documents across 53 readable pages; notes, FX, GST, date and bank checks; supplier templates, MIME attachments and duplicates.')
+    print('PASS: 54 emails, 40 routine + 14 edge cases; 37 searchable PDFs + 15 image-only PDFs + 1 corrupt + 1 encrypted; 56 readable documents across 57 readable pages; installments and cumulative PO caps; notes, FX, GST, date and bank checks; supplier templates, MIME attachments and duplicates.')
+
+def validate_installments(record, data, procurement):
+    from decimal import Decimal
+    from backend.invoice_rules import evaluate
+    from backend.schemas import InvoiceExtraction
+    from backend.settings import Settings
+    mapping = dict(vendor_name='vendor', invoice_number='number', invoice_date='date',
+                   total_amount='total', po_reference='po', bank_details='bank_account')
+    refs = dict(vendors=procurement['vendors'], purchase_orders=procurement['purchase_orders'],
+                fx_rates=procurement['fx_rates'], policy=procurement['validation_policy'])
+    reservations = []
+    assert len(record['documents']) == 2
+    assert len({d['fields']['number'] for d in record['documents']}) == 2
+    with pymupdf.open(stream=data, filetype='pdf') as pdf:
+        for index, document in enumerate(record['documents']):
+            fields = document['fields']
+            assert document['page_range'] == [index+1, index+1]
+            text = pdf[index].get_text()
+            assert fields['number'] in text and fields['po'] in text
+            assert f"{fields['total']:,.2f}" in text
+            def field(value):
+                evidence = f'{value:,.2f}' if isinstance(value, (int, float)) else value
+                return dict(value=value, evidence=evidence, confidence='high', page=index+1) if value is not None else dict(value=None, evidence=None, confidence='low', page=None)
+            values = {name: field(fields.get(mapping.get(name, name)))
+                      for name in InvoiceExtraction.model_fields if name != 'line_items'}
+            values['vendor_name']['evidence'] = 'HARBOR IT SERVICES'
+            values['line_items'] = [{name: field(fields[key]) for name,key in
+                                     dict(description='description', quantity='quantity', unit_price='unit_price', amount='subtotal').items()}]
+            values['line_items'][0]['quantity']['evidence'] = str(fields['quantity'])
+            extraction = InvoiceExtraction.model_validate(values)
+            pages = [dict(page=index+1, text=text, route='digital', ocr_confidence=None)]
+            result = evaluate(extraction, pages, refs, [], reservations, Settings())
+            expected_codes = set(document['expected_review_codes'])
+            assert {f['code'] for f in result['findings']} == expected_codes, (record['id'], index, result['findings'])
+            assert result['outcome'] == ('review' if expected_codes else 'approved')
+            assert Decimal(result['checks']['po_match']['balance']) == Decimal(str(document['remaining_po_before']))
+            if index == 1 and record['id'] == 54:
+                # The second invoice fits alone: the failure must depend on the first reservation.
+                isolated = evaluate(extraction, pages, refs, [], [], Settings())
+                assert isolated['outcome'] == 'approved', isolated['findings']
+            if result['outcome'] == 'approved':
+                reservations.append(dict(po_number=fields['po'], amount=str(fields['total'])))
+
 
 if __name__=='__main__':
     validate()

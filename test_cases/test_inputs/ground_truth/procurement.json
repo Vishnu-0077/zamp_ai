@@ -506,6 +506,26 @@
       "tolerance_percent": 2,
       "currency": "INR",
       "issue_date": "2023-12-01"
+    },
+    {
+      "number": "PO-26053",
+      "vendor_id": "V002",
+      "amount": 1100,
+      "received_amount": 1100,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
+    },
+    {
+      "number": "PO-26054",
+      "vendor_id": "V002",
+      "amount": 1100,
+      "received_amount": 1100,
+      "previously_invoiced": 0,
+      "tolerance_percent": 2,
+      "currency": "USD",
+      "issue_date": "2026-10-01"
     }
   ],
   "fx_rates": [

@@ -1,4 +1,4 @@
-"""Generate 52 fictional AP emails: 40 routine and 12 edge cases."""
+"""Generate 54 fictional AP emails: 40 routine and 14 edge cases."""
 from pathlib import Path
 from email.message import EmailMessage
 from email.policy import SMTP
@@ -155,11 +155,14 @@ def generate():
         db.execute('INSERT INTO purchase_orders VALUES (?,?)', (po['number'], json.dumps(po)))
     from .attachment_failures import append_attachment_failures
     append_attachment_failures(INPUTS, db, truth)
+    from .installment_billing import append_installment_billing
+    procurement = dict(vendors=vendors, purchase_orders=pos, fx_rates=FX_RATES, validation_policy=POLICY)
+    append_installment_billing(INPUTS, db, truth, procurement)
     db.commit()
     db.close()
     (INPUTS / 'ground_truth' / 'expected.json').write_text(json.dumps(truth, indent=2) + '\n')
     (INPUTS / 'ground_truth' / 'procurement.json').write_text(json.dumps(dict(vendors=vendors, purchase_orders=pos, fx_rates=FX_RATES, validation_policy=POLICY), indent=2) + '\n')
-    print('Created test_inputs: 52 emails, 52 PDF attachments, 40 routine invoices, 12 edge cases.')
+    print('Created test_inputs: 54 emails, 54 PDF attachments, 40 routine invoices, 14 edge cases.')
 
 if __name__ == '__main__':
     generate()

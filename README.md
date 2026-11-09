@@ -9,7 +9,7 @@ web dashboard.
 - **Backend:** Python, FastAPI, SQLite, Tesseract OCR, LangChain with Gemini
   and Groq models.
 - **Dashboard:** React and TypeScript.
-- **Sample data:** a 52-email vendor inbox with realistic invoices and edge
+- **Sample data:** a 54-email vendor inbox with realistic invoices and edge
   cases. All companies and people in it are fictional.
 
 Nothing here pays an invoice or sends an email.
@@ -251,7 +251,7 @@ Before you share the link, note that:
   decision was made.
 
 **Inbox** (`/inbox`)
-- The 52 sample vendor emails, with search by sender or subject.
+- The 54 sample vendor emails, with search by sender or subject.
 - The message body, the attached invoice PDF and a download of the original
   `.eml`.
 - **Send to processing** creates a case. Sending the same PDF again reuses the
@@ -592,7 +592,7 @@ npm run gen:api     # after backend API changes: regenerate types, then npm run 
 ```
 
 **Live end-to-end audit.** `backend/audit_inbox.py` runs the real PDF, OCR and
-model pipeline over all 52 inbox emails in a separate database, then compares
+model pipeline over all 54 inbox emails in a separate database, then compares
 the outcomes with the expected labels. Labels are read only after processing.
 It uses provider quota, so export the keys and model chain first (as
 `backend/start.sh` does), then run:
@@ -649,7 +649,7 @@ backend/                 All backend code, configuration, dependencies and API d
   approved_export.py     Excel register of approved invoices
   purchase_orders.py     Purchase orders added from the dashboard (form and CSV)
   statistics.py          Totals, per-vendor and per-problem statistics
-  audit_inbox.py         Live end-to-end audit of the 52-email inbox against the labels
+  audit_inbox.py         Live end-to-end audit of the 54-email inbox against the labels
   schemas.py             Extraction and API schemas
   database.py            SQLite persistence and audit storage
   settings.py            Environment configuration and repository paths
@@ -686,4 +686,10 @@ created by `run.sh` and ignored by Git.
 
 ### Attachment failure fixtures
 
-Emails **51** and **52** extend the inbox to **52 emails**: email 51 contains a corrupt, unreadable PDF; email 52 contains an AES-256 password-protected PDF. Both expect human review, bringing the labels to **40 approvals, 2 duplicates and 10 human reviews**. Their `.eml` files remain valid MIME messages. The synthetic test password for email 52 is `DemoInvoice52!`; it is intentionally absent from the message. See [fixture details](test_cases/test_inputs/README.md). The historical 50-email audit result above predates these additions.
+Emails **51** and **52** test attachment access failures: email 51 contains a corrupt, unreadable PDF; email 52 contains an AES-256 password-protected PDF. Both expect human review, contributing two human-review labels. Their `.eml` files remain valid MIME messages. The synthetic test password for email 52 is `DemoInvoice52!`; it is intentionally absent from the message. See [fixture details](test_cases/test_inputs/README.md). The historical 50-email audit result above predates these additions.
+
+### Installment and cumulative billing fixtures
+
+The inbox now contains **54 emails** with expected email outcomes of **41 approvals, 2 duplicates and 11 human reviews**. Email **53** contains two invoices in a two-page PDF: **USD 440 + USD 660 = USD 1,100**, matching PO **PO-26053**. Both installments should pass. Email **54** contains **USD 660 + USD 550 = USD 1,210** against **PO-26054**, worth **USD 1,100**. Its first invoice passes; its second exceeds the remaining **USD 440** balance by **USD 110** and requires review. Each invoice bills a separate milestone, not a running total.
+
+Process each bundle in page order and reserve the first approved invoice before checking the second. Both POs are included in the fixture reference data, inbox database, and `backend/procurement.json`. The dataset validator uses the application’s deterministic rules to verify the sequential outcomes, including that email 54’s second invoice passes in isolation but fails after the first reservation. The historical live model audit above covers the original 50 emails only.
