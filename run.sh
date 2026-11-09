@@ -139,10 +139,27 @@ for _ in $(seq 1 90); do
 done
 curl -fsS "http://127.0.0.1:$BACKEND_PORT/health" >/dev/null 2>&1 || die "Backend did not become healthy within 90 s."
 
+if [[ "$SHARE" == true ]]; then
+  # The dev server sends ~100 unminified modules (react-dom alone is 3 MB),
+  # which takes minutes over a tunnel. Share the optimised build instead.
+  say "Building the dashboard for sharing"
+  (cd frontend && npm run build) 2>&1 | sed -u 's/^/[frontend] /'
+  [[ ${PIPESTATUS[0]} -eq 0 ]] || die "Dashboard build failed; see the [frontend] lines above."
+  frontend_cmd=preview
+else
+  frontend_cmd=dev
+fi
 say "Starting dashboard on http://localhost:$FRONTEND_PORT"
-(cd frontend && exec setsid npm run dev -- --port "$FRONTEND_PORT" --strictPort) \
+(cd frontend && exec setsid npm run "$frontend_cmd" -- --port "$FRONTEND_PORT" --strictPort) \
   > >(sed -u 's/^/[frontend] /') 2>&1 &
 pids+=($!)
+frontend_pid=$!
+# Wait until the dashboard answers so the tunnel never serves a 502.
+for _ in $(seq 1 30); do
+  curl -fsS -o /dev/null "http://localhost:$FRONTEND_PORT/" 2>/dev/null && break
+  kill -0 "$frontend_pid" 2>/dev/null || die "Dashboard exited during startup; see the [frontend] lines above."
+  sleep 1
+done
 
 public_url=""
 if [[ "$SHARE" == true ]]; then

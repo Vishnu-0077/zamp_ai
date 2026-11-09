@@ -117,7 +117,8 @@ The sample inputs in `test_cases/` are never modified.
 ./run.sh --share
 ```
 
-This does everything `./run.sh` does, then opens a free
+This does everything `./run.sh` does, except that it serves the optimised
+production build of the dashboard (built at startup), then opens a free
 [Cloudflare quick tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/)
 to the dashboard and prints a public link:
 
@@ -138,6 +139,8 @@ Before you share the link, note that:
 - **There is no login.** Anyone with the link can upload invoices and POs,
   approve cases and reset the data. Share it only with people you trust, and
   don't use real payment data.
+- Code changes don't reload by themselves in this mode. Restart
+  `./run.sh --share` to pick them up, or use plain `./run.sh` while developing.
 - Quick tunnels are meant for testing and demos: Cloudflare gives no uptime
   guarantee for them.
 
@@ -570,6 +573,7 @@ submissions.
 | An uploaded PO disappeared | A reset removes uploaded POs: **Refresh & start fresh** or a backend restart. Use `RESET_ON_START=false ./run.sh` to keep them across restarts |
 | `--share` says *The tunnel did not start* | Read `runtime/cloudflared.log`. Usually there's no internet access, or a firewall blocks outbound connections to Cloudflare |
 | The public link shows *Blocked request. This host is not allowed* | The dashboard was started before `vite.config.ts` allowed `*.trycloudflare.com`. Restart `./run.sh --share` |
+| The public link keeps loading and never shows the dashboard | The dashboard is running in development mode, which sends about 100 unminified files (React alone is 3 MB) and takes minutes over a tunnel. Start with `./run.sh --share`, which serves the optimised build instead. Don't point `cloudflared` at `npm run dev` yourself |
 | The public link stopped working | `./run.sh --share` was stopped, or your computer slept or went offline. Start it again and share the new link |
 | Cases stay *Queued* | The worker isn't running. Check `WORKER_ENABLED`, and that only one backend process uses the database |
 | Backend refuses to start a second worker | Only one process may own a processing database. Stop the other one |
