@@ -9,7 +9,7 @@ web dashboard.
 - **Backend:** Python, FastAPI, SQLite, Tesseract OCR, LangChain with Gemini
   and Groq models.
 - **Dashboard:** React and TypeScript.
-- **Sample data:** a 50-email vendor inbox with realistic invoices and edge
+- **Sample data:** a 52-email vendor inbox with realistic invoices and edge
   cases. All companies and people in it are fictional.
 
 Nothing here pays an invoice or sends an email.
@@ -256,7 +256,7 @@ Before you share the link, note that:
   decision was made.
 
 **Inbox** (`/inbox`)
-- The 50 sample vendor emails, with search by sender or subject.
+- The 52 sample vendor emails, with search by sender or subject.
 - The message body, the attached invoice PDF and a download of the original
   `.eml`.
 - **Send to processing** creates a case. Sending the same PDF again reuses the
@@ -596,7 +596,7 @@ npm run gen:api     # after backend API changes: regenerate types, then npm run 
 ```
 
 **Live end-to-end audit.** `backend/audit_inbox.py` runs the real PDF, OCR and
-model pipeline over all 50 inbox emails in a separate database, then compares
+model pipeline over all 52 inbox emails in a separate database, then compares
 the outcomes with the expected labels. Labels are read only after processing.
 It uses provider quota, so export the keys and model chain first (as
 `backend/start.sh` does), then run:
@@ -653,7 +653,7 @@ backend/                 All backend code, configuration, dependencies and API d
   approved_export.py     Excel register of approved invoices
   purchase_orders.py     Purchase orders added from the dashboard (form and CSV)
   statistics.py          Totals, per-vendor and per-problem statistics
-  audit_inbox.py         Live end-to-end audit of the 50-email inbox against the labels
+  audit_inbox.py         Live end-to-end audit of the 52-email inbox against the labels
   schemas.py             Extraction and API schemas
   database.py            SQLite persistence and audit storage
   settings.py            Environment configuration and repository paths
@@ -687,3 +687,7 @@ test_cases/              All tests, test-data tools and sample documents
 
 `zamp_venv/` is the local Python environment, not application source. It is
 created by `run.sh` and ignored by Git.
+
+### Attachment failure fixtures
+
+Emails **51** and **52** extend the inbox to **52 emails**: email 51 contains a corrupt, unreadable PDF; email 52 contains an AES-256 password-protected PDF. Both expect human review, bringing the labels to **40 approvals, 2 duplicates and 10 human reviews**. Their `.eml` files remain valid MIME messages. The synthetic test password for email 52 is `DemoInvoice52!`; it is intentionally absent from the message. See [fixture details](test_cases/test_inputs/README.md). The historical 50-email audit result above predates these additions.

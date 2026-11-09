@@ -1,8 +1,9 @@
 # How to use the test inputs
 
-The dataset contains **50 fictional vendor emails, 50 PDF attachments, 40 routine
-invoices and 10 edge-case email IDs**. Some attachments contain multiple pages or
-multiple billing documents: there are **52 documents across 53 pages** in total.
+The dataset contains **52 fictional vendor emails, 52 PDF attachments, 40 routine
+invoices and 12 edge-case email IDs**. Some attachments contain multiple pages or
+multiple billing documents: the original readable inputs contain **52 documents across 53 pages**.
+There is also one corrupt PDF and one encrypted single-page PDF.
 No real messages are sent and no real payments should be made.
 
 ## View the demo
@@ -25,8 +26,8 @@ field checks automatically, or make payment decisions.
 
 | Path | Contents |
 | --- | --- |
-| `emails/` | 50 `.eml` files with headers, message bodies and embedded PDF attachments |
-| `attachments/` | Separate copies of those same 50 PDFs |
+| `emails/` | 52 `.eml` files with headers, message bodies and embedded PDF attachments |
+| `attachments/` | Separate copies of those same 52 PDF attachments |
 | `inbox.sqlite3` | Inbox records, approved vendor master and purchase orders |
 | `ground_truth/expected.json` | Expected email/document outcomes, source fields, reasons, page ranges and case labels |
 | `ground_truth/procurement.json` | Trusted vendor/PO data, approved synthetic FX rates and demo validation policy |
@@ -62,10 +63,13 @@ Emails **41–50** retain the previous scenarios with added features:
 | 49 | Optional contact details missing; now a credit note linked to an earlier invoice | Adjustment review; optional details alone are acceptable |
 | 50 | Vague email, optional due date missing; now an old EUR invoice without an approved EUR-to-INR rate | Review age and FX; vague wording/optional due date alone are acceptable |
 
-Expected **email-level** totals: **40 approvals, 2 duplicates, 8 human reviews**.
+| 51 | Corrupt, unreadable PDF attachment in a valid email | Human review; request a replacement |
+| 52 | Password-protected PDF attachment in a valid email | Human review; request password through a trusted channel |
+
+Expected **email-level** totals: **40 approvals, 2 duplicates, 10 human reviews**.
 Ground-truth labels are test answers, not results produced by the demo app.
 A live run of `backend/audit_inbox.py` on 2026-11-08 (Gemini/Groq) reproduced
-all 50; model output varies, so rerun it rather than relying on that result.
+the original 50 (before emails 51–52 were added); model output varies, so rerun it rather than relying on that result.
 Email 47's second invoice has its own PO and is expected to pass these checks
 independently. Its third document is a positive-value debit note referring to
 invoice 002-2026-0002. Email 49 is a negative credit adjustment referring to
@@ -73,7 +77,9 @@ invoice 004-2026-0004. Neither note should enter a normal payable-invoice workfl
 
 ## Searchable PDFs and OCR-only scans
 
-**35 PDFs contain searchable text. 15 are image-only and require OCR:**
+**35 PDFs contain searchable text. 15 are image-only and require OCR.** Email 51 is corrupt and cannot be opened; email 52 requires a password before extraction. The synthetic test password is `DemoInvoice52!` and is not included in the email. The encrypted PDF uses AES-256 and has one page. Both failure cases have empty extracted fields and document lists; email 51 has an unknown (`null`) page count. Route attachment access failures to human review before field checks.
+
+The 15 OCR-only IDs are:
 
 `03, 05, 08, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38, 43, 47`
 

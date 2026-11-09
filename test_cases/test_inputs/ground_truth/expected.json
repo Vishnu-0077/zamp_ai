@@ -3528,5 +3528,49 @@
     "reason": "EUR invoice has no approved EUR-to-INR rate and is older than the fixture policy of 365 days.",
     "sha256": "15b08cd13b21233728f50de6555fda31df3f30b7cb6a615d687de30514c49cf9",
     "duplicate_of": null
+  },
+  {
+    "id": 51,
+    "scenario": "corrupted_attachment",
+    "is_edge_case": true,
+    "vendor_id": "V001",
+    "fields": {},
+    "missing_fields": [],
+    "added_features": [
+      "corrupted_attachment"
+    ],
+    "documents": [],
+    "page_count": null,
+    "email_style": "exception_message",
+    "pdf_kind": "corrupted",
+    "requires_ocr": false,
+    "template_id": null,
+    "scan_variation": null,
+    "expected": "human_review",
+    "reason": "PDF is corrupt and cannot be opened; request a replacement and route to human review.",
+    "sha256": "424504edad99c40107b503132590edf68ea7a6493e6c46a416b648e6094731db",
+    "duplicate_of": null
+  },
+  {
+    "id": 52,
+    "scenario": "password_protected_attachment",
+    "is_edge_case": true,
+    "vendor_id": "V002",
+    "fields": {},
+    "missing_fields": [],
+    "added_features": [
+      "password_protected_attachment"
+    ],
+    "documents": [],
+    "page_count": 1,
+    "email_style": "exception_message",
+    "pdf_kind": "password_protected",
+    "requires_ocr": false,
+    "template_id": null,
+    "scan_variation": null,
+    "expected": "human_review",
+    "reason": "PDF requires an unavailable password; request it through a trusted channel and route to human review.",
+    "sha256": "3be990c0d74b04f4e4af18f23b0964bdb4fcc5409e93150339ad1a88b4a91468",
+    "duplicate_of": null
   }
 ]

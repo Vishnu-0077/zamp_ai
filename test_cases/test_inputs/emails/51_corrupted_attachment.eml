@@ -1,0 +1,29 @@
+From: billing@northstar.example
+To: Accounts Payable <accounts-payable@buyer.example>
+Subject: Invoice attached - November submission 51
+Date: Tue, 03 Nov 2026 10:01:00 +0000
+Message-ID: <ar.202611.0051@northstar.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============5581497879869631104=="
+
+--===============5581497879869631104==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello AP team,
+
+Please find our invoice attached for processing.
+
+Thank you,
+Accounts receivable
+
+--===============5581497879869631104==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="Invoice_51.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjcKJSBEYW1hZ2VkIHRyYW5zZmVyOiBvYmplY3Qgc3RyZWFtIGFuZCBjcm9zcy1yZWZl
+cmVuY2UgdGFibGUgbWlzc2luZy4K
+
+--===============5581497879869631104==--

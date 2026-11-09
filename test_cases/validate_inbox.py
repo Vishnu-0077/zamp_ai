@@ -18,11 +18,11 @@ def validate():
     with sqlite3.connect(base/'inbox.sqlite3') as db:
         db.row_factory=sqlite3.Row
         rows=list(db.execute('SELECT * FROM emails ORDER BY id'))
-    assert len(rows)==len(truth)==50
-    assert len(list((base/'emails').glob('*.eml')))==50
-    assert len(list((base/'attachments').glob('*.pdf')))==50
-    assert sum(t['is_edge_case'] for t in truth)==10
-    assert Counter(t['expected'] for t in truth)=={'approve':40,'duplicate':2,'human_review':8}
+    assert len(rows)==len(truth)==52
+    assert len(list((base/'emails').glob('*.eml')))==52
+    assert len(list((base/'attachments').glob('*.pdf')))==52
+    assert sum(t['is_edge_case'] for t in truth)==12
+    assert Counter(t['expected'] for t in truth)=={'approve':40,'duplicate':2,'human_review':10}
     assert {t['id'] for t in truth if t['requires_ocr']}==SCAN_IDS
     templates=defaultdict(set)
     procurement=json.loads((base/'ground_truth/procurement.json').read_text())
@@ -38,6 +38,26 @@ def validate():
         assert len(attachments)==1 and attachments[0].get_payload(decode=True)==data
         body=msg.get_body(preferencelist=('plain',)).get_content()
         assert body.strip()
+        if t['id'] in (51, 52):
+            assert t['fields'] == {} and t['documents'] == []
+            if t['id'] == 51:
+                assert t['pdf_kind'] == 'corrupted' and t['page_count'] is None
+                try:
+                    with pymupdf.open(stream=data, filetype='pdf') as damaged:
+                        assert damaged.page_count == 0, 'Corrupt PDF unexpectedly has pages'
+                except pymupdf.FileDataError:
+                    pass
+            else:
+                from .attachment_failures import TEST_PASSWORD
+                assert t['pdf_kind'] == 'password_protected'
+                assert TEST_PASSWORD not in body
+                with pymupdf.open(stream=data, filetype='pdf') as locked:
+                    assert locked.needs_pass
+                    assert not locked.authenticate('incorrect-password')
+                    assert locked.authenticate(TEST_PASSWORD)
+                    assert locked.page_count == t['page_count'] == 1
+                    assert 'HI-2026-0052' in locked[0].get_text()
+            continue
         with pymupdf.open(stream=data,filetype='pdf') as pdf:
             assert len(pdf)==t['page_count']
             extracted='\n'.join(page.get_text() for page in pdf)
@@ -82,7 +102,7 @@ def validate():
                 fields=document['fields']
                 assert not check_document(fields,vendors.get(t['vendor_id']),pos.get(fields['po']),procurement['fx_rates'],procurement['validation_policy'])
     assert sum(len(t['documents']) for t in truth)==52
-    assert sum(t['page_count'] for t in truth)==53
+    assert sum(t['page_count'] for t in truth[:50])==53
     required={44:{'negative_invoice','unapproved_vendor'},45:{'bank_account_changed'},
               46:{'future_invoice_date','missing_number'},47:{'missing_total'},
               48:{'missing_currency','gst_split_total','gst_component_amount','invoice_before_po'},
@@ -108,7 +128,7 @@ def validate():
     assert truth[41]['sha256']!=truth[1]['sha256']
     assert truth[41]['fields']==truth[1]['fields']
     assert truth[42]['fields']['number']==truth[2]['fields']['number'].replace('-','')
-    print('PASS: 50 emails, 40 routine + 10 edge cases; 35 searchable PDFs + 15 image-only PDFs; 52 documents across 53 pages; notes, FX, GST, date and bank checks; supplier templates, MIME attachments and duplicates.')
+    print('PASS: 52 emails, 40 routine + 12 edge cases; 35 searchable PDFs + 15 image-only PDFs + 1 corrupt + 1 encrypted; 52 readable documents across 53 readable pages; notes, FX, GST, date and bank checks; supplier templates, MIME attachments and duplicates.')
 
 if __name__=='__main__':
     validate()

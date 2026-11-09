@@ -1,4 +1,4 @@
-# Edge cases: 10 of 50 emails
+# Edge cases: 12 of 52 emails
 
 Emails 1–40 remain routine, valid invoices. The original cases in emails 41–50
 are retained, with realistic features layered onto selected cases.
@@ -16,7 +16,10 @@ are retained, with realistic features layered onto selected cases.
 | 49 | Optional contact name, address and phone missing | Credit note referencing invoice 004-2026-0004 | Human review through adjustment workflow; optional omissions alone do not block |
 | 50 | Vague message and optional due date omitted | Very old EUR invoice; INR PO with no approved EUR-to-INR rate | Human review; vague wording/optional due date alone do not block |
 
-Expected email-level totals are **40 approvals, 2 duplicates and 8 human reviews**.
+| 51 | Corrupt PDF attachment | Unreadable PDF body with no recoverable pages; email MIME remains valid | Human review; request replacement |
+| 52 | Password-protected PDF attachment | AES-256 encryption; password absent from message | Human review; request password through a trusted channel |
+
+Expected email-level totals are **40 approvals, 2 duplicates and 10 human reviews**.
 Emails 49 and 50 now require review because of their added features. At document
 level, email 47's complete second invoice can pass the supplied field checks;
 review of its other documents must not be treated as a rejection of that invoice.
@@ -27,8 +30,7 @@ Positive controls among the ordinary emails:
 - **13:** INR invoice with correct IGST components for the supplied state pair.
 - **18:** INR invoice with correct CGST/SGST amounts and a reconciled total.
 
-The dataset still contains **35 searchable PDFs and 15 image-only PDFs**, with
-**52 billing documents across 53 pages**. Scan IDs remain unchanged. Supplier
+The dataset contains **52 emails and 52 attachments**: **35 searchable PDFs, 15 image-only PDFs, one corrupt PDF and one encrypted PDF**. The original readable inputs contain **52 billing documents across 53 pages**; the encrypted PDF has one additional page, and the corrupt file has no readable page count. Scan IDs remain unchanged. Supplier
 stationery and duplicate relationships are preserved.
 
 Evaluate dates against the fixed fixture date **2026-11-02**. The old-invoice
@@ -37,3 +39,5 @@ business policies, not claims about statutory deadlines. FX rates are synthetic
 reference values with explicit currency direction and invoice-date matching.
 
 See [fixture guide](test_inputs/README.md) for running the demo and using the reference data.
+
+Email 52’s synthetic test password is `DemoInvoice52!`. Validation verifies rejection of a wrong password and successful opening with this credential. Unreadable inputs have empty extracted fields and document lists; do not interpret these as missing business fields or attempt payment approval. Full generation includes both cases; `python -m test_cases.attachment_failures` appends them once to an existing 50-email fixture set.
