@@ -214,26 +214,18 @@ Before you share the link, note that:
   processing.
 
 **Statistics** (`/statistics`)
-- **Overall:** total cases, approved (automatically and manually), needs
-  review, duplicates, approval rate, straight-through rate (approved with no
-  person involved), invoices with problems, approved value and value held for
-  review, plus a bar showing the outcome of every case.
+- **Overall:** total cases, invoices with problems, approved value and value
+  held for review, plus one bar with every outcome (approved automatically or
+  manually, needs review, duplicate) and its count and share.
 - **Highlights:** the most problematic vendor (most invoices with problems,
-  then the highest share of its invoices) with its most common problem, and the
-  most common problem overall with the vendors it came from. Ties show every
-  tied vendor or problem.
-- **By vendor:** a chart of invoices with problems per vendor; a table with
-  each vendor's invoices, approved, needs review, duplicates, problem rate,
-  most common problem and approved value; and each vendor's problems with
-  counts, its most common one highlighted.
-- **By problem:** a chart of cases affected per problem; a table with each
-  problem in plain language, its risk, cases, share of all cases, the vendors
-  affected and the fields involved.
-- Each problem counts once per case. OCR and model failures are listed
-  separately as processing problems and never count against a vendor.
-  Vendors not in the vendor master appear by their printed name.
-- The page refreshes every 10 seconds and covers the cases currently in the
-  system, so a reset starts it over. API: `GET /api/v1/statistics`.
+  then the highest share) and the most common problem. Ties show all of them.
+- **Vendors:** one table with each vendor's invoices, approved, needs review,
+  duplicates and every problem it had (its most common one highlighted).
+- **Problems:** one table with each problem in plain language, how many cases
+  it affected and which vendors.
+- Each problem counts once per case. OCR and model failures are shown in a
+  separate note and never count against a vendor. The page refreshes every
+  10 seconds and is cleared by a reset. API: `GET /api/v1/statistics`.
 
 **Case detail** (`/cases/<id>`)
 - **Header:** vendor and invoice number with the status, then the source

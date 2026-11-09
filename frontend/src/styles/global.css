@@ -192,14 +192,7 @@ label.field-missing input, label.field-missing textarea { border-color: var(--da
   .content { padding: var(--space-4); }
 }
 
-/* Statistics charts: thin bars from one baseline, 4px rounded data end, value at the tip. */
-.hbars { display: grid; grid-template-columns: minmax(120px, 34%) 1fr; gap: 6px var(--space-3); align-items: center; }
-.hbars .hbar-label { font-size: 13px; overflow-wrap: anywhere; }
-.hbars .hbar-track { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 4px 0; }
-.hbars .hbar { height: 14px; min-width: 2px; background: var(--brand); border-radius: 0 4px 4px 0; }
-.hbars .hbar-value { font-size: 12.5px; font-weight: 600; white-space: nowrap; color: var(--text); }
-.hbars .hbar-row:hover .hbar { filter: brightness(1.15); }
-.hbars .hbar-row { display: contents; }
+/* Statistics: segmented outcome bar with a legend. */
 .segbar { display: flex; gap: 2px; height: 28px; border-radius: 4px; overflow: hidden; background: var(--surface); }
 .segbar > span { min-width: 3px; }
 .legend { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); margin-top: var(--space-3); font-size: 13px; }
@@ -208,4 +201,3 @@ label.field-missing input, label.field-missing textarea { border-color: var(--da
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { display: inline-flex; gap: 6px; align-items: center; font-size: 12.5px; padding: 3px 9px; border-radius: 999px; background: var(--surface-muted); border: 1px solid var(--border); }
 .chip.top { background: var(--warn-soft); border-color: transparent; color: var(--text); font-weight: 600; }
-@media (max-width: 640px) { .hbars { grid-template-columns: 1fr; gap: 2px; } .hbars .hbar-track { margin-bottom: 6px; } }

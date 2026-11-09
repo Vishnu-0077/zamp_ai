@@ -63,11 +63,11 @@ describe('Statistics', () => {
     expect(within(common).getByText("Bank account doesn't match our records")).toBeTruthy();
     expect(within(common).getByText("Totals don't add up")).toBeTruthy();
 
-    const table = screen.getByRole('heading', { name: 'Vendor statistics' }).closest('section')!;
+    const table = screen.getByRole('heading', { name: 'Vendors' }).closest('section')!;
     expect(within(table).getByText('could not be read')).toBeTruthy();
     expect(within(table).getByText('1 (1 manual)')).toBeTruthy();
 
-    expect(screen.getByRole('heading', { name: 'Processing problems (system, not vendor)' })).toBeTruthy();
+    expect(screen.getByText(/could not be read automatically \(PROCESSING_ERROR 1\)/)).toBeTruthy();
     expect(screen.getByRole('img', { name: /Approved automatically 1, Approved manually 1, Needs review 3/ })).toBeTruthy();
   });
 

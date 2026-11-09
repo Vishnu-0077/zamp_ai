@@ -1,33 +1,3 @@
-import type { ReactNode } from 'react';
-
-export interface BarDatum {
-  key: string;
-  label: ReactNode;
-  value: number;
-  /** Text at the bar tip, e.g. "3 (60%)". Defaults to the value. */
-  display?: string;
-  /** Hover text with the full detail. */
-  title?: string;
-}
-
-/** Ranked horizontal bars, one series (so no legend: the card title names it). */
-export function HBars({ data, label }: { data: BarDatum[]; label: string }) {
-  const max = Math.max(1, ...data.map((d) => d.value));
-  return (
-    <div className="hbars" role="list" aria-label={label}>
-      {data.map((d) => (
-        <div className="hbar-row" role="listitem" key={d.key} title={d.title}>
-          <div className="hbar-label">{d.label}</div>
-          <div className="hbar-track">
-            <div className="hbar" style={{ width: `${(d.value / max) * 85}%` }} />
-            <span className="hbar-value">{d.display ?? d.value}</span>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export interface Segment {
   key: string;
   label: string;

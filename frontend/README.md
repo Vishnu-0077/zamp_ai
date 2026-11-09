@@ -6,7 +6,7 @@ React + TypeScript single-page app for the invoice processing backend in
 | Screen | Route | Backend endpoints |
 | --- | --- | --- |
 | Dashboard, start fresh, Excel download | `/` | `/api/v1/stats`, `/api/v1/cases`, `/health`, `/api/v1/reset`, `/api/v1/exports/approved-invoices.xlsx` |
-| Statistics: totals, outcome bar, most problematic vendor, most common problem, per-vendor and per-problem charts and tables | `/statistics` | `/api/v1/statistics` |
+| Statistics: totals, outcome bar, most problematic vendor, most common problem, vendor and problem tables | `/statistics` | `/api/v1/statistics` |
 | Cases (filter, paginate, live refresh, Excel download) | `/cases` | `/api/v1/cases`, `/api/v1/exports/approved-invoices.xlsx` |
 | Case **Summary**: key facts, plain-language reasons, invoice vs PO table, line items, verified fields | `/cases/:id` | `/api/v1/cases/{id}` |
 | Case **Compare & resolve**: invoice PDF beside the PO, correct & re-check, approve manually, retry | `/cases/:id?tab=review` | `/document`, `/corrections`, `/approve`, `/retry` |
