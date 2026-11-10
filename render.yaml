@@ -1,0 +1,33 @@
+# Render Blueprint: New → Blueprint → pick this repo. See deploy/render/README.md.
+services:
+  - type: web
+    name: zamp-ai
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./deploy/render/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # Shared between Caddy and the API inside the container; never sent to the browser.
+      - key: BACKEND_API_KEY
+        generateValue: true
+      # Asked for when the Blueprint is created. Paste your own keys.
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: EXTRACTION_MODEL
+        value: gemini:gemini-3.5-flash
+      - key: EXTRACTION_FALLBACK_MODELS
+        value: groq:openai/gpt-oss-120b,gemini:gemini-3-flash-preview,gemini:gemini-3.5-flash-lite,groq:qwen/qwen3.8-27b
+      - key: EXTRACTION_PROVIDER_RETRIES
+        value: "3"
+      - key: EXTRACTION_RETRY_BACKOFF_SECONDS
+        value: "5"
+      # Keep cases across worker restarts (the free plan's disk is still temporary).
+      - key: RESET_ON_START
+        value: "false"
+      - key: WORKER_ENABLED
+        value: "true"

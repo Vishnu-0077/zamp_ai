@@ -1,0 +1,29 @@
+{
+	admin off
+	auto_https off
+	persist_config off
+}
+
+:{$PORT:10000} {
+	encode gzip
+
+	# Same paths the Vite dev proxy forwards (frontend/vite.config.ts), plus the API docs.
+	@api path /api/* /emails /emails/* /vendors /vendors/* /purchase-orders /purchase-orders/* /health /docs /docs/* /redoc /openapi.json
+	handle @api {
+		reverse_proxy 127.0.0.1:8000 {
+			header_up X-API-Key {$BACKEND_API_KEY}
+			# Extraction can take a while on the free instance.
+			transport http {
+				read_timeout 5m
+				write_timeout 5m
+			}
+		}
+	}
+
+	# Dashboard (single-page app): unknown paths fall back to index.html.
+	handle {
+		root * /app/frontend/dist
+		try_files {path} /index.html
+		file_server
+	}
+}
