@@ -1,26 +1,26 @@
-/* Design tokens. Change the look of the whole app here; components only use these variables. */
+/* Design tokens (single light theme: #f8f9fa background, #0f52ba brand, #dc2626 danger). Change the look of the whole app here; components only use these variables. */
 :root {
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
-  --bg: #f4f6fa;
+  --bg: #f8f9fa;
   --surface: #ffffff;
-  --surface-muted: #f8fafc;
-  --border: #dce3eb;
+  --surface-muted: #f8f9fa;
+  --border: #dee2e6;
   --text: #192b40;
   --text-muted: #5d6f83;
-  --brand: #147c73;
+  --brand: #0f52ba;
   --brand-contrast: #ffffff;
-  --brand-soft: #e3f3f1;
-  --nav-bg: #152d40;
-  --nav-text: #bcd0df;
+  --brand-soft: #e7eef8;
+  --nav-bg: #0f52ba;
+  --nav-text: #dbe5f5;
   --nav-active: #ffffff;
   --focus: #e7ac44;
 
   --ok: #187a4a;      --ok-soft: #e2f4ea;
   --warn: #9a5b00;    --warn-soft: #fdf1dc;
-  --danger: #b42318;  --danger-soft: #fde7e5;
-  --info: #1d5fa8;    --info-soft: #e3eefa;
+  --danger: #dc2626;  --danger-soft: #fdecec;
+  --info: #0f52ba;    --info-soft: #e7eef8;
   --neutral: #5d6f83; --neutral-soft: #edf1f5;
 
   --radius: 10px;
@@ -28,25 +28,4 @@
   --shadow: 0 1px 2px rgba(16, 32, 48, 0.06);
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 32px;
   color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --bg: #0f1720; --surface: #16212c; --surface-muted: #1b2836; --border: #2a3a4a;
-    --text: #e3eaf1; --text-muted: #94a6b8; --brand: #3fb3a6; --brand-contrast: #062521; --brand-soft: #173a37;
-    --nav-bg: #0b131b; --nav-text: #94a6b8;
-    --ok: #5cc98c; --ok-soft: #173326; --warn: #e8b35a; --warn-soft: #3a2c14;
-    --danger: #f27a6f; --danger-soft: #3d1c1a; --info: #7cb2ef; --info-soft: #172a40;
-    --neutral: #94a6b8; --neutral-soft: #223040;
-    color-scheme: dark;
-  }
-}
-:root[data-theme='dark'] {
-  --bg: #0f1720; --surface: #16212c; --surface-muted: #1b2836; --border: #2a3a4a;
-  --text: #e3eaf1; --text-muted: #94a6b8; --brand: #3fb3a6; --brand-contrast: #062521; --brand-soft: #173a37;
-  --nav-bg: #0b131b; --nav-text: #94a6b8;
-  --ok: #5cc98c; --ok-soft: #173326; --warn: #e8b35a; --warn-soft: #3a2c14;
-  --danger: #f27a6f; --danger-soft: #3d1c1a; --info: #7cb2ef; --info-soft: #172a40;
-  --neutral: #94a6b8; --neutral-soft: #223040;
-  color-scheme: dark;
 }

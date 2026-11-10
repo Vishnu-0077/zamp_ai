@@ -1,14 +1,11 @@
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { systemApi } from '@/api/endpoints';
 import { qk } from '@/api/queryKeys';
 import { API_BASE } from '@/api/client';
 import { Badge, Card, ErrorMessage, KeyValue, PageHeader } from '@/components';
 import { ReviewerNameField } from '@/features/cases/components/ReviewerNameField';
-import { applyTheme, currentTheme, type Theme } from '@/lib/theme';
 
 export default function SettingsPage() {
-  const [theme, setTheme] = useState(currentTheme);
   const health = useQuery({ queryKey: qk.health, queryFn: systemApi.health });
   const yes = (b?: boolean) => <Badge tone={b ? 'ok' : 'danger'}>{b ? 'yes' : 'no'}</Badge>;
 
@@ -21,16 +18,6 @@ export default function SettingsPage() {
           audit trail and the approved-invoices Excel, and is remembered in this browser.
         </p>
         <ReviewerNameField />
-      </Card>
-      <Card title="Appearance">
-        <label className="field" style={{ maxWidth: 240 }}>
-          Theme
-          <select value={theme} onChange={(e) => { setTheme(e.target.value as Theme); applyTheme(e.target.value); }}>
-            <option value="system">System</option>
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-          </select>
-        </label>
       </Card>
       <Card title="Backend">
         {health.error && <ErrorMessage error={health.error} title="Backend unreachable" />}
