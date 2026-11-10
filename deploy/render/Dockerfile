@@ -22,7 +22,13 @@ RUN apt-get update \
 WORKDIR /app
 COPY backend/requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
-COPY --from=caddy /usr/bin/caddy /usr/local/bin/caddy
+COPY --from=caddy /usr/bin/caddy /usr/local/bin/caddy.orig
+# The official binary carries the cap_net_bind_service file capability, which Render
+# refuses to exec for a non-root user ("Operation not permitted"). A plain cp drops it;
+# Caddy only binds $PORT (10000), so the capability is not needed.
+RUN cp /usr/local/bin/caddy.orig /usr/local/bin/caddy \
+ && rm /usr/local/bin/caddy.orig \
+ && chmod 755 /usr/local/bin/caddy
 COPY . .
 COPY --from=web /web/dist /app/frontend/dist
 RUN chmod +x deploy/render/start.sh \
