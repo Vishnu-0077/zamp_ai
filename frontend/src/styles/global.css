@@ -47,6 +47,24 @@ code, pre, .mono { font-family: var(--font-mono); font-size: 12.5px; }
 .tile .label { color: var(--text-muted); font-size: 12px; font-weight: 500; text-transform: capitalize; }
 .tile .value { font-size: 28px; font-weight: 700; margin-top: 4px; }
 
+/* Dashboard status tiles: icon, accent colour and share of all cases per status. */
+.status-tile { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 2px; padding-top: calc(var(--space-4) + 3px); transition: border-color .15s, box-shadow .15s, transform .15s; }
+.status-tile::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--tone); }
+.status-tile:hover { border-color: var(--tone); box-shadow: 0 6px 18px rgba(15, 82, 186, 0.10); transform: translateY(-1px); }
+.status-tile-head { display: flex; align-items: center; gap: var(--space-2); }
+.status-icon { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: var(--tone); background: var(--tone-soft); flex: none; }
+.status-tile .label { font-size: 13px; font-weight: 600; color: var(--text); }
+.status-tile .value { color: var(--tone); font-variant-numeric: tabular-nums; }
+.status-share { display: flex; align-items: center; gap: var(--space-2); margin-top: auto; padding-top: var(--space-3); font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.status-share-track { flex: 1; height: 6px; border-radius: 999px; background: var(--neutral-soft); overflow: hidden; }
+.status-share-track span { display: block; height: 100%; border-radius: inherit; background: var(--tone); transition: width .3s; }
+.outcome-strip { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: var(--space-3) 0 var(--space-4); }
+.outcome-strip-title { font-weight: 600; margin-right: var(--space-1); }
+.outcome-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; background: var(--tone-soft); color: var(--text); font-size: 13px; border: 1px solid transparent; }
+.outcome-chip strong { color: var(--tone); }
+.outcome-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--tone); }
+.outcome-strip .small { flex-basis: 100%; }
+
 /* Buttons & forms */
 .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-weight: 600; cursor: pointer; }
 .btn:hover:not(:disabled) { border-color: var(--brand); text-decoration: none; }
