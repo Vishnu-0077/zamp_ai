@@ -20,7 +20,7 @@ code, pre, .mono { font-family: var(--font-mono); font-size: 12.5px; }
 .nav a { white-space: nowrap; color: var(--nav-text); font-weight: 500; padding: 9px var(--space-3); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center; }
 .nav a:hover { background: rgba(255,255,255,.06); text-decoration: none; }
 .nav a.active { background: rgba(255,255,255,.12); color: var(--nav-active); }
-.nav .count { font-size: 11px; background: var(--danger); color: #fff; border-radius: 10px; padding: 0 7px; }
+.nav .count { font-size: 11px; background: var(--danger); color: var(--brand-contrast); border-radius: 10px; padding: 0 7px; }
 .sidebar-foot { margin-top: auto; font-size: 12px; padding: 0 var(--space-3); display: flex; flex-direction: column; gap: 4px; }
 .content { padding: var(--space-5) var(--space-6); min-width: 0; max-width: 1400px; width: 100%; }
 .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-5); flex-wrap: wrap; }

@@ -4,17 +4,17 @@
   --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
   --bg: #f8f9fa;
-  --surface: #ffffff;
+  --surface: #fffefa;
   --surface-muted: #f8f9fa;
   --border: #dee2e6;
   --text: #192b40;
   --text-muted: #5d6f83;
   --brand: #0f52ba;
-  --brand-contrast: #ffffff;
+  --brand-contrast: #fffefa;
   --brand-soft: #e7eef8;
   --nav-bg: #0f52ba;
   --nav-text: #dbe5f5;
-  --nav-active: #ffffff;
+  --nav-active: #fffefa;
   --focus: #e7ac44;
 
   --ok: #187a4a;      --ok-soft: #e2f4ea;
