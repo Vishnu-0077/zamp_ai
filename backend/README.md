@@ -142,7 +142,7 @@ legacy inbox routes use application-key authentication when enabled.
    are not changed; the decision records `manual_override: true` and the overridden
    codes, the PO value is reserved when a PO is known, and a `manual_approval` audit
    event stores the note and reviewer. Refused (409) while nothing usable was
-   extracted (processing errors, bundled documents), when an open code is not
+   extracted (processing errors), when an open code is not
    acknowledged, or when the version is stale.
 
 5. Read audit events with `GET /api/v1/cases/{id}/audit?after=0&limit=100`;
@@ -278,9 +278,13 @@ use FastAPI's `detail` format. PDF download remains behind application auth.
 - Duplicate checks, rule evaluation and reservations commit in a single
   `BEGIN IMMEDIATE` transaction. Concurrent invoices cannot independently
   reserve the same remaining balance. Explanations are deterministic templates.
-- Bundled invoices/credit notes are identified by the extraction batch schema
-  and held with `MULTIPLE_DOCUMENTS`. Split the original PDF and ingest each
-  document independently; a reviewer cannot attest a bundle into one invoice.
+- A PDF holding several invoices/credit/debit notes is split automatically: the
+  extraction batch returns one document each, the original case keeps the first
+  (in page order) and every further document becomes its own case with the same
+  source PDF, labelled `<file> · document n of N`. They are validated in page
+  order, so each sees the PO value reserved by the ones before it (milestone
+  billing that overruns the PO holds only the overrunning invoice). Audit events
+  `bundle_split` and `split_from_bundle` link the cases.
 - Dependency retry is distinct from correction. After repairing OCR/provider
   configuration, `POST /api/v1/cases/{id}/retry` accepts `expected_version`, a
   `reviewer` name and a `note`. Only processing dependency failures qualify.

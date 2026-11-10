@@ -17,6 +17,13 @@ class Conflict(Exception): pass
 class NotFound(Exception): pass
 
 
+def first_page(document):
+    """Lowest page any extracted field cites, used to keep bundled documents in page order."""
+    pages = [f.page for f in document.__dict__.values() if hasattr(f, 'page') and f.page]
+    pages += [getattr(line, k).page for line in document.line_items for k in line.__class__.model_fields if getattr(line, k).page]
+    return min(pages, default=10**6)
+
+
 def serialized(method):
     @wraps(method)
     def wrapped(self, *args, **kwargs):
@@ -114,15 +121,58 @@ class Service:
                 # Record the model that actually produced the extraction (may be a fallback).
                 used = getattr(self.extractor, 'last_model', None) or self.settings.model
                 c.execute('UPDATE jobs SET extraction=?, model=? WHERE id=?', (batch.model_dump_json(), used, job_id))
-            if len(batch.documents) != 1:
-                raise ProcessingError('MULTIPLE_DOCUMENTS', 'Bundled documents require separation and individual ingestion before approval.')
-            self.validate(job_id, batch.documents[0])
+            documents = sorted(batch.documents, key=first_page)
+            if len(documents) > 1:
+                children = self.split_bundle(job_id, documents)
+            self.validate(job_id, documents[0])
+            if len(documents) > 1:
+                # In page order, after the first: each sees the PO value reserved by the ones before it.
+                for child_id, document in children:
+                    try:
+                        self.validate(child_id, document)
+                    except Exception:
+                        log.exception('Validation failed for bundled case %s', child_id)
+                        self.fail(child_id, 'PROCESSING_ERROR', 'Processing dependency failed. Inspect server logs, then retry after repair.')
         except ProcessingError as exc:
             self.fail(job_id, exc.code, exc.message)
         except Exception:
             log.exception('Processing failed for case %s', job_id)
             self.fail(job_id, 'PROCESSING_ERROR', 'Processing dependency failed. Inspect server logs, then retry after repair.')
         return True
+
+    def split_bundle(self, job_id, documents):
+        """One PDF holding several invoices/notes becomes one case per document.
+
+        The original case keeps the first document; every further document gets its own
+        case with the same source PDF and parsed pages (field citations use the original
+        page numbers), so each is validated, reviewed and approved on its own.
+        Returns [(case id, document)] for the documents after the first.
+        """
+        total = len(documents)
+        children = []
+        with self.store.connect() as c:
+            c.execute('BEGIN IMMEDIATE')
+            row = c.execute('SELECT * FROM jobs WHERE id=?', (job_id,)).fetchone()
+            base = row['filename'].split(' · ')[0]
+            c.execute('UPDATE jobs SET filename=? WHERE id=?', (f'{base} · document 1 of {total}', job_id))
+            for number, document in enumerate(documents[1:], 2):
+                digest = hashlib.sha256(f'{row["hash"]}:document:{number}'.encode()).hexdigest()
+                existing = c.execute('SELECT id, status FROM jobs WHERE hash=?', (digest,)).fetchone()
+                if existing:
+                    # Re-processing the original after a retry: keep the case already created.
+                    if existing['status'] in ('queued', 'processing'):
+                        children.append((existing['id'], document))
+                    continue
+                child_id, timestamp = str(uuid.uuid4()), now()
+                c.execute('''INSERT INTO jobs(id,email_id,hash,sender,filename,content,status,created_at,updated_at,pages,extraction,model)
+                           VALUES(?,?,?,?,?,?,?,?,?,?,?,?)''',
+                          (child_id, row['email_id'], digest, row['sender'], f'{base} · document {number} of {total}',
+                           row['content'], 'processing', timestamp, timestamp, row['pages'], document.model_dump_json(), row['model']))
+                self.store.audit(c, child_id, 'split_from_bundle', {'source_case': job_id, 'document': number, 'of': total,
+                                 'source_sha256': row['hash'], 'email_id': row['email_id'], 'filename': base})
+                children.append((child_id, document))
+            self.store.audit(c, job_id, 'bundle_split', {'documents': total, 'cases': [job_id] + [i for i, _ in children]})
+        return children
 
     def fail(self, job_id, code, message):
         findings = [{'code': code, 'message': message, 'stage': 'processing', 'field': None}]

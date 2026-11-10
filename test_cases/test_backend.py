@@ -253,14 +253,65 @@ class BackendTests(unittest.TestCase):
         self.assertEqual(result['status'], 'review')
         self.assertIn('EXTRACTION_NOT_CONFIGURED', self.codes(result))
 
-    def test_bundled_documents_never_approved(self):
+    def bundle(self, po_amount):
+        """Two invoices for PO-1 on pages 1 and 2 of one PDF; the model lists page 2 first."""
+        refs = dict(self.refs, purchase_orders=[dict(self.refs['purchase_orders'][0], amount=po_amount, received_amount=po_amount)])
+        (Path(self.temp.name) / 'refs.json').write_text(json.dumps(refs))
+        first, second = extraction('INV-001'), extraction('INV-002')
+        data = second.model_dump(mode='json')
+        # A later milestone: same amount, but dated weeks apart, so it is not a possible duplicate.
+        for name, day in (('invoice_date', '2026-10-21'), ('due_date', '2026-11-20')):
+            data[name].update(value=day, evidence=day)
+        for name, value in data.items():
+            if isinstance(value, dict) and value.get('page'): value['page'] = 2
+        for line in data['line_items']:
+            for value in line.values():
+                if value.get('page'): value['page'] = 2
+        second = InvoiceExtraction.model_validate(data)
         class Bundled:
-            def extract(inner, pages): return ExtractionBatch(documents=[self.e,self.e])
+            def extract(inner, pages): return ExtractionBatch(documents=[second, first])
         self.service.extractor = Bundled()
-        job_id = self.ingest()
+        with fitz.open() as doc:
+            for e in (first, second):
+                doc.new_page().insert_text((40, 40), text_for(e))
+            content = doc.tobytes()
+        return self.service.ingest(content, 'billing@test.invalid', 'bundle.pdf')['id']
+
+    def bundle_cases(self):
+        with self.service.store.connect() as c:
+            return [self.service.store.decode(r) for r in c.execute('SELECT * FROM jobs ORDER BY created_at, id')]
+
+    def test_bundled_invoices_split_into_cases_and_approve(self):
+        job_id = self.bundle('220')
         self.service.process_next()
-        self.assertIn('MULTIPLE_DOCUMENTS', self.codes(self.service.store.get(job_id)))
-        with self.assertRaises(Conflict): self.service.validate(job_id, self.e, 'reviewer', self.service.store.get(job_id)['version'], 'Please approve bundle')
+        cases = self.bundle_cases()
+        self.assertEqual([c['invoice_number'] for c in cases], ['INV-001', 'INV-002'])
+        self.assertEqual(cases[0]['id'], job_id)
+        self.assertEqual([c['status'] for c in cases], ['approved', 'approved'])
+        self.assertEqual([c['filename'] for c in cases], ['bundle.pdf · document 1 of 2', 'bundle.pdf · document 2 of 2'])
+        with self.service.store.connect() as c:
+            self.assertEqual(c.execute('SELECT count(*) FROM reservations').fetchone()[0], 2)
+        # The split invoice is an ordinary case: it can be corrected on its own.
+        child = cases[1]
+        self.assertNotIn('documents', child['extraction'])
+
+    def test_bundled_second_invoice_overrunning_po_is_held(self):
+        self.bundle('110')
+        self.service.process_next()
+        first, second = self.bundle_cases()
+        self.assertEqual(first['status'], 'approved')
+        self.assertEqual(second['status'], 'review')
+        self.assertTrue({'PO_BALANCE_EXCEEDED', 'RECEIPT_BALANCE_EXCEEDED'} <= self.codes(second))
+
+    def test_reingesting_a_bundle_is_a_duplicate_submission(self):
+        job_id = self.bundle('220')
+        self.service.process_next()
+        with self.service.store.connect() as c:
+            content = c.execute('SELECT content FROM jobs WHERE id=?', (job_id,)).fetchone()['content']
+        again = self.service.ingest(content, 'billing@test.invalid', 'bundle.pdf')
+        self.assertTrue(again['duplicate_submission'])
+        self.assertEqual(again['id'], job_id)
+        self.assertEqual(len(self.bundle_cases()), 2)
 
     def test_low_ocr_confidence(self):
         job_id = self.seeded()
@@ -336,6 +387,18 @@ class BackendTests(unittest.TestCase):
         result = self.service.validate(second,e)
         self.assertIn('POSSIBLE_DUPLICATE',self.codes(result))
         self.assertEqual(result['status'],'review')
+
+    def test_similar_invoice_on_a_different_po_is_not_a_duplicate(self):
+        refs = dict(self.refs, purchase_orders=self.refs['purchase_orders'] + [dict(self.refs['purchase_orders'][0], number='PO-2')])
+        (Path(self.temp.name) / 'refs.json').write_text(json.dumps(refs))
+        first = self.seeded()
+        self.service.validate(first, self.e)
+        data = extraction('INV-002').model_dump(mode='json')
+        data['po_reference'].update(value='PO-2', evidence='PO-2')
+        e = InvoiceExtraction.model_validate(data)
+        result = self.service.validate(self.seeded(e), e)
+        self.assertNotIn('POSSIBLE_DUPLICATE', self.codes(result))
+        self.assertEqual(result['status'], 'approved')
 
 class LangChainContractTests(unittest.TestCase):
     def test_structured_output_schema_retry_once_and_temperature(self):

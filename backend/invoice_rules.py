@@ -130,7 +130,10 @@ def evaluate(extraction, pages, refs, existing, reservations, settings, verified
                     close_date = abs((date.fromisoformat(old['invoice_date']) - date.fromisoformat(values['invoice_date'])).days) <= policy.get('duplicate_date_window_days', 7)
                 except (ValueError, TypeError): close_date = False
                 similar = SequenceMatcher(None, normalize(old['invoice_number']), normalize(values['invoice_number'])).ratio() >= .8
-                if close_date and (similar or (po and old['po_number'] == po['number'])):
+                # A resubmitted invoice bills the same PO; billing a different known PO is a
+                # separate transaction (e.g. milestone invoices with sequential numbers).
+                other_po = bool(po and old['po_number'] and old['po_number'] != po['number'])
+                if close_date and not other_po and (similar or (po and old['po_number'] == po['number'])):
                     flag('POSSIBLE_DUPLICATE', f'Invoice resembles case {old["id"]}.')
     if exact: flag('DUPLICATE_INVOICE', 'Vendor and invoice number match: ' + ', '.join(exact))
     converted = None
